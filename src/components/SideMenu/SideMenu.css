@@ -1,0 +1,8 @@
+.side-menu {
+  background: transparent;
+  border: none;
+}
+.ant-menu-inline .ant-menu-item-selected {
+  background-color: #51624f; /* 比如 #40a9ff */
+  /* 比如 #fff */
+}

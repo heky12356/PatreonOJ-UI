@@ -1,0 +1,3 @@
+[submodule "front-end-part"]
+	path = front-end-part
+	url = https://gitee.com/linlin_2233/front-end-part.git

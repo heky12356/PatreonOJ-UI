@@ -1,0 +1,17 @@
+
+:where(.css-dev-only-do-not-override-os2fvf).ant-pagination .ant-pagination-item-active a {
+    color: #93f180 !important; /* 若原样式优先级高，可加 !important 强制覆盖 */
+    border-width: 2px !important;
+    background-color: #ededee;
+}
+
+ :where(.css-dev-only-do-not-override-os2fvf).ant-pagination .ant-pagination-item-active {
+     font-weight: 600;
+     border-color: #a4cd7f;
+
+
+ }
+
+:where(.css-dev-only-do-not-override-os2fvf).ant-pagination .ant-pagination-item-active:hover {
+    border-color: #253b22;
+}

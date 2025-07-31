@@ -1,0 +1,151 @@
+/*pages/Login.module.css */
+/*页面整体样式，局部css*/
+.body {
+    margin-left: 500px;
+    margin-right: 500px;
+    background-color: rgb(253, 253, 253);
+}
+
+.wrapper {
+    margin-top: 100px;
+}
+
+/*登录表单容器 */
+.formBoxLogin {
+    margin: 100px;
+    padding: 100px;
+    background-color: #e8e6e6;
+    border-radius: 20px;
+}
+
+/*Logo区域 */
+.logo {
+    vertical-align: middle;
+    font-size: 25px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.logo img {
+    width: 20%;
+    vertical-align: middle;
+}
+
+/*标题样式 */
+.title {
+    font-size: 1.5em;
+    color: #4d5d4b;
+    text-align: center;
+}
+
+/*输入框样式 */
+.inputBox {
+    position: relative;
+    width: 100%;
+    height: 50px;
+    border-bottom: 2px solid #aebda1;
+    margin: 30px 0;
+}
+
+.inputBox label {
+    position: absolute;
+    top: 50%;
+    left: 5px;
+    transform: translateY(-50%);
+    font-size: 1em;
+    color: #000000;
+    font-weight: 500;
+    pointer-events: none;
+}
+
+/*输入框聚焦/有值时的动画 */
+.inputBox input:focus ~ label,
+.inputBox input:valid ~ label {
+    top: -5px;
+    transition: 0.5s;
+}
+
+.inputBox input {
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: 1em;
+    color: #253b22;
+    font-weight: 600;
+    padding: 0 35px 0 5px;
+}
+
+.inputBox .icon {
+    position: absolute;
+    right: 8px;
+    font-size: 1.2em;
+    color: #253b22;
+    line-height: 57px;
+}
+
+/*记住密码和忘记密码 */
+.rememberForgot {
+    font-size: 0.9em;
+    color: #253b22;
+    font-weight: 500;
+    margin: -15px 0 15px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.rememberForgot label input {
+    accent-color: #aebda1;
+    margin-right: 3px;
+}
+
+.rememberForgot a {
+    color: #97b67d;
+    text-decoration: none;
+}
+
+.rememberForgot a:hover {
+    text-decoration: underline;
+}
+
+/*登录按钮 */
+.btn {
+    width: 100%;
+    height: 45px;
+    background: #aebda1;
+    border: none;
+    outline: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1em;
+    color: #253b22;
+    font-weight: 500;
+}
+
+/*登录注册切换区域 */
+.loginRegister {
+    font-size: 0.9em;
+    color: #253b22;
+    text-align: center;
+    font-weight: 500;
+    margin: 25px 0 10px;
+}
+
+.loginRegister p a {
+    color: #253b22;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.loginRegister p a:hover {
+    text-decoration: underline;
+    font-size: 15px;
+}
+
+.footer {
+    text-align: center;
+    margin-top: 50px;
+    color: #253b22;
+    font-size: 0.9em;
+}

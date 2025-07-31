@@ -1,0 +1,23 @@
+[
+  { "key": 1, "rank": 1, "username": "琳琳", "solved": 999, "submitted": 999, "accuracy": "100%" },
+  { "key": 2, "rank": 2, "username": "will", "solved": 299, "submitted": 300, "accuracy": "97%" },
+  { "key": 3, "rank": 3, "username": "2ss*", "solved": 93, "submitted": 78, "accuracy": "96%" },
+  { "key": 4, "rank": 4, "username": "草草*", "solved": 49, "submitted": 4, "accuracy": "4%" },
+  { "key": 5, "rank": 5, "username": "ddi", "solved": 57, "submitted": 5, "accuracy": "5%" },
+  { "key": 6, "rank": 6, "username": "yy", "solved": 76, "submitted": 6, "accuracy": "6%" },
+  { "key": 7, "rank": 7, "username": "哦uo", "solved": 78, "submitted": 7, "accuracy": "7%" },
+  { "key": 1, "rank": 1, "username": "琳琳", "solved": 999, "submitted": 999, "accuracy": "100%" },
+  { "key": 2, "rank": 2, "username": "will", "solved": 299, "submitted": 300, "accuracy": "97%" },
+  { "key": 3, "rank": 3, "username": "2ss*", "solved": 93, "submitted": 78, "accuracy": "96%" },
+  { "key": 4, "rank": 4, "username": "草草*", "solved": 49, "submitted": 4, "accuracy": "4%" },
+  { "key": 5, "rank": 5, "username": "ddi", "solved": 57, "submitted": 5, "accuracy": "5%" },
+  { "key": 6, "rank": 6, "username": "yy", "solved": 76, "submitted": 6, "accuracy": "6%" },
+  { "key": 7, "rank": 7, "username": "哦uo", "solved": 78, "submitted": 7, "accuracy": "7%" },
+  { "key": 1, "rank": 1, "username": "琳琳", "solved": 999, "submitted": 999, "accuracy": "100%" },
+  { "key": 2, "rank": 2, "username": "will", "solved": 299, "submitted": 300, "accuracy": "97%" },
+  { "key": 3, "rank": 3, "username": "2ss*", "solved": 93, "submitted": 78, "accuracy": "96%" },
+  { "key": 4, "rank": 4, "username": "草草*", "solved": 49, "submitted": 4, "accuracy": "4%" },
+  { "key": 5, "rank": 5, "username": "ddi", "solved": 57, "submitted": 5, "accuracy": "5%" },
+  { "key": 6, "rank": 6, "username": "yy", "solved": 76, "submitted": 6, "accuracy": "6%" },
+  { "key": 7, "rank": 7, "username": "哦uo", "solved": 78, "submitted": 7, "accuracy": "7%" }
+]

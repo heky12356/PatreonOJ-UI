@@ -1,0 +1,51 @@
+div[style="display: flex; align-items: center;"] {
+  /* 自定义样式，比如修改背景色 */
+  background-color: #c6d1bd;
+}
+.header-nav-menu {
+  /*background: transparent;*/
+  border: none;
+  background-color: #c6d1bd;
+
+}
+
+.ant-layout-header{
+  background-color: #c6d1bd;
+}
+.ant-menu-title-content{
+  color: #253B22;
+}
+.ant-menu-item-selected .ant-menu-title-content {
+  color: #fff;
+}
+svg{
+  color: #253B22;
+}
+.ant-menu-item-selected svg{
+  color: white;
+}
+.header-nav-menu .ant-menu-overflow-item.ant-menu-item.ant-menu-item-selected {
+  background-color: #51624f !important;
+  opacity: 0.8;
+  order: 1;
+}
+.ant-menu-item-select  {
+  background-color: #51624f !important;
+}
+
+.ant-menu .ant-menu-overflow-item.ant-menu-item.ant-menu-item-selected.ant-menu-item-only-child {
+  background-color: #51624f !important;}
+.ant-layout-header {
+  background-color: #c6d1bd !important;
+}
+.ant-menu-overflow-item {
+  background-color: #c6d1bd !important;
+  border-radius: 4px !important;
+  height: 64px !important;
+
+}
+.ant-menu-horizontal .ant-menu-item-selected {
+  height: 64px !important;
+
+}
+

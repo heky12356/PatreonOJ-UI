@@ -1,0 +1,208 @@
+<!--已废弃）-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register</title>
+</head>
+<style>
+
+    body{
+
+margin-left:500px;
+margin-right: 500px;
+background-color: rgb(253, 253, 253);
+
+}
+.wrapper{
+margin-top: 100px;
+
+
+
+}
+.form-box-register{
+margin-right: 100px;
+    margin-left: 100px;
+padding: 100px;
+background-color: #e8e6e6;
+border-radius: 20px
+}
+ .logo{
+    vertical-align: middle;
+    font-size: 25px;
+    text-align: center;
+     font-weight: bold;
+}
+    img{
+        width: 20%;
+        vertical-align: middle;
+
+    }
+h2{
+font-size:  1.5em ;
+color: #4d5d4b;
+text-align: center;
+}
+.input-box input:focus ~ label,
+.input-box input:valid ~ label{
+top: -5px;
+transition: 0.5s;
+}
+.input-box{
+position: relative;
+
+width: 100%;
+height: 50px;
+border-bottom: 2px solid #aebda1;
+margin: 30px 0;
+
+}
+.input-box label{
+position: absolute;
+top:50%;
+left: 5px;
+transform: translateY(-50%);
+font-size: 1em;
+color: #000000;
+font-weight: 500;
+pointer-events: none;
+
+}
+.input-box input{
+width:100%;
+height: 100%;
+background: transparent;
+border:none ;
+outline: none;
+font-size: 1em;
+color: #253b22;
+font-weight: 600;
+padding: 0 35px 0 5px;
+
+}
+.input-box .icon{
+position: absolute;
+right: 8px;
+font-size: 1.2em;
+color: #253b22;
+line-height: 57px;
+
+}
+.remember-forgot{
+font-size: .9em;
+color:#253b22;
+font-weight: 500;
+margin:-15px 0 15px ;
+display: flex;
+justify-content:space-between;
+
+}
+.remember-forgot label input{
+accent-color: #aebda1;
+margin-right: 3px;
+
+
+}
+.remember-forgot a{
+color: #97b67d;
+text-decoration: none;
+}
+.remember-forgot a:hover{
+text-decoration: underline;
+}
+.btn{
+width: 100%;
+height:45px;
+background: #aebda1;
+border: none;
+outline: none;
+border-radius: 6px;
+cursor: pointer;
+font-size: 1em;
+color: #253b22;
+font-weight: 500;
+
+
+}
+.login-register{
+font-size: .9em;
+color:#253b22;
+text-align: center;
+font-weight: 500;
+margin:25px 0 10px;
+}
+.login-register p a{
+color:#253b22;
+text-decoration: none;
+font-weight: 600;
+}
+.login-register p a:hover{
+text-decoration: underline;
+font-size: 15px;
+
+}
+</style>
+<body>
+<div class="wrapper">
+<div class="form-box-register">
+    <div class="logo">
+        <img src="/images/logo.png" alt="logo">Patreon算法平台</div>
+    <h2>注册</h2>
+    <form action="#">
+        <div class="input-box">
+            <span class="icon"><ion-icon name="people-circle"></ion-icon></span>
+            <input type="text" required>
+            <label>用户名</label>
+        </div>
+
+        <div class="input-box">
+            <span class="icon"><ion-icon name="mail"></ion-icon></span>
+            <input type="email" required>
+            <label>邮箱</label>
+        </div>
+        <div class="input-box">
+            <span class="icon"><ion-icon name="lock-closed"></ion-icon></span>
+            <input type="password" required>
+            <label>密码</label>
+        </div>
+        <div class="remember-forgot">
+            <label><input type="checkbox">同意条款
+            <a href="#">查看条款</a></label>
+
+        </div>
+        <button type="submit" class="btn">注册</button>
+        <div class="login-register">
+            <p>已经有帐号了？ <a href="Login.html">去登录</a></p>
+        </div>
+
+    </form>
+</div>
+
+</div>
+<script>
+    const wrapper = document.querySelector('.wrapper');
+
+    const btnPopup = document.querySelector('.btnLogin-popup');
+    const  iconclose = document.querySelector('.icon-close');
+
+
+
+    registerLink.addEventListener('click', () => {
+        wrapper.classList.add('active');
+    });
+    loginLink.addEventListener('click', () => {
+        wrapper.classList.remove('active');
+    });
+    btnPopup.addEventListener('click', () => {
+        wrapper.classList.add('active-popup');
+    });
+    iconclose.addEventListener('click', () => {
+        wrapper.classList.remove('active-popup');
+    });
+</script>
+<script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+
+
+</body>
+</html>
