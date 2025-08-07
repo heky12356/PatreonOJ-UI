@@ -1,15 +1,14 @@
-// QuestionBank.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
-import problems from '../../data/quesionBank.json';
-import styles from './QuestionBank.module.css'; // 引入CSS模块
+// 导入统一的数据源（和 ProblemList 相同）
+import { problems } from '/public/api/problem.js';
+import styles from './QuestionBank.module.css';
 
-const QuestionBank = () => {
+const QuestionBank = ({ setCurrentKey }) => {
     return (
         <div className={styles.container}>
             <h1 className={styles.title}>题库列表</h1>
 
-            {/* 搜索框和筛选器 */}
             <div className={styles.searchBar}>
                 <input
                     type="text"
@@ -25,7 +24,6 @@ const QuestionBank = () => {
                 </select>
             </div>
 
-            {/* 题目列表表格 */}
             <div className={styles.tableContainer}>
                 <table className={styles.table}>
                     <thead>
@@ -38,25 +36,27 @@ const QuestionBank = () => {
                     </tr>
                     </thead>
                     <tbody>
+                    {/* 遍历统一数据源中的题目 */}
                     {problems.map((problem) => (
                         <tr key={problem.id} className={styles.row}>
                             <td>{problem.id}</td>
                             <td>
+                                {/* 确保路由路径与ProblemList的导航一致 */}
                                 <Link to={`/questionBank/${problem.id}`} className={styles.link}>
                                     {problem.title}
                                 </Link>
                             </td>
                             <td>
-                  <span className={`${styles.difficulty} ${styles[problem.difficulty]}`}>
-                    {problem.difficulty}
-                  </span>
+                                <span className={`${styles.difficulty} ${styles[problem.difficulty]}`}>
+                                    {problem.difficulty}
+                                </span>
                             </td>
                             <td>
                                 {problem.tags.map((tag) => (
                                     <span key={tag} className={styles.tag}>{tag}</span>
                                 ))}
                             </td>
-                            <td>--</td> {/* 待添加通过率数据，加一个数据处理的部分 */}
+                            <td>{problem.historicalScores}</td>
                         </tr>
                     ))}
                     </tbody>

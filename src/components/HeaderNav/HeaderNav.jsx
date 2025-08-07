@@ -1,72 +1,83 @@
 import React from "react";
-import { Menu } from "antd";
-import {
-  HomeOutlined,
-  BookOutlined,
-  QuestionCircleOutlined,
-  FileTextOutlined,
+import { NavLink, useNavigate } from "react-router-dom";
+import { Input, Button } from "antd";
+import { 
+  HomeOutlined, 
+  BookOutlined, 
+  QuestionCircleOutlined, 
+  AppstoreOutlined, 
   TrophyOutlined,
   UserOutlined,
-} from "@ant-design/icons";
+  SearchOutlined
+} from '@ant-design/icons';
 import "./HeaderNav.css";
 
-const HeaderNav = ({ currentKey, setCurrentKey }) => {
-  const menuItems = [
-    {
-      key: "1",
-      icon: <HomeOutlined />,
-      label: "主页",
-    },
-    {
-      key: "2",
-      icon: <BookOutlined />,
-      label: "学习",
-    },
-    {
-      key: "3",
-      icon: <QuestionCircleOutlined />,
-      label: "问题",
-    },
-    {
-      key: "4",
-      icon: <FileTextOutlined />,
-      label: "题库",
-    },
-    {
-      key: "5",
-      icon: <TrophyOutlined />,
-      label: "竞赛",
-    },
-    {
-      key: "6",
-      icon: <UserOutlined />,
-      label: "排名",
-    },
-  ];
+const { Search } = Input;
+
+const HeaderNav = () => {
+  const navigate = useNavigate();
+
+  const onSearch = (value, _e, info) => {
+    console.log(info?.source, value);
+  };
 
   return (
-    <div style={{ display: "flex", alignItems: "center" }}>
-      <div
-        className="demo-logo"
-        style={{
-          fontSize: "30px",
-          fontWeight: "bold",
-          color: "#090707",
-          marginRight: "12px",
-        }}
-      >
-        <img src="/images/logo.png" style={{width:40,height:40,}} />
-        Patreon 算法平台
+    <nav className="navbar navbar-expand-lg custom-navbar">
+      <div className="container-fluid">
+        <div className="navbar-brand d-flex align-items-center">
+          <img src="/images/logo.png" width="40" height="40" alt="logo" className="me-2" />
+          <span className="brand-text">Patreon 算法平台</span>
+        </div>
+        
+        <div className="navbar-nav d-flex flex-row">
+          <NavLink className="nav-link" to="/" end>
+            <HomeOutlined className="me-1" />首页
+          </NavLink>
+          <NavLink className="nav-link" to="/study">
+            <BookOutlined className="me-1" />学习
+          </NavLink>
+          <NavLink className="nav-link" to="/problem">
+            <QuestionCircleOutlined className="me-1" />题目
+          </NavLink>
+          <NavLink className="nav-link" to="/questionBank">
+            <AppstoreOutlined className="me-1" />题库
+          </NavLink>
+          <NavLink className="nav-link" to="/rank">
+            <TrophyOutlined className="me-1" />排行榜
+          </NavLink>
+        </div>
+        
+        <div className="navbar-search">
+          <Search
+            placeholder="搜索题目..."
+            onSearch={onSearch}
+            enterButton={<SearchOutlined />}
+            style={{ width: '280px' }}
+            size="middle"
+          />
+        </div>
+        
+        <div className="navbar-nav ms-auto d-flex flex-row">
+          <NavLink className="nav-link" to="/profile">
+            <UserOutlined className="me-1" />个人中心
+          </NavLink>
+          <Button 
+            type="text" 
+            className="auth-button"
+            onClick={() => navigate('/login')}
+          >
+            登录
+          </Button>
+          <Button 
+            type="primary" 
+            className="auth-button register-button"
+            onClick={() => navigate('/register')}
+          >
+            注册
+          </Button>
+        </div>
       </div>
-      <Menu
-        theme="dark"
-        mode="horizontal"
-        selectedKeys={[currentKey]}
-        onClick={(e) => setCurrentKey(e.key)}
-        items={menuItems}
-        className="header-nav-menu"
-      />
-    </div>
+    </nav>
   );
 };
 

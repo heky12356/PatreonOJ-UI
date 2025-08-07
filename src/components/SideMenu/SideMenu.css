@@ -1,8 +1,39 @@
 .side-menu {
-  background: transparent;
-  border: none;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 0;
+    background-color: #fff;
+    height: 100%;
 }
-.ant-menu-inline .ant-menu-item-selected {
-  background-color: #51624f; /* 比如 #40a9ff */
-  /* 比如 #fff */
+
+.side-menu-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    color: #253B22;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border-radius: 4px;
+    margin: 2px 8px;
+}
+
+.side-menu-item:hover {
+    background-color: #c6d1bd;
+    color: #253B22;
+    text-decoration: none;
+}
+
+.side-menu-item.active {
+    background-color: #c6d1bd;
+    color: #253B22;
+    font-weight: 500;
+}
+
+.side-menu-icon {
+    margin-right: 12px;
+    font-size: 16px;
+}
+
+.side-menu-label {
+    font-size: 14px;
 }

@@ -1,55 +1,71 @@
-import React from "react";
-import { Menu } from "antd";
+import React from 'react';
+import { NavLink } from 'react-router-dom';
 import {
-  BookOutlined,
-  QuestionCircleOutlined,
-  FileTextOutlined,
-  BookOutlined as BookOutlined2,
-  TrophyOutlined,
-} from "@ant-design/icons";
-import "./SideMenu.css";
+    HomeOutlined,
+    BookOutlined,
+    QuestionCircleOutlined,
+    AppstoreOutlined,
+    TrophyOutlined,
+    UserOutlined
+} from '@ant-design/icons';
+import './SideMenu.css';
 
-const siderMenuItems = [
-  {
-    key: "1",
-    icon: <BookOutlined />,
-    label: "Happy Coding",
-  },
-  {
-    key: "3",
-    icon: <QuestionCircleOutlined />,
-    label: "问题",
-  },
-  {
-    key: "4",
-    icon: <FileTextOutlined />,
-    label: "题库",
-  },
-  {
-    key: "2",
-    icon: <BookOutlined2 />,
-    label: "学习",
-  },
-  {
-    key: "5",
-    icon: <TrophyOutlined />,
-    label: "竞赛",
-  },
+const menuItems = [
+    {
+        key: '1',
+        icon: <HomeOutlined />,
+        label: '首页',
+        path: '/'
+    },
+    {
+        key: '2',
+        icon: <BookOutlined />,
+        label: '学习',
+        path: '/study'
+    },
+    {
+        key: '3',
+        icon: <QuestionCircleOutlined />,
+        label: '题目',
+        path: '/problem'
+    },
+    {
+        key: '4',
+        icon: <AppstoreOutlined />,
+        label: '题库',
+        path: '/questionBank'
+    },
+    {
+        key: '5',
+        icon: <TrophyOutlined />,
+        label: '排行榜',
+        path: '/rank'
+    },
+    {
+        key: '6',
+        icon: <UserOutlined />,
+        label: '个人中心',
+        path: '/profile'
+    },
 ];
 
-const SideMenu = ({ currentKey, setCurrentKey }) => {
-  return (
-    <Menu
-      mode="inline"
-      selectedKeys={[currentKey]}
-      onClick={(e) => setCurrentKey(e.key)}
-      items={siderMenuItems.map((item) => ({
-        ...item,
-        style: { color: "#000" },
-      }))}
-      className="side-menu"
-    />
-  );
-};
+function SideMenu() {
+    return (
+        <div className="side-menu">
+            {menuItems.map(item => (
+                <NavLink
+                    key={item.key}
+                    to={item.path}
+                    className={({ isActive }) => 
+                        `side-menu-item ${isActive ? 'active' : ''}`
+                    }
+                >
+                    <span className="side-menu-icon">{item.icon}</span>
+                    <span className="side-menu-label">{item.label}</span>
+                </NavLink>
+            ))}
+        </div>
+    );
+}
 
 export default SideMenu;
