@@ -1,0 +1,158 @@
+/**
+ * 代码编辑器组件样式
+ * 保持与主项目设计风格一致
+ */
+
+.codeEditor {
+    width: 100%;
+    margin-top: 16px;
+}
+
+.editorCard {
+    border: 1px solid #d9d9d9;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.editorCard .ant-card-head {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 8px 8px 0 0;
+}
+
+.editorCard .ant-card-head-title {
+    color: white;
+    font-weight: 600;
+}
+
+.editorControls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.editorContainer {
+    border: 1px solid #e8e8e8;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #fafafa;
+}
+
+.editorActions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.tips {
+    color: #666;
+    font-size: 12px;
+    font-style: italic;
+}
+
+.outputCard {
+    border: 1px solid #d9d9d9;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.outputCard .ant-card-head {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    color: white;
+    border-radius: 8px 8px 0 0;
+}
+
+.outputCard .ant-card-head-title {
+    color: white;
+    font-weight: 600;
+}
+
+.output {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 12px;
+    margin: 0;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #333;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.recordContent {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .editorControls {
+        flex-direction: column;
+        gap: 8px;
+        align-items: stretch;
+    }
+    
+    .editorActions {
+        flex-direction: column;
+        gap: 8px;
+        align-items: stretch;
+    }
+    
+    .tips {
+        text-align: center;
+    }
+}
+
+/* 深色主题支持 */
+@media (prefers-color-scheme: dark) {
+    .editorContainer {
+        background: #1e1e1e;
+        border-color: #333;
+    }
+    
+    .output {
+        background: #2d2d2d;
+        border-color: #444;
+        color: #e0e0e0;
+    }
+}
+
+/* 动画效果 */
+.editorCard,
+.outputCard {
+    transition: all 0.3s ease;
+}
+
+.editorCard:hover,
+.outputCard:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 按钮样式优化 */
+.editorControls .ant-btn {
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.editorControls .ant-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.editorControls .ant-btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+}
+
+.editorControls .ant-btn-primary:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+}

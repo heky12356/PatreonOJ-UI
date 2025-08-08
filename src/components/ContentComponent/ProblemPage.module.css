@@ -236,23 +236,97 @@ body {
     margin: 20px;
 }
 
+/* 新增：标签页相关样式 */
+.problem-tabs {
+    margin: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.problem-tabs .ant-tabs-nav {
+    background: #f8f9fa;
+    margin: 0;
+    padding: 0 20px;
+}
+
+.problem-tabs .ant-tabs-tab {
+    font-weight: 500;
+    color: #666;
+}
+
+.problem-tabs .ant-tabs-tab-active {
+    color: #007bff;
+}
+
+.problem-tabs .ant-tabs-ink-bar {
+    background: #007bff;
+}
+
+.tab-content {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+    min-height: 600px;
+}
+
+/* 在标签页模式下调整内容布局 */
+.tab-content .problem-content {
+    flex: 2;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.tab-content .problem-sidebar {
+    flex: 1;
+    margin: 0;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    max-width: 300px;
+}
+
+/* IDE标签页的特殊样式 */
+.tab-content:has(.codeEditor) {
+    flex-direction: column;
+}
+
+.tab-content:has(.codeEditor) .problem-sidebar {
+    display: none; /* 在IDE模式下隐藏侧边栏 */
+}
+
+/* 响应式设计优化 */
+@media (max-width: 1200px) {
+    .tab-content {
+        flex-direction: column;
+    }
+    
+    .tab-content .problem-sidebar {
+        max-width: none;
+        flex: none;
+    }
+}
+
 @media (max-width: 768px) {
+    .problem-tabs {
+        margin: 10px;
+    }
+    
+    .tab-content {
+        padding: 15px;
+        gap: 15px;
+    }
+    
     .problem-meta {
         flex-direction: column;
+        align-items: stretch;
     }
     
     .problem-actions {
-        width: 100%;
-        justify-content: flex-start;
-    }
-    
-    .problem-input-output {
-        flex-direction: column;
-    }
-    
-    .input-section,
-    .output-section {
-        min-width: auto;
+        justify-content: center;
     }
 }
 

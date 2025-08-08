@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { Tag } from 'antd';
-import { ArrowLeftOutlined } from '@ant-design/icons';
+import { Tag, Tabs, message } from 'antd';
+import { ArrowLeftOutlined, CodeOutlined, FileTextOutlined } from '@ant-design/icons';
+import CodeEditor from './CodeEditor';
 import styles from "./ProblemPage.module.css";
 
 function ProblemPage() {
@@ -10,6 +11,7 @@ function ProblemPage() {
     const [question, setQuestion] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [activeTab, setActiveTab] = useState('description'); // 新增：当前激活的标签页
 
     // 获取题目详情
     useEffect(() => {
@@ -60,6 +62,24 @@ function ProblemPage() {
             console.error('复制失败:', err);
             alert('复制失败，请手动复制');
         }
+    };
+
+    /**
+     * 处理代码提交
+     * @param {Object} submitData - 提交的数据
+     */
+    const handleCodeSubmit = (submitData) => {
+        console.log('代码提交:', submitData);
+        message.success('代码提交成功！');
+        // 这里可以添加实际的提交逻辑
+    };
+
+    /**
+     * 切换到IDE标签页
+     */
+    const switchToIdeTab = () => {
+        setActiveTab('ide');
+        message.info('已切换到代码编辑器');
     };
 
     const goToIde = () => {
@@ -131,81 +151,121 @@ function ProblemPage() {
                         <button
                             type="primary"
                             className={styles['ide-button']}
-                            onClick={goToIde}
+                            onClick={switchToIdeTab}
                         >
-                            进入 IDE 解题
+                            <CodeOutlined /> 开始编程
                         </button>
                     </div>
                 </div>
             </div>
-            <div className={styles['problem-content']}>
-                <div className={styles['problem-description']}>
-                    <h2>题目描述</h2>
-                    <p>{question.content}</p>
-                </div>
-                
-                {question.input_format && (
-                    <div className={styles['problem-input-format']}>
-                        <h3>输入格式</h3>
-                        <pre>{question.input_format}</pre>
-                    </div>
-                )}
-                
-                {question.output_format && (
-                    <div className={styles['problem-output-format']}>
-                        <h3>输出格式</h3>
-                        <pre>{question.output_format}</pre>
-                    </div>
-                )}
-                
-                <div className={styles['problem-input-output']}>
-                    <div className={styles['input-section']}>
-                        <h3>样例输入</h3>
-                        <pre>{question.sample_input}</pre>
-                    </div>
-                    <div className={styles['output-section']}>
-                        <h3>样例输出</h3>
-                        <pre>{question.sample_output}</pre>
-                    </div>
-                </div>
-                
-                {question.sample_explanation && (
-                    <div className={styles['problem-explanation']}>
-                        <h3>样例解释</h3>
-                        <p>{question.sample_explanation}</p>
-                    </div>
-                )}
-                
-                {question.data_range && (
-                    <div className={styles['problem-data-range']}>
-                        <h3>数据范围</h3>
-                        <pre>{question.data_range}</pre>
-                    </div>
-                )}
-                
-                {question.hint && (
-                    <div className={styles['problem-hint']}>
-                        <h3>提示</h3>
-                        <p>{question.hint}</p>
-                    </div>
-                )}
-            </div>
-            <div className={styles['problem-sidebar']}>
-                <div className={styles['problem-tags']}>
-                    <h3>标签</h3>
-                    {parseTags(question.tags).map((tag, index) => (
-                        <Tag key={index}>{tag}</Tag>
-                    ))}
-                </div>
-                <div className={styles['problem-discussions']}>
-                    <h3>讨论</h3>
-                    <p>暂无讨论</p>
-                </div>
-                <div className={styles['problem-recommendations']}>
-                    <h3>推荐题目</h3>
-                    <div>暂无推荐题目</div>
-                </div>
-            </div>
+
+            {/* 使用Tabs组件实现题目描述和代码编辑器的切换 */}
+            <Tabs
+                activeKey={activeTab}
+                onChange={setActiveTab}
+                className={styles['problem-tabs']}
+                items={[
+                    {
+                        key: 'description',
+                        label: (
+                            <span>
+                                <FileTextOutlined />
+                                题目描述
+                            </span>
+                        ),
+                        children: (
+                            <div className={styles['tab-content']}>
+                                <div className={styles['problem-content']}>
+                                    <div className={styles['problem-description']}>
+                                        <h2>题目描述</h2>
+                                        <p>{question.content}</p>
+                                    </div>
+                                    
+                                    {question.input_format && (
+                                        <div className={styles['problem-input-format']}>
+                                            <h3>输入格式</h3>
+                                            <pre>{question.input_format}</pre>
+                                        </div>
+                                    )}
+                                    
+                                    {question.output_format && (
+                                        <div className={styles['problem-output-format']}>
+                                            <h3>输出格式</h3>
+                                            <pre>{question.output_format}</pre>
+                                        </div>
+                                    )}
+                                    
+                                    <div className={styles['problem-input-output']}>
+                                        <div className={styles['input-section']}>
+                                            <h3>样例输入</h3>
+                                            <pre>{question.sample_input}</pre>
+                                        </div>
+                                        <div className={styles['output-section']}>
+                                            <h3>样例输出</h3>
+                                            <pre>{question.sample_output}</pre>
+                                        </div>
+                                    </div>
+                                    
+                                    {question.sample_explanation && (
+                                        <div className={styles['problem-explanation']}>
+                                            <h3>样例解释</h3>
+                                            <p>{question.sample_explanation}</p>
+                                        </div>
+                                    )}
+                                    
+                                    {question.data_range && (
+                                        <div className={styles['problem-data-range']}>
+                                            <h3>数据范围</h3>
+                                            <pre>{question.data_range}</pre>
+                                        </div>
+                                    )}
+                                    
+                                    {question.hint && (
+                                        <div className={styles['problem-hint']}>
+                                            <h3>提示</h3>
+                                            <p>{question.hint}</p>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className={styles['problem-sidebar']}>
+                                    <div className={styles['problem-tags']}>
+                                        <h3>标签</h3>
+                                        {parseTags(question.tags).map((tag, index) => (
+                                            <Tag key={index}>{tag}</Tag>
+                                        ))}
+                                    </div>
+                                    <div className={styles['problem-discussions']}>
+                                        <h3>讨论</h3>
+                                        <p>暂无讨论</p>
+                                    </div>
+                                    <div className={styles['problem-recommendations']}>
+                                        <h3>推荐题目</h3>
+                                        <div>暂无推荐题目</div>
+                                    </div>
+                                </div>
+                            </div>
+                        )
+                    },
+                    {
+                        key: 'ide',
+                        label: (
+                            <span>
+                                <CodeOutlined />
+                                代码编辑器
+                            </span>
+                        ),
+                        children: (
+                            <div className={styles['tab-content']}>
+                                {/* 集成的代码编辑器组件 */}
+                                <CodeEditor 
+                                    problem={question} 
+                                    onSubmit={handleCodeSubmit}
+                                />
+                            </div>
+                        )
+                    }
+                ]}
+            />
         </div>
     );
 }
