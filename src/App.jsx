@@ -2,8 +2,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import MainLayout from './MainLayout.jsx';
-import Login from '../pages/Login.jsx';
-import Register from '../pages/Register.jsx';
+import Login from './pages/Login.jsx';
+import Register from './pages/Register.jsx';
 import HomeComponent from './components/ContentComponent/HomeComponent.jsx';
 import StudyComponent from './components/ContentComponent/StudyComponent.jsx';
 import ProblemComponent from './components/ContentComponent/ProblemComponent.jsx';
