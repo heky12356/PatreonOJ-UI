@@ -8,7 +8,7 @@ import { Card, Select, Button, message, Modal, Spin, Tag } from 'antd';
 import { PlayCircleOutlined, CloudUploadOutlined, HistoryOutlined, LoadingOutlined, FileSearchOutlined } from '@ant-design/icons';
 import Editor from '@monaco-editor/react';
 import { runCode, mockRunCode, mockSubmitCode, submitCode, getSubmissionResult } from '../../api/judge.js';
-import { getUserId } from '../../api/user.js';
+import { getUserId, isLoggedIn } from '../../api/user.js';
 import { useNavigate } from 'react-router-dom';
 import styles from './CodeEditor.module.css';
 
@@ -79,6 +79,16 @@ int main() {
             setCode(languageConfig[language].template);
         }
     }, [language, problem]);
+    
+    // 检查登录状态，如果未登录则跳转到登录页面
+    useEffect(() => {
+        if (!isLoggedIn()) {
+            message.warning('请先登录后再使用代码编辑器');
+            // 获取当前URL路径，用于登录后返回
+            const currentPath = window.location.pathname;
+            navigate(`/login?redirect=${encodeURIComponent(currentPath)}`);
+        }
+    }, [navigate]);
 
     /**
      * 处理语言切换
@@ -93,6 +103,15 @@ int main() {
      * 运行代码
      */
     const handleRun = async () => {
+        // 检查登录状态
+        if (!isLoggedIn()) {
+            message.warning('请先登录后再使用代码编辑器');
+            // 获取当前URL路径，用于登录后返回
+            const currentPath = window.location.pathname;
+            navigate(`/login?redirect=${encodeURIComponent(currentPath)}`);
+            return;
+        }
+        
         if (!code.trim()) {
             message.warning('请先编写代码');
             return;
@@ -125,6 +144,15 @@ int main() {
      * 提交代码
      */
     const handleSubmit = async () => {
+        // 检查登录状态
+        if (!isLoggedIn()) {
+            message.warning('请先登录后再使用代码编辑器');
+            // 获取当前URL路径，用于登录后返回
+            const currentPath = window.location.pathname;
+            navigate(`/login?redirect=${encodeURIComponent(currentPath)}`);
+            return;
+        }
+        
         if (!code.trim()) {
             message.warning('请先编写代码');
             return;

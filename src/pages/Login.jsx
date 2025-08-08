@@ -1,6 +1,6 @@
 //pages/Login.jsx
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { login, saveUserInfo, mockLogin } from '../api/user';
 import styles from './Login.module.css'; // 引入CSS Modules
 
@@ -39,13 +39,8 @@ const Login = () => {
         setError('');
         
         try {
-            // 开发环境使用模拟登录，生产环境使用实际API
             let response;
-            if (process.env.NODE_ENV === 'development') {
-                response = mockLogin(formData.username);
-            } else {
-                response = await login(formData.username, formData.password);
-            }
+            response = await login(formData.username, formData.password);
             
             // 保存用户信息到本地存储
             saveUserInfo(response);
@@ -53,7 +48,7 @@ const Login = () => {
             // 登录成功提示
             console.log('登录成功:', response);
             
-            // 跳转到首页
+            // 跳转到重定向首页
             navigate('/');
         } catch (err) {
             console.error('登录失败:', err);
