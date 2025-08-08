@@ -4,10 +4,12 @@
  * 从ide-part项目的ProblemDetail组件中提取而来
  */
 import React, { useState, useEffect } from 'react';
-import { Card, Select, Button, message, Modal } from 'antd';
-import { PlayCircleOutlined, CloudUploadOutlined, HistoryOutlined } from '@ant-design/icons';
+import { Card, Select, Button, message, Modal, Spin, Tag } from 'antd';
+import { PlayCircleOutlined, CloudUploadOutlined, HistoryOutlined, LoadingOutlined, FileSearchOutlined } from '@ant-design/icons';
 import Editor from '@monaco-editor/react';
-import { runCode, mockRunCode } from '../../api/judge.js';
+import { runCode, mockRunCode, mockSubmitCode, submitCode, getSubmissionResult } from '../../api/judge.js';
+import { getUserId } from '../../api/user.js';
+import { useNavigate } from 'react-router-dom';
 import styles from './CodeEditor.module.css';
 
 const { Option } = Select;
@@ -19,6 +21,8 @@ const { Option } = Select;
  * @param {Function} props.onSubmit - 提交回调函数
  */
 function CodeEditor({ problem, onSubmit }) {
+    const navigate = useNavigate(); // 用于页面导航
+    
     // 状态管理
     const [code, setCode] = useState('');                    // 当前代码
     const [output, setOutput] = useState('');               // 运行输出
@@ -26,6 +30,9 @@ function CodeEditor({ problem, onSubmit }) {
     const [submitting, setSubmitting] = useState(false);    // 提交状态
     const [running, setRunning] = useState(false);          // 运行状态
     const [isModalVisible, setIsModalVisible] = useState(false); // 测评记录模态框
+    const [submissionId, setSubmissionId] = useState(null); // 提交ID
+    const [submissionResult, setSubmissionResult] = useState(null); // 提交结果
+    const [checkingResult, setCheckingResult] = useState(false); // 检查结果状态
 
     // 语言配置
     const languageConfig = {
@@ -123,33 +130,247 @@ int main() {
             return;
         }
 
+        // 重置之前的提交结果
+        setSubmissionId(null);
+        setSubmissionResult(null);
+        setOutput('');
+        
         setSubmitting(true);
         message.loading('正在提交代码...', 0);
 
         try {
-            // 这里可以调用实际的提交API
-            const result = await mockRunCode(code, language, problem?.sample_input || '');
+            // 获取用户ID，从用户API获取
+            const userId = getUserId() || 'test-user-id';
             
-            setOutput(result);
+            // 获取题目编号
+            const questionNumber = problem?.question_number;
+            
+            // 调用提交API
+            const result = await submitCode(code, language, userId, questionNumber)
+
+            console.log(result)
+            // 保存提交ID
+            setSubmissionId(result.submission_id);
+            
             message.destroy();
-            message.success('提交成功');
+            message.success('代码已提交，正在评测中');
+            
+            // 开始轮询检查评测结果
+            checkSubmissionResult(result.submission_id);
             
             // 调用父组件的提交回调
             if (onSubmit) {
                 onSubmit({
                     code,
                     language,
-                    result,
-                    problemId: problem?.id
+                    submissionId: result.submission_id,
+                    problemId: questionNumber
                 });
             }
         } catch (error) {
             console.error('代码提交失败:', error);
             message.destroy();
-            message.error('提交失败');
+            message.error(error.message || '提交失败');
+            setOutput('提交失败: ' + (error.message || '未知错误'));
         } finally {
             setSubmitting(false);
         }
+    };
+    
+    /**
+     * 检查提交结果
+     * @param {string} id - 提交ID
+     */
+    const checkSubmissionResult = async (id) => {
+        if (!id) return;
+        console.log("正在检查提交结果", id)
+        setCheckingResult(true);
+        
+        try {
+            // 实际环境中轮询检查结果
+            let result = await getSubmissionResult(id);
+
+            console.log("获取到的评测结果", result)
+
+            // 如果状态是processing，继续轮询
+            if (result.status === 'processing' || result.status === 'pending') {
+                setTimeout(() => checkSubmissionResult(id), 100);
+                return;
+            }
+            
+            // 分析测试用例结果，确定最终状态
+            if (result.status === 'completed' && result.results && result.results.length > 0) {
+                // 检查是否有特殊错误类型
+                let hasTimeLimit = false;
+                let hasMemoryLimit = false;
+                let hasRuntimeError = false;
+                let hasWrongAnswer = false;
+                let allCorrect = true;
+                
+                // 遍历所有测试用例
+                for (const testCase of result.results) {
+                    if (!testCase.is_correct) {
+                        allCorrect = false;
+                        
+                        // 检查错误类型
+                        if (testCase.error_type === 'time_limit_exceeded') {
+                            hasTimeLimit = true;
+                        } else if (testCase.error_type === 'memory_limit_exceeded') {
+                            hasMemoryLimit = true;
+                        } else if (testCase.error_type === 'runtime_error') {
+                            hasRuntimeError = true;
+                        } else {
+                            hasWrongAnswer = true;
+                        }
+                    }
+                }
+                
+                // 根据错误类型设置最终状态
+                if (allCorrect) {
+                    result.status = 'accepted';
+                } else if (hasTimeLimit) {
+                    result.status = 'time_limit_exceeded';
+                } else if (hasMemoryLimit) {
+                    result.status = 'memory_limit_exceeded';
+                } else if (hasRuntimeError) {
+                    result.status = 'runtime_error';
+                } else if (hasWrongAnswer) {
+                    result.status = 'wrong_answer';
+                }
+                
+                // 计算通过率
+                const totalCases = result.results.length;
+                const passedCases = result.results.filter(tc => tc.is_correct).length;
+                result.pass_rate = passedCases / totalCases;
+            }
+            
+            // 评测完成，显示结果
+            setSubmissionResult(result);
+            setOutput(formatSubmissionResult(result));
+            
+        } catch (error) {
+            console.error('获取评测结果失败:', error);
+            message.error('获取评测结果失败');
+        } finally {
+            setCheckingResult(false);
+        }
+    };
+    
+    /**
+     * 获取状态对应的消息
+     * @param {string} status - 评测状态
+     * @returns {string} 状态消息
+     */
+    const getStatusMessage = (status) => {
+        const statusMessages = {
+            pending: '等待评测',
+            judging: '评测中',
+            accepted: '通过',
+            wrong_answer: '答案错误',
+            time_limit_exceeded: '超时',
+            memory_limit_exceeded: '内存超限',
+            runtime_error: '运行时错误',
+            compile_error: '编译错误',
+            system_error: '系统错误'
+        };
+        
+        return statusMessages[status] || '未知状态';
+    };
+    
+    /**
+     * 获取状态对应的颜色
+     * @param {string} status - 评测状态
+     * @returns {string} 状态颜色
+     */
+    const getStatusColor = (status) => {
+        const statusColors = {
+            pending: 'default',
+            judging: 'processing',
+            accepted: 'success',
+            wrong_answer: 'error',
+            time_limit_exceeded: 'warning',
+            memory_limit_exceeded: 'warning',
+            runtime_error: 'error',
+            compile_error: 'error',
+            system_error: 'error'
+        };
+        
+        return statusColors[status] || 'default';
+    };
+    
+    /**
+     * 格式化提交结果为显示文本
+     * @param {Object} result - 提交结果
+     * @returns {string} 格式化后的文本
+     */
+    const formatSubmissionResult = (result) => {
+        if (!result) return '';
+        
+        let output = `评测结果: ${getStatusMessage(result.status)}\n`;
+        
+        // 添加通过率信息
+        if (result.pass_rate !== undefined) {
+            const passRate = Math.round(result.pass_rate * 100);
+            output += `通过率: ${passRate}%\n`;
+        }
+        
+        if (result.execution_time) {
+            output += `执行时间: ${result.execution_time}ms\n`;
+        }
+        
+        if (result.memory_used) {
+            output += `内存使用: ${result.memory_used}KB\n`;
+        }
+        
+        // 添加测试用例统计
+        if (result.results && result.results.length > 0) {
+            const totalCases = result.results.length;
+            const passedCases = result.results.filter(tc => tc.is_correct).length;
+            output += `测试用例: ${passedCases}/${totalCases} 通过\n`;
+            
+            // 添加错误类型统计
+            const errorTypes = {
+                time_limit_exceeded: 0,
+                memory_limit_exceeded: 0,
+                runtime_error: 0,
+                wrong_answer: 0
+            };
+            
+            for (const testCase of result.results) {
+                if (!testCase.is_correct) {
+                    if (testCase.error_type && errorTypes[testCase.error_type] !== undefined) {
+                        errorTypes[testCase.error_type]++;
+                    } else {
+                        errorTypes.wrong_answer++;
+                    }
+                }
+            }
+            
+            // 显示错误类型统计
+            const errorMessages = [];
+            if (errorTypes.time_limit_exceeded > 0) {
+                errorMessages.push(`超时: ${errorTypes.time_limit_exceeded}个用例`);
+            }
+            if (errorTypes.memory_limit_exceeded > 0) {
+                errorMessages.push(`内存超限: ${errorTypes.memory_limit_exceeded}个用例`);
+            }
+            if (errorTypes.runtime_error > 0) {
+                errorMessages.push(`运行时错误: ${errorTypes.runtime_error}个用例`);
+            }
+            if (errorTypes.wrong_answer > 0) {
+                errorMessages.push(`答案错误: ${errorTypes.wrong_answer}个用例`);
+            }
+            
+            if (errorMessages.length > 0) {
+                output += `\n错误统计:\n${errorMessages.join('\n')}\n`;
+            }
+        }
+        
+        if (result.message && result.message !== getStatusMessage(result.status)) {
+            output += `\n${result.message}\n`;
+        }
+        
+        return output;
     };
 
     /**
@@ -245,14 +466,44 @@ int main() {
                 </div>
             </Card>
 
-            {/* 运行结果 */}
+            {/* 运行结果或评测结果 */}
             {output && (
                 <Card
-                    title="运行结果"
+                    title={
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span>{submissionResult ? '评测结果' : '运行结果'}</span>
+                            {submissionResult && (
+                                <Tag color={getStatusColor(submissionResult.status)}>
+                                    {getStatusMessage(submissionResult.status)}
+                                </Tag>
+                            )}
+                            {checkingResult && (
+                                <Spin indicator={<LoadingOutlined style={{ fontSize: 16 }} spin />} />
+                            )}
+                        </div>
+                    }
                     className={styles.outputCard}
                     style={{ marginTop: 16 }}
                 >
                     <pre className={styles.output}>{output}</pre>
+                    
+                    {submissionId && (
+                        <div style={{ marginTop: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ fontSize: '0.9em', color: '#888' }}>
+                                提交ID: {submissionId}
+                            </div>
+                            {submissionResult && (
+                                <Button 
+                                    type="primary" 
+                                    icon={<FileSearchOutlined />}
+                                    size="small"
+                                    onClick={() => navigate(`/submission/${submissionId}`)}
+                                >
+                                    查看详情
+                                </Button>
+                            )}
+                        </div>
+                    )}
                 </Card>
             )}
 
@@ -263,10 +514,53 @@ int main() {
                 onOk={() => setIsModalVisible(false)}
                 onCancel={() => setIsModalVisible(false)}
                 width={800}
+                footer={[
+                    <Button key="close" onClick={() => setIsModalVisible(false)}>
+                        关闭
+                    </Button>
+                ]}
             >
                 <div className={styles.recordContent}>
-                    <p>这里将显示历史提交记录</p>
-                    <p>功能开发中...</p>
+                    {submissionResult ? (
+                        <div className={styles.submissionRecord}>
+                            <h3>最近提交</h3>
+                            <div className={styles.recordItem}>
+                                <div className={styles.recordHeader}>
+                                    <span>提交ID: {submissionId}</span>
+                                    <Tag color={getStatusColor(submissionResult.status)}>
+                                        {getStatusMessage(submissionResult.status)}
+                                    </Tag>
+                                </div>
+                                <div className={styles.recordDetails}>
+                                    <p>提交时间: {new Date(submissionResult.created_at).toLocaleString()}</p>
+                                    {submissionResult.execution_time && (
+                                        <p>执行时间: {submissionResult.execution_time}ms</p>
+                                    )}
+                                    {submissionResult.memory_used && (
+                                        <p>内存使用: {submissionResult.memory_used}KB</p>
+                                    )}
+                                    {submissionResult.status === 'completed' && (
+                                        <Button 
+                                            type="primary" 
+                                            icon={<FileSearchOutlined />}
+                                            onClick={() => {
+                                                setIsModalVisible(false);
+                                                navigate(`/submission/${submissionId}`);
+                                            }}
+                                            style={{ marginTop: 8 }}
+                                        >
+                                            查看详细评测结果
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className={styles.noRecord}>
+                            <p>暂无提交记录</p>
+                            <p>提交代码后将在此显示评测结果</p>
+                        </div>
+                    )}
                 </div>
             </Modal>
         </div>

@@ -10,6 +10,7 @@ import ProblemComponent from './components/ContentComponent/ProblemComponent.jsx
 import QuestionBank from './components/ContentComponent/QuestionBank.jsx';
 import Rank from './components/ContentComponent/Rank.jsx';
 import ProblemPage from './components/ContentComponent/ProblemPage.jsx';
+import SubmissionDetailPage from './components/ContentComponent/SubmissionDetailPage.jsx';
 
 function App() {
     return (
@@ -28,6 +29,8 @@ function App() {
                     <Route path="profile" element={<div>个人中心页面</div>} />
                     {/* 题目详情页，也使用主布局 */}
                     <Route path="questionBank/:id" element={<ProblemPage />} />
+                    {/* 评测结果详情页 */}
+                    <Route path="submission/:submissionId" element={<SubmissionDetailPage />} />
                 </Route>
             </Routes>
         </Router>

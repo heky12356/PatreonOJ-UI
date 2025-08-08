@@ -115,6 +115,36 @@
   border-color: #3d4a3b;
 }
 
+/* 用户头像和下拉菜单样式 */
+.user-avatar-container {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  margin-left: 8px;
+  transition: all 0.3s ease;
+}
+
+.user-avatar-container:hover {
+  background-color: rgba(81, 98, 79, 0.1);
+}
+
+.user-avatar {
+  background-color: #51624f;
+  color: white;
+}
+
+.user-name {
+  margin-left: 8px;
+  font-weight: 500;
+  color: #253B22;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* 认证按钮样式 */
 .auth-button {
   margin-left: 8px;

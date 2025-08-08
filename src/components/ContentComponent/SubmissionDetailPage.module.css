@@ -1,0 +1,103 @@
+/* 评测结果详情页样式 */
+.container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.backButton {
+    margin-right: 16px;
+}
+
+.title {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 100px 0;
+}
+
+.infoCard {
+    margin-bottom: 20px;
+}
+
+.testCasesCard {
+    margin-bottom: 20px;
+}
+
+.progressSection {
+    margin: 20px 0;
+}
+
+.descriptions {
+    margin-top: 20px;
+}
+
+.codeBlock {
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    padding: 8px;
+    max-height: 120px;
+    overflow: auto;
+}
+
+.codeBlock pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.correct {
+    background-color: #f6ffed;
+    border: 1px solid #b7eb8f;
+}
+
+.incorrect {
+    background-color: #fff2f0;
+    border: 1px solid #ffccc7;
+}
+
+.testCaseTable {
+    margin-top: 16px;
+}
+
+.passedRow {
+    background-color: #f6ffed;
+}
+
+.failedRow {
+    background-color: #fff2f0;
+}
+
+.actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    .title {
+        font-size: 20px;
+    }
+    
+    .descriptions {
+        font-size: 14px;
+    }
+}

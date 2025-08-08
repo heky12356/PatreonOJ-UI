@@ -1,6 +1,7 @@
 //pages/Register.jsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { register } from '../api/user';
 import styles from './Register.module.css'; // 导入CSS Modules
 
 const Register = () => {
@@ -10,16 +11,50 @@ const Register = () => {
         email: '',
         password: ''
     });
+    
+    // 注册状态
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    
     // 钩子
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+        // 清除错误信息
+        if (error) setError('');
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('注册数据:', formData);
-        navigate('/login');
+        
+        // 表单验证
+        if (!formData.username || !formData.password) {
+            setError('用户名和密码不能为空');
+            return;
+        }
+        
+        setLoading(true);
+        setError('');
+        
+        try {
+            // 开发环境模拟注册成功，生产环境使用实际API
+            if (process.env.NODE_ENV === 'development') {
+                // 模拟API调用延迟
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                console.log('注册数据:', formData);
+            } else {
+                // 实际注册API调用
+                await register(formData.username, formData.password);
+            }
+            
+            // 注册成功，跳转到登录页
+            navigate('/login');
+        } catch (err) {
+            console.error('注册失败:', err);
+            setError(err.response?.data?.message || '注册失败，请稍后再试');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -79,8 +114,17 @@ const Register = () => {
                             <a href="#">查看条款</a>
                         </label>
                     </div>
+                    
+                    {/* 错误提示 */}
+                    {error && <div className={styles.errorMessage}>{error}</div>}
 
-                    <button type="submit" className={styles.btn}>注册</button> {/* 新增类 */}
+                    <button 
+                        type="submit" 
+                        className={styles.btn}
+                        disabled={loading}
+                    >
+                        {loading ? '注册中...' : '注册'}
+                    </button> {/* 新增类 */}
 
                     <div className={styles.loginRegister}> {/* 新增类 */}
                         <p>
