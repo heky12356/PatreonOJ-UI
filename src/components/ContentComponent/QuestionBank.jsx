@@ -1,10 +1,66 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-// 导入统一的数据源（和 ProblemList 相同）
-import { problems } from '/public/api/problem.js';
 import styles from './QuestionBank.module.css';
 
 const QuestionBank = ({ setCurrentKey }) => {
+    const [questions, setQuestions] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [difficultyFilter, setDifficultyFilter] = useState('');
+
+    // 获取题目列表
+    useEffect(() => {
+        const fetchQuestions = async () => {
+            try {
+                setLoading(true);
+                const response = await fetch('/api/question/');
+                if (!response.ok) {
+                    throw new Error('获取题目列表失败');
+                }
+                const data = await response.json();
+                setQuestions(data.result || []);
+            } catch (err) {
+                setError(err.message);
+                console.error('获取题目列表失败:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchQuestions();
+    }, []);
+
+    // 过滤题目
+    const filteredQuestions = questions.filter(question => {
+        const matchesSearch = question.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            question.question_number.toString().includes(searchTerm);
+        const matchesDifficulty = !difficultyFilter || question.difficulty === difficultyFilter;
+        return matchesSearch && matchesDifficulty;
+    });
+
+    // 解析标签字符串为数组
+    const parseTags = (tagsString) => {
+        if (!tagsString) return [];
+        return tagsString.split(',').map(tag => tag.trim());
+    };
+
+    if (loading) {
+        return (
+            <div className={styles.container}>
+                <div className={styles.loading}>加载中...</div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className={styles.container}>
+                <div className={styles.error}>错误: {error}</div>
+            </div>
+        );
+    }
+
     return (
         <div className={styles.container}>
             <h1 className={styles.title}>题库列表</h1>
@@ -14,10 +70,15 @@ const QuestionBank = ({ setCurrentKey }) => {
                     type="text"
                     placeholder="搜索题目..."
                     className={styles.searchInput}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                 />
-                <select className={styles.filter}>
+                <select 
+                    className={styles.filter}
+                    value={difficultyFilter}
+                    onChange={(e) => setDifficultyFilter(e.target.value)}
+                >
                     <option value="">全部难度</option>
-                    <option value="入门">入门</option>
                     <option value="简单">简单</option>
                     <option value="中等">中等</option>
                     <option value="困难">困难</option>
@@ -32,36 +93,44 @@ const QuestionBank = ({ setCurrentKey }) => {
                         <th>题目名称</th>
                         <th>难度</th>
                         <th>标签</th>
-                        <th>通过率</th>
+                        <th>来源</th>
+                        <th>状态</th>
                     </tr>
                     </thead>
                     <tbody>
-                    {/* 遍历统一数据源中的题目 */}
-                    {problems.map((problem) => (
-                        <tr key={problem.id} className={styles.row}>
-                            <td>{problem.id}</td>
+                    {filteredQuestions.map((question) => (
+                        <tr key={question.id} className={styles.row}>
+                            <td>{question.question_number}</td>
                             <td>
-                                {/* 确保路由路径与ProblemList的导航一致 */}
-                                <Link to={`/questionBank/${problem.id}`} className={styles.link}>
-                                    {problem.title}
+                                <Link to={`/questionBank/${question.question_number}`} className={styles.link}>
+                                    {question.title}
                                 </Link>
                             </td>
                             <td>
-                                <span className={`${styles.difficulty} ${styles[problem.difficulty]}`}>
-                                    {problem.difficulty}
+                                <span className={`${styles.difficulty} ${styles[question.difficulty]}`}>
+                                    {question.difficulty}
                                 </span>
                             </td>
                             <td>
-                                {problem.tags.map((tag) => (
-                                    <span key={tag} className={styles.tag}>{tag}</span>
+                                {parseTags(question.tags).map((tag, index) => (
+                                    <span key={index} className={styles.tag}>{tag}</span>
                                 ))}
                             </td>
-                            <td>{problem.historicalScores}</td>
+                            <td>{question.source}</td>
+                            <td>
+                                <span className={`${styles.status} ${styles[question.status]}`}>
+                                    {question.status === 'published' ? '已发布' : '未发布'}
+                                </span>
+                            </td>
                         </tr>
                     ))}
                     </tbody>
                 </table>
             </div>
+
+            {filteredQuestions.length === 0 && !loading && (
+                <div className={styles.noData}>暂无题目数据</div>
+            )}
         </div>
     );
 };
