@@ -11,6 +11,7 @@ import QuestionBank from './components/ContentComponent/QuestionBank.jsx';
 import Rank from './components/ContentComponent/Rank.jsx';
 import ProblemPage from './components/ContentComponent/ProblemPage.jsx';
 import SubmissionDetailPage from './components/ContentComponent/SubmissionDetailPage.jsx';
+import Profile from './pages/profile/profile.jsx';
 
 function App() {
     return (
@@ -23,10 +24,10 @@ function App() {
                 <Route path="/" element={<MainLayout />}>
                     <Route index element={<HomeComponent />} />
                     <Route path="study" element={<StudyComponent />} />
-                    <Route path="problem" element={<ProblemComponent />} />
+                    {/* <Route path="problem" element={<ProblemComponent />} /> */}
                     <Route path="questionBank" element={<QuestionBank />} />
                     <Route path="rank" element={<Rank />} />
-                    <Route path="profile" element={<div>个人中心页面</div>} />
+                    <Route path="profile" element={<Profile />} />
                     {/* 题目详情页，也使用主布局 */}
                     <Route path="questionBank/:id" element={<ProblemPage />} />
                     {/* 评测结果详情页 */}
