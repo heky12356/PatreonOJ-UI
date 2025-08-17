@@ -2,9 +2,7 @@
 import axios from 'axios';
 
 // API基础URL，可以根据环境配置
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? '/api' 
-  : 'http://localhost:8080/api';
+const API_BASE_URL = '/api';
 
 /**
  * 用户注册
@@ -86,16 +84,62 @@ export const getUserId = () => {
 };
 
 /**
+ * 获取当前用户权限列表
+ * @returns {string[]|null} - 返回权限数组，如果未登录则返回null
+ */
+export const getUserPermissions = () => {
+  const userInfo = getUserInfo();
+  return userInfo ? (userInfo.permissions || []) : null;
+};
+
+/**
+ * 检查用户是否拥有指定权限
+ * @param {string|string[]} permission - 权限名称或权限数组
+ * @returns {boolean} - 返回是否拥有权限
+ */
+export const hasPermission = (permission) => {
+  const userPermissions = getUserPermissions();
+  if (!userPermissions) return false;
+  
+  if (Array.isArray(permission)) {
+    return permission.some(p => userPermissions.includes(p));
+  }
+  return userPermissions.includes(permission);
+};
+
+/**
  * 模拟登录（开发环境使用）
  * @param {string} username - 用户名
+ * @param {string} role - 角色类型（admin, teacher, student, user）
  * @returns {Object} - 返回模拟的用户信息
  */
-export const mockLogin = (username) => {
+export const mockLogin = (username, role = 'user') => {
+  // 根据角色设置权限
+  let permissions = ['user'];
+  
+  switch (role) {
+    case 'admin':
+      permissions = ['admin', 'moderator', 'teacher', 'user'];
+      break;
+    case 'moderator':
+      permissions = ['moderator', 'user'];
+      break;
+    case 'teacher':
+      permissions = ['teacher', 'user'];
+      break;
+    case 'student':
+      permissions = ['student', 'user'];
+      break;
+    default:
+      permissions = ['user'];
+  }
+  
   const mockUserInfo = {
     message: "登录成功",
     user_id: 1,
     username: username || "测试用户",
-    uuid: "2bfd19c5-abf9-40d0-903d-185c80e69fd4"
+    uuid: "2bfd19c5-abf9-40d0-903d-185c80e69fd4",
+    permissions: permissions
   };
   
   saveUserInfo(mockUserInfo);

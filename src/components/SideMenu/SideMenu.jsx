@@ -6,7 +6,8 @@ import {
     QuestionCircleOutlined,
     AppstoreOutlined,
     TrophyOutlined,
-    UserOutlined
+    UserOutlined,
+    PlusOutlined
 } from '@ant-design/icons';
 import './SideMenu.css';
 
@@ -17,18 +18,18 @@ const menuItems = [
         label: '首页',
         path: '/'
     },
-    {
-        key: '2',
-        icon: <BookOutlined />,
-        label: '学习',
-        path: '/study'
-    },
-    {
-        key: '3',
-        icon: <QuestionCircleOutlined />,
-        label: '题目',
-        path: '/problem'
-    },
+    // {
+    //     key: '2',
+    //     icon: <BookOutlined />,
+    //     label: '学习',
+    //     path: '/study'
+    // },
+    // {
+    //     key: '3',
+    //     icon: <QuestionCircleOutlined />,
+    //     label: '题目',
+    //     path: '/problem'
+    // },
     {
         key: '4',
         icon: <AppstoreOutlined />,
@@ -37,15 +38,27 @@ const menuItems = [
     },
     {
         key: '5',
-        icon: <TrophyOutlined />,
-        label: '排行榜',
-        path: '/rank'
+        icon: <PlusOutlined />,
+        label: '添加题目',
+        path: '/addproblem'
     },
+    // {
+    //     key: '6',
+    //     icon: <TrophyOutlined />,
+    //     label: '排行榜',
+    //     path: '/rank'
+    // },
+    // {
+    //     key: '7',
+    //     icon: <UserOutlined />,
+    //     label: '个人中心',
+    //     path: '/profile'
+    // },
     {
-        key: '6',
-        icon: <UserOutlined />,
-        label: '个人中心',
-        path: '/profile'
+        key: '8',
+        icon: <PlusOutlined />,
+        label: '更新题目',
+        path: '/updateproblem'
     },
 ];
 

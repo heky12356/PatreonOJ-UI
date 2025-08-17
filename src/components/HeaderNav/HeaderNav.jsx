@@ -52,21 +52,21 @@ const HeaderNav = () => {
           <NavLink className="nav-link" to="/" end>
             <HomeOutlined className="me-1" />首页
           </NavLink>
-          <NavLink className="nav-link" to="/study">
+          {/* <NavLink className="nav-link" to="/study">
             <BookOutlined className="me-1" />学习
-          </NavLink>
-          <NavLink className="nav-link" to="/problem">
+          </NavLink> */}
+          {/* <NavLink className="nav-link" to="/problem">
             <QuestionCircleOutlined className="me-1" />题目
-          </NavLink>
+          </NavLink> */}
           <NavLink className="nav-link" to="/questionBank">
             <AppstoreOutlined className="me-1" />题库
           </NavLink>
-          <NavLink className="nav-link" to="/rank">
+          {/* <NavLink className="nav-link" to="/rank">
             <TrophyOutlined className="me-1" />排行榜
-          </NavLink>
+          </NavLink> */}
         </div>
         
-        <div className="navbar-search">
+        {/* <div className="navbar-search">
           <Search
             placeholder="搜索题目..."
             onSearch={onSearch}
@@ -74,14 +74,14 @@ const HeaderNav = () => {
             style={{ width: '280px' }}
             size="middle"
           />
-        </div>
+        </div> */}
         
         <div className="navbar-nav ms-auto d-flex flex-row align-items-center">
           {userInfo ? (
             <>
-              <NavLink className="nav-link" to="/profile">
+              {/* <NavLink className="nav-link" to="/profile">
                 <UserOutlined className="me-1" />个人中心
-              </NavLink>
+              </NavLink> */}
               <Dropdown
                 menu={{
                   items: [
@@ -92,13 +92,13 @@ const HeaderNav = () => {
                         <NavLink to="/profile">个人资料</NavLink>
                       ),
                     },
-                    {
-                      key: '2',
-                      icon: <SettingOutlined />,
-                      label: (
-                        <NavLink to="/settings">设置</NavLink>
-                      ),
-                    },
+                    // {
+                    //   key: '2',
+                    //   icon: <SettingOutlined />,
+                    //   label: (
+                    //     <NavLink to="/settings">设置</NavLink>
+                    //   ),
+                    // },
                     {
                       type: 'divider',
                     },

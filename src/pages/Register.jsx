@@ -37,15 +37,8 @@ const Register = () => {
         setError('');
         
         try {
-            // 开发环境模拟注册成功，生产环境使用实际API
-            if (process.env.NODE_ENV === 'development') {
-                // 模拟API调用延迟
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                console.log('注册数据:', formData);
-            } else {
-                // 实际注册API调用
-                await register(formData.username, formData.password);
-            }
+            // 实际注册API调用
+            await register(formData.username, formData.password);
             
             // 注册成功，跳转到登录页
             navigate('/login');

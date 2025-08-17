@@ -85,9 +85,9 @@ const HomeComponent = () => {
         {/* 分隔轮播和下面内容 */}
         <div><Frame /></div>
 
-        <div style={{ display: "flex", gap: "24px" }}>
+        {/* <div style={{ display: "flex", gap: "24px"}}> */}
             {/* 今日 coding 统计 */}
-            <div
+            {/* <div
                 style={{
                     flex: 1,
                     background: "#e5e5e5",
@@ -124,10 +124,10 @@ const HomeComponent = () => {
                         <span>66</span>
                     </div>
                 </div>
-            </div>
+            </div> */}
 
             {/* 近期比赛 */}
-            <div
+            {/* <div
                 style={{
                     flex: 1,
                     background: "#dedcdc",
@@ -155,8 +155,8 @@ const HomeComponent = () => {
                         距 CSP-J/S 2025 第二轮还剩{daysUntilSecond}天
                     </div>
                 </div>
-            </div>
-        </div>
+            </div> */}
+        {/* </div> */}
     </Card>
     );
 };
