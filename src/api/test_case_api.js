@@ -26,3 +26,13 @@ export const addTestCase = async ({input, expected_output, problem_number}) => {
         throw error;
     }
 }
+
+export const apideleteTestCase = async ({id}) => {
+    try {
+        const response = await axios.delete(`${baseUrl}/testcase/${id}`)
+        return response.data
+    } catch (error) {
+        console.error('删除测试用例失败:', error);
+        throw error;
+    }
+}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import {useParams} from 'react-router-dom'
-import { getTestCasesByProblemNumber, addTestCase } from "../../api/test_case_api"
+import { getTestCasesByProblemNumber, addTestCase, apideleteTestCase } from "../../api/test_case_api"
 
 const AddTestPage = ({problem_number, setIsAdd}) => {
 
@@ -68,18 +68,29 @@ const AddTestPage = ({problem_number, setIsAdd}) => {
 export default function ManageTestCasePage() {
     const {problem_number} = useParams()
     const [testCases, setTestCases] = useState({})
+    const [testCasesDetail, setTestCasesDetail] = useState([])
     const [isadd, setIsAdd] = useState(false)
+    const [isdelete, setIsDelete] = useState('')
 
     const handleAddClick = () => {
         setIsAdd(true)
     }
 
+    const deleteTestCase = async (id) => {
+        try {
+            await apideleteTestCase({id : parseInt(id)})
+            setIsDelete(id)
+        } catch (error) {
+            console.error('删除测试用例失败:', error)
+        }
+    }
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const data = await getTestCasesByProblemNumber(problem_number)
                 setTestCases(data)
+                setTestCasesDetail(data.result)
             } catch (error) {
                 console.error('获取测试用例失败:', error)
             }
@@ -88,12 +99,22 @@ export default function ManageTestCasePage() {
         if (problem_number) {
             fetchData()
         }
-    },[problem_number, isadd])
+    },[problem_number, isadd, isdelete])
 
     return (
         <>
             <div>当前题目： {problem_number}</div>
             <div>测试用例数量： {testCases.count}</div>
+
+            <div>测试用例列表：</div>
+            {testCasesDetail?.map((testCase) => (
+                <div key={testCase.id}>
+                    <div>input: {testCase.Input}</div>
+                    <div>expected_output: {testCase.ExpectedOutput}</div>
+                    <button onClick={() => deleteTestCase(testCase.ID)}>删除</button>
+                </div>
+            ))}
+
             <button onClick={handleAddClick}>点击添加测试用例</button>
             {isadd && <AddTestPage problem_number={problem_number} setIsAdd={setIsAdd} />}
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Tag, Tabs, message } from 'antd';
 import { ArrowLeftOutlined, CodeOutlined, FileTextOutlined } from '@ant-design/icons';
-import CodeEditor from './CodeEditor';
+import CodeEditor from '../../components/codeEditor/CodeEditor';
 import styles from "./ProblemPage.module.css";
 
 function ProblemPage() {
@@ -82,15 +82,9 @@ function ProblemPage() {
         message.info('已切换到代码编辑器');
     };
 
-    const goToIde = () => {
-        const ideProjectBaseUrl = 'http://localhost:5174';
-        const ideDetailPath = `/problem/${question.id}`;
-        window.location.href = `${ideProjectBaseUrl}${ideDetailPath}`;
-    };
-
     // 退出到题库页面
     const handleExit = () => {
-        navigate('/questionBank');
+        navigate('/problem');
     };
 
     // 解析标签字符串为数组
@@ -144,10 +138,10 @@ function ProblemPage() {
                             <ArrowLeftOutlined /> 退出到题库
                         </button>
 
-                        <button className={styles['custom-button']} onClick={handleAddToList}>加入题单</button>
+                        {/* <button className={styles['custom-button']} onClick={handleAddToList}>加入题单</button> */}
                         <button className={styles['custom-button']} onClick={handleCopyProblem}>复制题目</button>
-                        <button className={styles['custom-button']}>查看题解</button>
-                        <button className={styles['custom-button']}>提交记录</button>
+                        {/* <button className={styles['custom-button']}>查看题解</button> */}
+                        {/* <button className={styles['custom-button']}>提交记录</button> */}
                         <button
                             type="primary"
                             className={styles['ide-button']}
@@ -168,10 +162,10 @@ function ProblemPage() {
                     {
                         key: 'description',
                         label: (
-                            <span>
+                            <div style={{marginLeft: '10px'}}>
                                 <FileTextOutlined />
                                 题目描述
-                            </span>
+                            </div>
                         ),
                         children: (
                             <div className={styles['tab-content']}>

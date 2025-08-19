@@ -27,11 +27,12 @@ export default function Profile() {
 
     return (
         <>
-            <h2>已解决题目</h2>
+            <h2 style={{marginTop: '3vh'}}>已解决题目</h2>
+
             <ListGroup>
                 {problemList.map((item, i) => (
                     <ListGroup.Item key={i}>
-                        <Link to={`/questionBank/${item}`}>{item}</Link>
+                        <Link to={`/problem/${item}`}>{item}</Link>
                     </ListGroup.Item>
                 ))}
             </ListGroup>

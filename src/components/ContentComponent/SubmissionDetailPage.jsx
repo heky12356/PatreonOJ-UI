@@ -107,39 +107,6 @@ function SubmissionDetailPage() {
             )
         },
         {
-            title: '输入',
-            dataIndex: 'input',
-            key: 'input',
-            width: 200,
-            render: (input) => (
-                <div className={styles.codeBlock}>
-                    <pre>{input || '无输入'}</pre>
-                </div>
-            )
-        },
-        {
-            title: '期望输出',
-            dataIndex: 'expected_output',
-            key: 'expected_output',
-            width: 200,
-            render: (output) => (
-                <div className={styles.codeBlock}>
-                    <pre>{output}</pre>
-                </div>
-            )
-        },
-        {
-            title: '实际输出',
-            dataIndex: 'actual_output',
-            key: 'actual_output',
-            width: 200,
-            render: (output, record) => (
-                <div className={`${styles.codeBlock} ${record.is_correct ? styles.correct : styles.incorrect}`}>
-                    <pre>{output}</pre>
-                </div>
-            )
-        },
-        {
             title: '运行时间',
             dataIndex: 'runtime',
             key: 'runtime',

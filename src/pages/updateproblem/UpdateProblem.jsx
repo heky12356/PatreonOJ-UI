@@ -45,10 +45,11 @@ const UpdateProblem = () => {
                 
                 // 更新表单数据
                 if (response.data) {
-                    const problem = response.data;
+                    const problem = response.data.data;
+                    // console.log(problem);
                     setFormData({
                         title: problem.title || '',
-                        description: problem.description || '',
+                        description: problem.content || '',
                         difficulty: problem.difficulty || 'easy',
                         input_format: problem.input_format || '',
                         output_format: problem.output_format || '',

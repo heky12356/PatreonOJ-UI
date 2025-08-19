@@ -94,7 +94,6 @@ const QuestionBank = ({ setCurrentKey }) => {
                         <th>难度</th>
                         <th>标签</th>
                         <th>来源</th>
-                        <th>状态</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -102,7 +101,7 @@ const QuestionBank = ({ setCurrentKey }) => {
                         <tr key={question.id} className={styles.row}>
                             <td>{question.question_number}</td>
                             <td>
-                                <Link to={`/questionBank/${question.question_number}`} className={styles.link}>
+                                <Link to={`/problem/${question.question_number}`} className={styles.link}>
                                     {question.title}
                                 </Link>
                             </td>
@@ -117,11 +116,6 @@ const QuestionBank = ({ setCurrentKey }) => {
                                 ))}
                             </td>
                             <td>{question.source}</td>
-                            <td>
-                                <span className={`${styles.status} ${styles[question.status]}`}>
-                                    {question.status === 'published' ? '已发布' : '未发布'}
-                                </span>
-                            </td>
                         </tr>
                     ))}
                     </tbody>
