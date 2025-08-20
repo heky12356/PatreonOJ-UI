@@ -40,13 +40,13 @@ const Login = () => {
       saveUserInfo(response);
 
       // 登录成功提示
-      console.log("登录成功:", response);
+      // console.log("登录成功:", response);
 
       // 跳转到重定向首页
       window.location.href = "/";
     } catch (err) {
-      console.error("登录失败:", err);
-      setError(err.response?.data?.message || "登录失败，请检查用户名和密码");
+      // console.error("登录失败:", err);
+      setError(err.response?.data?.error || "登录失败，请检查用户名和密码");
     } finally {
       setLoading(false);
     }
@@ -66,6 +66,7 @@ const Login = () => {
                 <Form.Label>Password</Form.Label>
                 <Form.Control onChange={handlePasswordChange} type="password" placeholder="Password" />
               </Form.Group>
+              {error && <p style={{ color: "red" }}>{error}</p>}
               <Button variant="primary" type="submit">
                 Submit
               </Button>

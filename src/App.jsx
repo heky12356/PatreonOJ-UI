@@ -16,6 +16,7 @@ import Updatebase from "./pages/updatebase/update.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import ManageTestCasePage from "./pages/manage_test_case_page/index.jsx";
 import Home from "./pages/home/index.jsx";
+import Admin from "./pages/admin/index.jsx";
 
 function App() {
   return (
@@ -65,6 +66,14 @@ function App() {
             element={
               <ProtectedRoute requiredPermissions={["admin", "moderator"]}>
                 <ManageTestCasePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="admin"
+            element={
+              <ProtectedRoute requiredPermissions={["admin"]}>
+                <Admin />
               </ProtectedRoute>
             }
           />

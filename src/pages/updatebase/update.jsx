@@ -1,8 +1,8 @@
-import { render } from 'react-dom';
 import { Outlet } from 'react-router-dom';
 import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { getUserId, isLoggedIn } from '../../api/user.js';
+import { Container, Button } from 'react-bootstrap';
 
 
 export default function Updatebase () {
@@ -48,20 +48,24 @@ export default function Updatebase () {
     }, [params]);
     
     const layout = (
-    <div>
+    <Container style={style.container}>
         <h2>更新题目</h2>
         {
             problem.map((item, i) => (
-                <div key={i}>
-                    <h4>题目{i+1}</h4>
+                <div key={i} style={style.problemBox}>
+                    <div style={style.problemTitle}>Problem {item.question_number}</div>
                     <p>{item.content}</p>
-                    <Link to={`/updateproblem/${item.question_number}`}>更新</Link>
-                    <button onClick={() => handledelete(item.question_number)}>删除</button>
+                    <Link to={`/updateproblem/${item.question_number}`} style={{marginRight:'10px'}}>更新</Link>
                     <Link to={`/manageTestCase/${item.question_number}`}>管理测试用例</Link>
+                    <button style={style.btn} onClick={() => handledelete(item.question_number)} >
+                        <div style={style.btnText}>
+                            删除
+                        </div>
+                    </button>
                 </div>
             ))
         }
-    </div>
+    </Container>
     );
     
     return(
@@ -70,4 +74,32 @@ export default function Updatebase () {
             {isonly ? <Outlet /> : layout}
         </div>
     )
+}
+
+const style = {
+    container: {
+        marginTop: "3vh",
+    },
+    problemBox: {
+        border: "1px solid #000",
+        borderRadius: "10px",
+        marginBottom: "2vh",
+        padding: '10px',
+    },
+    btn: {
+        marginLeft: '10px',
+        height: '3vh',
+        width: '3vw',
+        borderRadius: '10px',
+        backgroundColor: 'red',
+        border: 'none',
+    },
+    btnText: {
+        color: 'white',
+        fontSize: '13px',
+    },
+    problemTitle: {
+        fontSize: '18px',
+        fontWeight: 'bold',
+    }
 }

@@ -4,6 +4,15 @@ import { getUserInfo, clearUserInfo } from "../../api/user";
 
 
 const UserPanel = ({ userInfo, setIsLogin, setUserInfo }) => {
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // 检查用户是否为管理员
+  useEffect(() => {
+    if (userInfo?.permissions?.includes("admin")) {
+      setIsAdmin(true);
+    }
+  }, [userInfo]);
+
   // 退出登录
   const handleLogout = () => {
     clearUserInfo();
@@ -16,6 +25,9 @@ const UserPanel = ({ userInfo, setIsLogin, setUserInfo }) => {
     <NavDropdown title={userInfo?.username} id="basic-nav-dropdown">
       <NavDropdown.Item href="/profile">Profile</NavDropdown.Item>
       {/* <NavDropdown.Item href="/rank">Rank</NavDropdown.Item> */}
+      {isAdmin && (
+        <NavDropdown.Item href="/admin">Admin</NavDropdown.Item>
+      )}
       <NavDropdown.Divider />
       <NavDropdown.Item href="#" onClick={handleLogout}>
         Logout

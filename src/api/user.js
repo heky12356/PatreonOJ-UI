@@ -18,7 +18,7 @@ export const register = async (username, password) => {
     });
     return response.data;
   } catch (error) {
-    console.error('注册失败:', error);
+    // console.error('注册失败:', error);
     throw error;
   }
 };
@@ -37,7 +37,7 @@ export const login = async (username, password) => {
     });
     return response.data;
   } catch (error) {
-    console.error('登录失败:', error);
+    // console.error('登录失败:', error);
     throw error;
   }
 };

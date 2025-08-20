@@ -48,7 +48,7 @@ const Register = () => {
       // 注册成功，跳转到登录页
       window.location.href = "/login";
     } catch (err) {
-      console.error("注册失败:", err);
+      // console.error("注册失败:", err);
       setError(err.response?.data?.error || "注册失败，请稍后再试");
     } finally {
       setLoading(false);
