@@ -1,5 +1,6 @@
 //app里只放路由和配置
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { ConfigProvider } from 'antd';
 import MainLayout from "./MainLayout.jsx";
 import Login from "./pages/login/Login.jsx";
 import Register from "./pages/register/Register.jsx";
@@ -18,9 +19,20 @@ import ManageTestCasePage from "./pages/manage_test_case_page/index.jsx";
 import Home from "./pages/home/index.jsx";
 import Admin from "./pages/admin/index.jsx";
 
+// Ant Design 白色主题配置
+const whiteTheme = {
+  token: {
+    colorBgBase: '#ffffff',
+    colorBgContainer: '#ffffff', 
+    colorBgLayout: '#ffffff',
+    colorBgElevated: '#ffffff'
+  }
+};
+
 function App() {
   return (
-    <Router>
+    <ConfigProvider theme={whiteTheme}>
+      <Router>
       <Routes>
         {/* 使用主布局的所有页面 */}
         <Route path="/" element={<MainLayout />}>
@@ -79,7 +91,8 @@ function App() {
           />
         </Route>
       </Routes>
-    </Router>
+      </Router>
+    </ConfigProvider>
   );
 }
 

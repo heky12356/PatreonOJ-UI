@@ -49,6 +49,7 @@ function SubmissionDetailPage() {
             try {
                 setLoading(true);
                 const result = await getSubmissionResult(submissionId);
+                // console.log('获取评测结果成功:', result);
                 setSubmissionData(result);
             } catch (err) {
                 console.error('获取评测结果失败:', err);

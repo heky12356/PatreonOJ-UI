@@ -1,3 +1,18 @@
+/* 全局白色背景设置 */
+body, html, #root {
+  background-color: white !important;
+  margin: 0;
+  padding: 0;
+}
+
+/* 确保所有布局容器也是白色背景 */
+.ant-layout,
+.ant-layout-content,
+/* .container, */
+.container-fluid {
+  background-color: white !important;
+}
+
 .body {
-  /* background-color: white; */
+  background-color: white !important;
 }

@@ -51,8 +51,21 @@ export default function HeaderNav() {
 
   return (
     <Navbar expand="lg" className="bg-body-tertiary">
-      <Container>
-        <Navbar.Brand href="/">Tgu-OJ</Navbar.Brand>
+      <Container >
+        <Navbar.Brand href="/">
+          <img
+            alt=""
+            src="../../public/images/tgu.jpg"
+            width="35"
+            height="35"
+            className="d-inline-block align-top"
+            style={{ 
+              borderRadius: "100",
+              marginRight: "10px"
+            }}
+          />
+          Tgu-OJ
+        </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">

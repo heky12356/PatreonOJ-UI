@@ -6,9 +6,13 @@ import './main.css'
 
 const MainLayout = () => {
   return (
-    <div>
+    <div style={{ 
+      backgroundColor: 'white', 
+      minHeight: '100vh',
+      width: '100%'
+    }}>
       <HeaderNav />
-      <Container>
+      <Container style={{ backgroundColor: 'white' }}>
         <Outlet />
       </Container>   
     </div>

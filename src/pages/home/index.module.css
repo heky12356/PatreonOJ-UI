@@ -1,0 +1,127 @@
+.home {
+    background-color: white;
+    min-height: 80vh;
+    padding: 2rem 0;
+}
+
+.title {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.subtitle {
+    font-size: 1.5rem;
+    font-weight: 300;
+    color: #666;
+    margin-bottom: 1rem;
+}
+
+.description {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #666;
+    margin-bottom: 2rem;
+}
+
+.buttonGroup {
+    margin-bottom: 3rem;
+}
+
+.featureCard {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    height: 100%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.featureCard:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(81, 98, 79, 0.15);
+    border-color: #51624f;
+}
+
+.featureIcon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.featureCard .card-title {
+    color: #51624f;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.featureCard .card-text {
+    color: #666;
+    line-height: 1.5;
+}
+
+.statCard {
+    padding: 1.5rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    transition: all 0.3s ease;
+}
+
+.statCard:hover {
+    background-color: #c6d1bd;
+    transform: translateY(-2px);
+}
+
+.statNumber {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #51624f;
+    margin-bottom: 0.5rem;
+}
+
+.statLabel {
+    font-size: 1rem;
+    color: #666;
+    margin: 0;
+    font-weight: 500;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .title {
+        font-size: 2.5rem;
+    }
+    
+    .subtitle {
+        font-size: 1.2rem;
+    }
+    
+    .description {
+        font-size: 1rem;
+    }
+    
+    .statNumber {
+        font-size: 2rem;
+    }
+    
+    .buttonGroup .btn {
+        margin-bottom: 0.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .home {
+        padding: 1rem 0;
+    }
+    
+    .title {
+        font-size: 2rem;
+    }
+    
+    .buttonGroup .btn {
+        display: block;
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+}
