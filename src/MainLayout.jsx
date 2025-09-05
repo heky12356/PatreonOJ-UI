@@ -12,7 +12,7 @@ const MainLayout = () => {
       width: '100%'
     }}>
       <HeaderNav />
-      <Container style={{ backgroundColor: 'white' }}>
+      <Container fluid style={{ backgroundColor: 'white', width: '100%' }}>
         <Outlet />
       </Container>   
     </div>

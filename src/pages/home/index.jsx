@@ -6,7 +6,7 @@ export default function Home() {
         <div className={styles.home}>
             <Container>
                 {/* 欢迎区域 */}
-                <Row className="justify-content-center text-center py-5">
+                <Row className={`justify-content-center text-center py-5 ${styles.welcome}`}>
                     <Col lg={8}>
                         <h1 className={styles.title}>欢迎来到 TGU-OJ</h1>
                         <p className={styles.subtitle}>在线编程练习平台</p>
