@@ -1,9 +1,15 @@
 .home {
-    background-color: white;
+    /* background-color: white; */
     /* background-color: red; */
+    display: flex;
     width: 100%;
-    min-height: 80vh;
-    padding: 2rem 0;
+    min-height: 93vh;
+    /* padding: 2rem 0; */
+    background-image: url('../../public/images/bg.png');
+    background-size: cover;
+    background-position: center;
+    justify-content: center;
+    align-items: center;
 }
 
 .title {
@@ -14,6 +20,7 @@
 }
 
 .welcome {
+    display: flex;
     /* padding-top: 20rem; */
     /* background-color: #c6d1bd; */
     justify-content: center;
