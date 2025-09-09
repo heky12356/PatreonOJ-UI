@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ListGroup from 'react-bootstrap/ListGroup';
 import { getUserId, isLoggedIn } from '../../api/user.js';
 import { Link } from 'react-router-dom';
+import { Container } from 'react-bootstrap';
 
 export default function Profile() {
     const [problemList, setProblemList] = useState([]);
@@ -26,7 +27,7 @@ export default function Profile() {
 
 
     return (
-        <>
+        <Container>
             <h2 style={{marginTop: '3vh'}}>已解决题目</h2>
 
             <ListGroup>
@@ -36,6 +37,6 @@ export default function Profile() {
                     </ListGroup.Item>
                 ))}
             </ListGroup>
-        </>
+        </Container>
     )
 }
