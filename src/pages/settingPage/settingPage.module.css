@@ -1,0 +1,23 @@
+.markdownPreview {
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 2px;
+}
+
+.settingPage {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: 80vh;
+}
+
+.buttonGroup {
+  width: 20%;
+}
+
+textarea {
+  border-radius: 2px;
+  border: 1px solid #ced4da;
+  min-height: 100px;
+  width: 100%;
+}

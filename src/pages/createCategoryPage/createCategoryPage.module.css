@@ -1,0 +1,57 @@
+.container {
+  margin: 0 auto;
+  margin-top: 3vh;
+  max-width: 60vw;
+}
+
+.category-header {
+  margin-bottom: 20px;
+}
+
+.category-container {
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
+  max-width: 40vw;
+  gap: 10px;
+}
+
+.category-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.custom-button {
+  background-color: #4d5d4b;
+  line-height: 100%;
+  border: none;
+  padding: 10px 5px;
+  border-radius: 5px;
+  color: white;
+  font-weight: 600;
+  width: 20%;
+  text-align: center;
+}
+
+.custom-button:hover {
+  background-color: #3a4538;
+}
+
+.parentSelect {
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  width: 20%;
+  height: 30px;
+}
+
+.error-message {
+  color: red;
+  font-size: 0.8em;
+}

@@ -1,28 +1,25 @@
 import { Link } from "react-router-dom";
 import { Container, Row, Col } from "react-bootstrap";
+import AdminNav from "../../components/adminNav/adminNav";
+import { Outlet } from 'react-router-dom';
 
 export default function Admin() {
+  const path = window.location.pathname;
+  if (path == '/admin') {
+    return (
+      <>
+        <AdminNav />
+        <Container style={style.container}>
+         hello world
+        </Container>
+      </>
+    )
+  }
+
   return (
     <>
-      <Container style={style.container}>
-        <Row>
-          <Row>
-            <Col md={12}>
-              <h3>Admin</h3>
-            </Col>
-          </Row>
-          <Row>
-            <Col md={12}>
-              <Link to="/addproblem">add problem</Link>
-            </Col>
-          </Row>
-          <Row>
-            <Col md={12}>
-              <Link to="/updateproblem">message problem</Link>
-            </Col>
-          </Row>
-        </Row>
-      </Container>
+      <AdminNav />
+      <Outlet />
     </>
   );
 }

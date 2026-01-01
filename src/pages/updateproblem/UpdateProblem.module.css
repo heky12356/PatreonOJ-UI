@@ -1,93 +1,96 @@
-/*pages/updateproblem/UpdateProblem.module.css */
+/*pages/addproblem/AddProblem.module.css */
 .container {
-    padding: 30px;
-    background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    margin: 0 auto;
-    margin-top: 3vh;
-    max-width: 70vw;
+  margin: 0 auto;
+  margin-top: 3vh;
+  max-width: 80rem;
+}
+
+.left {
+  border: 1px solid #ccc;
+  padding: 30px;
+}
+
+.right {
+  border: 1px solid #ccc;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.rightContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
 }
 
 .title {
-    font-size: 1.8em;
-    color: #4d5d4b;
-    text-align: center;
-    margin-bottom: 30px;
+  font-size: 1.8em;
+  color: #4d5d4b;
+  text-align: center;
+  margin-bottom: 30px;
 }
 
 .formGroup {
-    margin-bottom: 20px;
+  margin-bottom: 20px;
 }
 
 .formLabel {
-    font-weight: 600;
-    margin-bottom: 8px;
+  font-weight: 600;
+  margin-bottom: 8px;
 }
 
 .formControl {
-    border: 1px solid #ced4da;
-    border-radius: 4px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
 }
 
 .formControl:focus {
-    border-color: #aebda1;
-    box-shadow: 0 0 0 0.2rem rgba(174, 189, 161, 0.25);
+  border-color: #aebda1;
+  box-shadow: 0 0 0 0.2rem rgba(174, 189, 161, 0.25);
 }
 
 .textArea {
-    min-height: 100px;
+  min-height: 200px;
 }
 
 .submitBtn {
-    background-color: #4d5d4b;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    color: white;
-    font-weight: 600;
-    margin-top: 20px;
+  background-color: #4d5d4b;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  color: white;
+  font-weight: 600;
+  margin-top: 20px;
 }
 
 .submitBtn:hover {
-    background-color: #3a463a;
+  background-color: #3a463a;
 }
 
 .requiredField::after {
-    content: ' *';
-    color: red;
+  content: ' *';
+  color: red;
 }
 
 .difficultySelect {
-    width: 100%;
-    padding: 8px;
-    border-radius: 4px;
-    border: 1px solid #ced4da;
+  width: 100%;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ced4da;
 }
 
 .tagsInput {
-    width: 100%;
+  width: 100%;
 }
 
 .errorMessage {
-    color: #dc3545;
-    font-size: 0.875em;
-    margin-top: 5px;
+  color: #dc3545;
+  font-size: 0.875em;
+  margin-top: 5px;
 }
 
 .successMessage {
-    color: #28a745;
-    font-size: 0.875em;
-    margin-top: 5px;
-}
-
-.loadingMessage {
-    color: #007bff;
-    font-size: 0.875em;
-    margin-top: 5px;
-    text-align: center;
-}
-
-.problemIdInput {
-    margin-bottom: 20px;
+  color: #28a745;
+  font-size: 0.875em;
+  margin-top: 5px;
 }

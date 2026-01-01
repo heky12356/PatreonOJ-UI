@@ -1,0 +1,29 @@
+.container {
+    width: 100%;
+    border: 1px, solid, #999;
+
+    display: flex;
+    flex-direction: row;
+}
+
+.focusLittleButton,
+.littleButton {
+    --l : 1.5rem;
+    margin: 10px;
+    border: 1px solid #888;
+    height: var(--l);
+    width: var(--l);
+    cursor: pointer;
+    display: flex;
+    position: relative;
+}
+
+.focusLittleButton div {
+    color: #CD5C5C;
+}
+
+.focusLittleButton div,
+.littleButton div {
+    margin: auto;
+}
+

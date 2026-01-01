@@ -3,103 +3,146 @@ import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { getUserId, isLoggedIn } from '../../api/user.js';
 import { Container, Button } from 'react-bootstrap';
+import { getProblem as getProblemApi } from '../../api/getproblem.js';
+import FootNav from '../../components/footNav/footNav.jsx';
+import { Modal } from 'react-bootstrap';
+import { deleteProblem } from '../../api/deleteProblem.js';
+import styles from './update.module.css';
 
+export default function Updatebase() {
+  const params = useParams();
+  const [isonly, setIsonly] = useState(false);
+  const [problem, setProblem] = useState([]);
+  const [pageIdx, setPageIdx] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
+  const [totalCnt, setTotalCnt] = useState(0);
+  const [show, setShow] = useState(false); // 确认删除弹窗显示
+  const [deleteSuccessShow, setDeleteSuccessShow] = useState(false); // 删除成功弹窗显示
 
-export default function Updatebase () {
-    const params = useParams();
-    const [isonly, setIsonly] = useState(false);    
-    const [problem, setProblem] = useState([]);
+  const [deleteId, setDeleteId] = useState('');
 
-    const uuid = getUserId();
+  const uuid = getUserId();
 
-    const getProblem = async () => {
-        const response = await fetch(`/api/question/`);
-        if (!response.ok) {
-            throw new Error('获取题目失败');
-        }
-        const data = await response.json();
-        setProblem(data.result);
+  // 处理弹窗显示和隐藏
+  const handleClose = () => setShow(false);
+  const handleShow = (id) => {
+    setDeleteId(id);
+    setShow(true);
+  };
+
+  // 删除成功弹窗显示和隐藏
+  const handleDeleteSuccessClose = () => setDeleteSuccessShow(false);
+  const handleDeleteSuccessShow = () => setDeleteSuccessShow(true);
+
+  const getProblem = async () => {
+    const data = await getProblemApi({
+      pageIdx: pageIdx,
+      //   pageSize: pageSize,
+    });
+    setProblem(data.result || []);
+    setPageIdx(data.pageIdx || 1);
+    setPageSize(data.pageSize || 50);
+    setTotalCnt(data.totalCnt || 0);
+  };
+
+  const handledelete = async (id) => {
+    const response = await deleteProblem(id, uuid);
+    // console.log(response);
+    if (response.code === 200) {
+      setPageIdx(1);
+      handleClose();
+      handleDeleteSuccessShow();
     }
+  };
 
-    const handledelete = async (id) => {
-        const response = await fetch(`/api/question/delete`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                number: id,
-                uuid: uuid,
-            })
-        });
-        if (!response.ok) {
-            throw new Error('删除题目失败');
-        }
-        getProblem();
+  useEffect(() => {
+    if (Object.keys(params).length > 0) {
+      setIsonly(true);
     }
+    getProblem();
+  }, [params]);
 
+  useEffect(() => {
+    getProblem({
+      pageIdx: pageIdx,
+    });
+  }, [pageIdx]);
 
+  const deleteModal = (
+    <Modal show={show} onHide={handleClose}>
+      <Modal.Header closeButton>
+        <Modal.Title>提醒</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>确认删除吗？</Modal.Body>
+      <Modal.Footer>
+        <Button variant="secondary" onClick={handleClose}>
+          取消
+        </Button>
+        <Button variant="primary" onClick={() => handledelete(deleteId)}>
+          确认
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  );
 
-    useEffect(() => {
-        if (Object.keys(params).length > 0) {
-            setIsonly(true);
-        }
-        getProblem();
-    }, [params]);
-    
-    const layout = (
-    <Container style={style.container}>
-        <h2>更新题目</h2>
-        {
-            problem.map((item, i) => (
-                <div key={i} style={style.problemBox}>
-                    <div style={style.problemTitle}>Problem {item.question_number}</div>
-                    <p>{item.content}</p>
-                    <Link to={`/updateproblem/${item.question_number}`} style={{marginRight:'10px'}}>更新</Link>
-                    <Link to={`/manageTestCase/${item.question_number}`}>管理测试用例</Link>
-                    <button style={style.btn} onClick={() => handledelete(item.question_number)} >
-                        <div style={style.btnText}>
-                            删除
-                        </div>
-                    </button>
-                </div>
-            ))
-        }
-    </Container>
-    );
-    
-    return(
-        <div>
-            {/* 渲染子路由内容 */}
-            {isonly ? <Outlet /> : layout}
+  const deleteSuccessModal = (
+    <Modal show={deleteSuccessShow} onHide={handleDeleteSuccessClose}>
+      <Modal.Header closeButton>
+        <Modal.Title>提醒</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>删除成功</Modal.Body>
+      <Modal.Footer>
+        <Button variant="primary" onClick={handleDeleteSuccessClose}>
+          确认
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  );
+
+  const layout = (
+    <Container className={styles.container}>
+      <h2>更新题目</h2>
+      {problem.map((item, i) => (
+        <div key={i} className={styles.problemBox}>
+          <div className={styles.problemTitle}>
+            Problem {item.question_number}
+          </div>
+          <p>{item.content}</p>
+          <a
+            href={`/admin/updateproblem/${item.question_number}`}
+            style={{ marginRight: '10px' }}
+          >
+            更新
+          </a>
+          <a
+            href={`/admin/manageTestCase/${item.question_number}`}
+            style={{ marginRight: '10px' }}
+          >
+            管理测试用例
+          </a>
+          <button
+            className={styles.btn}
+            // onClick={() => handledelete(item.question_number)}
+            onClick={() => handleShow(item.question_number)}
+          >
+            <div className={styles.btnText}>删除</div>
+          </button>
         </div>
-    )
-}
+      ))}
+      <FootNav
+        pageIdx={pageIdx}
+        setIdx={setPageIdx}
+        pageCnt={Math.ceil(totalCnt / pageSize)}
+      />
+      {deleteModal}
+      {deleteSuccessModal}
+    </Container>
+  );
 
-const style = {
-    container: {
-        marginTop: "3vh",
-    },
-    problemBox: {
-        border: "1px solid #000",
-        borderRadius: "10px",
-        marginBottom: "2vh",
-        padding: '10px',
-    },
-    btn: {
-        marginLeft: '10px',
-        height: '3vh',
-        width: '3vw',
-        borderRadius: '10px',
-        backgroundColor: 'red',
-        border: 'none',
-    },
-    btnText: {
-        color: 'white',
-        fontSize: '13px',
-    },
-    problemTitle: {
-        fontSize: '18px',
-        fontWeight: 'bold',
-    }
+  return (
+    <div>
+      {/* 渲染子路由内容 */}
+      {isonly ? <Outlet /> : layout}
+    </div>
+  );
 }

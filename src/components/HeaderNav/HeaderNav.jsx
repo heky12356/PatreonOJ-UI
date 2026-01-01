@@ -50,7 +50,7 @@ export default function HeaderNav() {
   }, []);
 
   return (
-    <Navbar expand="lg" className="bg-body-tertiary">
+    <Navbar expand="lg" className="bg-body-tertiary mb-4">
       <Container >
         <Navbar.Brand href="/">
           <img
@@ -69,16 +69,16 @@ export default function HeaderNav() {
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
-            <Nav.Link href="/">Home</Nav.Link>
-            <Nav.Link href="/problem">Problem</Nav.Link>
+            <Nav.Link href="/">首页</Nav.Link>
+            <Nav.Link href="/problem">题库</Nav.Link>
           </Nav>
         </Navbar.Collapse>
         {isLogin ? (
           <UserPanel userInfo={userInfo} setIsLogin={setIsLogin} setUserInfo={setUserInfo} />
         ) : (
           <Nav>
-            <Nav.Link href="/login">Login</Nav.Link>
-            <Nav.Link href="/register">Register</Nav.Link>
+            <Nav.Link href="/login">登录</Nav.Link>
+            <Nav.Link href="/register">注册</Nav.Link>
           </Nav>
         )}
       </Container>

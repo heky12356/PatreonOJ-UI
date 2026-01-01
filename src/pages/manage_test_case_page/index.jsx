@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import {
-  getTestCasesByProblemNumber,
-  addTestCase,
-  apideleteTestCase,
-} from "../../api/test_case_api";
+  getProblemTestcaseFileTree,
+  uploadTestCaseViaOss,
+} from '../../api/test_case_api';
 import {
   Container,
   Row,
@@ -15,76 +14,107 @@ import {
   Alert,
   Badge,
   Modal,
-} from "react-bootstrap";
+} from 'react-bootstrap';
 
-const AddTestPage = ({ problem_number, setIsAdd, show }) => {
-  const [inputValue1, setInputValue1] = useState("");
-  const [inputValue2, setInputValue2] = useState("");
+const AddTestPage = ({ problem_number, setIsAdd, show, onUploaded }) => {
+  const [caseNo, setCaseNo] = useState('');
+  const [inputFile, setInputFile] = useState(null);
+  const [outputFile, setOutputFile] = useState(null);
+  const [isHidden, setIsHidden] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
+
+  const resetForm = () => {
+    setCaseNo('');
+    setInputFile(null);
+    setOutputFile(null);
+    setIsHidden(true);
+    setError('');
+  };
+
+  const handleCancel = () => {
+    setIsAdd(false);
+    resetForm();
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!inputValue1.trim() || !inputValue2.trim()) {
-      setError("请填写完整的输入和期望输出");
+
+    const normalizedCaseNo = String(caseNo).trim();
+    if (!normalizedCaseNo) {
+      setError('请填写用例编号（caseNo）');
+      return;
+    }
+    if (!inputFile || !outputFile) {
+      setError('请选择 .in 和 .out 文件');
       return;
     }
 
     setLoading(true);
-    setError("");
+    setError('');
     try {
-      const resp = await addTestCase({
-        input: inputValue1,
-        expected_output: inputValue2,
-        problem_number,
+      await uploadTestCaseViaOss({
+        question_number: parseInt(problem_number),
+        case_no: normalizedCaseNo,
+        inputFile,
+        outputFile,
+        is_hidden: isHidden,
       });
-      console.log(resp);
-      // 提交成功后关闭表单
+
       setIsAdd(false);
-      // 清空输入框
-      setInputValue1("");
-      setInputValue2("");
-    } catch (error) {
-      console.error("提交失败:", error);
-      setError("添加测试用例失败，请重试");
+      resetForm();
+      if (onUploaded) onUploaded();
+    } catch (err) {
+      console.error('上传失败:', err);
+      setError('上传测试用例失败，请重试');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCancel = () => {
-    setIsAdd(false);
-    setInputValue1("");
-    setInputValue2("");
-    setError("");
-  };
-
   return (
     <Modal show={show} onHide={handleCancel} size="lg">
       <Modal.Header closeButton>
-        <Modal.Title>添加测试用例</Modal.Title>
+        <Modal.Title>上传测试用例（OSS 直传）</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         {error && <Alert variant="danger">{error}</Alert>}
         <Form onSubmit={handleSubmit}>
+          <Row className="mb-3">
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label>用例编号（caseNo）</Form.Label>
+                <Form.Control
+                  value={caseNo}
+                  onChange={(e) => setCaseNo(e.target.value)}
+                  placeholder="例如：1"
+                />
+              </Form.Group>
+            </Col>
+            <Col md={6} className="d-flex align-items-end">
+              <Form.Check
+                type="switch"
+                id="isHiddenSwitch"
+                label={isHidden ? '隐藏用例' : '公开用例'}
+                checked={isHidden}
+                onChange={(e) => setIsHidden(e.target.checked)}
+              />
+            </Col>
+          </Row>
+
           <Form.Group className="mb-3">
-            <Form.Label>输入数据</Form.Label>
+            <Form.Label>输入文件（.in）</Form.Label>
             <Form.Control
-              as="textarea"
-              rows={3}
-              value={inputValue1}
-              onChange={(e) => setInputValue1(e.target.value)}
-              placeholder="请输入测试用例的输入数据"
+              type="file"
+              onChange={(e) => setInputFile(e.target.files?.[0] ?? null)}
             />
           </Form.Group>
+
           <Form.Group className="mb-3">
-            <Form.Label>期望输出</Form.Label>
+            <Form.Label>输出文件（.out）</Form.Label>
             <Form.Control
-              as="textarea"
-              rows={3}
-              value={inputValue2}
-              onChange={(e) => setInputValue2(e.target.value)}
-              placeholder="请输入期望的输出结果"
+              type="file"
+              onChange={(e) => setOutputFile(e.target.files?.[0] ?? null)}
             />
           </Form.Group>
         </Form>
@@ -94,7 +124,7 @@ const AddTestPage = ({ problem_number, setIsAdd, show }) => {
           取消
         </Button>
         <Button variant="dark" onClick={handleSubmit} disabled={loading}>
-          {loading ? "添加中..." : "添加测试用例"}
+          {loading ? '上传中...' : '开始上传'}
         </Button>
       </Modal.Footer>
     </Modal>
@@ -103,47 +133,53 @@ const AddTestPage = ({ problem_number, setIsAdd, show }) => {
 
 export default function ManageTestCasePage() {
   const { problem_number } = useParams();
-  const [testCases, setTestCases] = useState({});
-  const [testCasesDetail, setTestCasesDetail] = useState([]);
   const [isadd, setIsAdd] = useState(false);
-  const [isdelete, setIsDelete] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(null);
+
+  const [tree, setTree] = useState(null);
+  const [treeLoading, setTreeLoading] = useState(false);
+  const [treeError, setTreeError] = useState('');
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const handleAddClick = () => {
     setIsAdd(true);
   };
 
-  const deleteTestCase = async (id) => {
-    setDeleteLoading(id);
+  const refreshTree = async () => {
+    if (!problem_number) return;
+
+    setTreeLoading(true);
+    setTreeError('');
     try {
-      await apideleteTestCase({ id: parseInt(id) });
-      setIsDelete(id);
+      const data = await getProblemTestcaseFileTree({
+        question_number: parseInt(problem_number),
+        recursive: false,
+      });
+      setTree(data);
     } catch (error) {
-      console.error("删除测试用例失败:", error);
+      console.error('获取测试用例文件树失败:', error);
+      setTreeError('获取测试用例文件树失败');
     } finally {
-      setDeleteLoading(null);
+      setTreeLoading(false);
     }
   };
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const data = await getTestCasesByProblemNumber(problem_number);
-        setTestCases(data);
-        setTestCasesDetail(data.result);
-      } catch (error) {
-        console.error("获取测试用例失败:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    refreshTree();
+  }, [problem_number, refreshKey]);
 
-    if (problem_number) {
-      fetchData();
-    }
-  }, [problem_number, isadd, isdelete]);
+  const objects = useMemo(() => {
+    const list = tree?.objects ?? [];
+    return [...list].sort((a, b) => {
+      const ad = !!a.is_dir;
+      const bd = !!b.is_dir;
+      if (ad !== bd) return ad ? -1 : 1;
+      return String(a.key).localeCompare(String(b.key));
+    });
+  }, [tree]);
+
+  const fileCount = useMemo(() => {
+    return objects.filter((o) => !o.is_dir).length;
+  }, [objects]);
 
   return (
     <Container className="py-4">
@@ -159,11 +195,20 @@ export default function ManageTestCasePage() {
                   <Button
                     variant="outline-secondary"
                     size="sm"
-                    onClick={handleAddClick}
+                    onClick={refreshTree}
                     className="me-2"
+                    disabled={treeLoading}
+                  >
+                    <i className="bi bi-arrow-clockwise me-1"></i>
+                    刷新
+                  </Button>
+                  <Button
+                    variant="outline-secondary"
+                    size="sm"
+                    onClick={handleAddClick}
                   >
                     <i className="bi bi-plus-circle me-1"></i>
-                    添加测试用例
+                    上传测试用例
                   </Button>
                 </Col>
               </Row>
@@ -172,108 +217,68 @@ export default function ManageTestCasePage() {
               <Row className="mb-4">
                 <Col md={6}>
                   <div className="p-3 bg-light rounded border">
-                    <strong className="text-muted">当前题目：</strong> 
+                    <strong className="text-muted">当前题目：</strong>
                     <span className="text-dark">{problem_number}</span>
                   </div>
                 </Col>
                 <Col md={6}>
                   <div className="p-3 bg-light rounded border">
-                    <strong className="text-muted">测试用例数量：</strong> 
+                    <strong className="text-muted">文件数量：</strong>
                     <Badge bg="secondary" className="ms-2">
-                      {testCases.count || 0}
+                      {fileCount}
                     </Badge>
                   </div>
                 </Col>
               </Row>
 
-              {loading ? (
+              {treeError ? <Alert variant="danger">{treeError}</Alert> : null}
+
+              {treeLoading ? (
                 <div className="text-center py-5">
                   <div className="spinner-border text-secondary" role="status">
                     <span className="visually-hidden">加载中...</span>
                   </div>
-                  <p className="mt-2 text-muted">正在加载测试用例...</p>
+                  <p className="mt-2 text-muted">正在加载文件树...</p>
                 </div>
               ) : (
-                <>
-                  {testCasesDetail && testCasesDetail.length > 0 ? (
-                    <Row>
-                      {testCasesDetail.map((testCase, index) => (
-                        <Col md={6} lg={4} key={testCase.ID} className="mb-3">
-                          <Card className="h-100 border">
-                            <Card.Header className="bg-white border-bottom">
-                              <Row className="align-items-center">
-                                <Col>
-                                  <h6 className="mb-0">
-                                    <Badge bg="secondary" className="me-2">
-                                      #{index + 1}
-                                    </Badge>
-                                    <span className="text-muted">测试用例</span>
-                                  </h6>
-                                </Col>
-                                <Col xs="auto">
-                                  <Button
-                                    variant="outline-secondary"
-                                    size="sm"
-                                    onClick={() => deleteTestCase(testCase.ID)}
-                                    disabled={deleteLoading === testCase.ID}
-                                  >
-                                    {deleteLoading === testCase.ID ? (
-                                      <>
-                                        <span
-                                          className="spinner-border spinner-border-sm me-1"
-                                          role="status"
-                                        ></span>
-                                        删除中
-                                      </>
-                                    ) : (
-                                      <>
-                                        <i className="bi bi-trash me-1"></i>
-                                        删除
-                                      </>
-                                    )}
-                                  </Button>
-                                </Col>
-                              </Row>
-                            </Card.Header>
-                            <Card.Body className="bg-white">
-                              <div className="mb-3">
-                                <strong className="text-muted">
-                                  输入数据：
-                                </strong>
-                                <div className="mt-1 p-2 bg-light rounded border">
-                                  <code className="text-dark">
-                                    {testCase.Input || "(空)"}
-                                  </code>
-                                </div>
-                              </div>
-                              <div>
-                                <strong className="text-muted">
-                                  期望输出：
-                                </strong>
-                                <div className="mt-1 p-2 bg-light rounded border">
-                                  <code className="text-dark">
-                                    {testCase.ExpectedOutput || "(空)"}
-                                  </code>
-                                </div>
-                              </div>
-                            </Card.Body>
-                          </Card>
-                        </Col>
+                <div className="border rounded bg-white overflow-hidden">
+                  {objects.length > 0 ? (
+                    <div className="list-group list-group-flush">
+                      {objects.map((obj) => (
+                        <div
+                          key={obj.key}
+                          className="list-group-item d-flex align-items-center justify-content-between"
+                        >
+                          <div className="d-flex align-items-center">
+                            <i
+                              className={
+                                obj.is_dir
+                                  ? 'bi bi-folder me-2'
+                                  : 'bi bi-file-earmark-text me-2'
+                              }
+                            ></i>
+                            <span className="text-dark">{obj.key}</span>
+                          </div>
+                          <div
+                            className="text-muted"
+                            style={{ fontSize: '0.85rem' }}
+                          >
+                            {!obj.is_dir ? `${obj.size ?? 0} bytes` : ''}
+                          </div>
+                        </div>
                       ))}
-                    </Row>
+                    </div>
                   ) : (
-                    <div className="text-center py-5">
-                      <div className="text-muted">
-                        <i
-                          className="bi bi-inbox"
-                          style={{ fontSize: "3rem" }}
-                        ></i>
-                        <h5 className="mt-3">暂无测试用例</h5>
-                        <p>点击上方"添加测试用例"按钮来创建第一个测试用例</p>
-                      </div>
+                    <div className="text-center py-5 text-muted">
+                      <i
+                        className="bi bi-inbox"
+                        style={{ fontSize: '3rem' }}
+                      ></i>
+                      <h5 className="mt-3">暂无文件</h5>
+                      <p>点击右上角“上传测试用例”添加 .in/.out 文件</p>
                     </div>
                   )}
-                </>
+                </div>
               )}
             </Card.Body>
           </Card>
@@ -284,6 +289,7 @@ export default function ManageTestCasePage() {
         problem_number={problem_number}
         setIsAdd={setIsAdd}
         show={isadd}
+        onUploaded={() => setRefreshKey((k) => k + 1)}
       />
     </Container>
   );
