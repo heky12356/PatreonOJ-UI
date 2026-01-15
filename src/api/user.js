@@ -14,7 +14,7 @@ export const register = async (username, password) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/user/register`, {
       username,
-      password
+      password,
     });
     return response.data;
   } catch (error) {
@@ -33,7 +33,7 @@ export const login = async (username, password) => {
   try {
     const response = await axios.post(`api/user/login`, {
       username,
-      password
+      password,
     });
     return response.data;
   } catch (error) {
@@ -89,7 +89,7 @@ export const getUserId = () => {
  */
 export const getUserPermissions = () => {
   const userInfo = getUserInfo();
-  return userInfo ? (userInfo.permissions || []) : null;
+  return userInfo ? userInfo.permissions || [] : null;
 };
 
 /**
@@ -100,11 +100,166 @@ export const getUserPermissions = () => {
 export const hasPermission = (permission) => {
   const userPermissions = getUserPermissions();
   if (!userPermissions) return false;
-  
+
   if (Array.isArray(permission)) {
-    return permission.some(p => userPermissions.includes(p));
+    return permission.some((p) => userPermissions.includes(p));
   }
   return userPermissions.includes(permission);
+};
+
+// 辅助函数：清理参数中的undefined、null和空字符串
+const cleanParams = (params) => {
+  if (!params) return {};
+  return Object.fromEntries(
+    Object.entries(params).filter(
+      ([, v]) => v !== undefined && v !== null && v !== ''
+    )
+  );
+};
+
+// 辅助函数：如果operator_uuid不存在，则使用当前登录用户ID
+const withOperatorUuid = (operator_uuid) => {
+  const op = operator_uuid ?? getUserId();
+  return op ? { operator_uuid: op } : {};
+};
+
+// 获取用户信息
+export const getUserByUuid = async (uuid, { operator_uuid } = {}) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/user/${uuid}`, {
+      params: cleanParams(withOperatorUuid(operator_uuid)),
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// 更新用户信息
+export const updateUserByUuid = async (
+  uuid,
+  payload,
+  { operator_uuid } = {}
+) => {
+  try {
+    const response = await axios.put(`${API_BASE_URL}/user/${uuid}`, payload, {
+      params: cleanParams(withOperatorUuid(operator_uuid)),
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// 获取用户掌握的题目列表
+export const getUserMasteryQuestions = async (
+  uuid,
+  { operator_uuid, pageIdx, pageSize, min_mastery, sort, order } = {}
+) => {
+  try {
+    const response = await axios.get(
+      `${API_BASE_URL}/user/${uuid}/mastery/questions`,
+      {
+        params: cleanParams({
+          ...withOperatorUuid(operator_uuid),
+          pageIdx,
+          pageSize,
+          min_mastery,
+          sort,
+          order,
+        }),
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// 获取用户掌握的标签列表
+export const getUserMasteryTags = async (
+  uuid,
+  { operator_uuid, pageIdx, pageSize, min_mastery, sort, order } = {}
+) => {
+  try {
+    const response = await axios.get(
+      `${API_BASE_URL}/user/${uuid}/mastery/tags`,
+      {
+        params: cleanParams({
+          ...withOperatorUuid(operator_uuid),
+          pageIdx,
+          pageSize,
+          min_mastery,
+          sort,
+          order,
+        }),
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// 提交用户掌握事件
+export const postUserMasteryEvent = async (
+  uuid,
+  payload,
+  { operator_uuid } = {}
+) => {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/user/${uuid}/mastery/events`,
+      payload,
+      {
+        params: cleanParams(withOperatorUuid(operator_uuid)),
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// 重置用户掌握的题目
+export const resetUserMasteryQuestion = async (
+  uuid,
+  questionNumber,
+  { operator_uuid } = {}
+) => {
+  try {
+    const response = await axios.delete(
+      `${API_BASE_URL}/user/${uuid}/mastery/questions/${questionNumber}`,
+      {
+        params: cleanParams(withOperatorUuid(operator_uuid)),
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// 重置用户掌握的标签
+export const resetUserMasteryTag = async (
+  uuid,
+  tag,
+  { operator_uuid } = {}
+) => {
+  try {
+    const response = await axios.delete(
+      `${API_BASE_URL}/user/${uuid}/mastery/tags`,
+      {
+        params: cleanParams({
+          ...withOperatorUuid(operator_uuid),
+          tag,
+        }),
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
 };
 
 /**
@@ -116,7 +271,7 @@ export const hasPermission = (permission) => {
 export const mockLogin = (username, role = 'user') => {
   // 根据角色设置权限
   let permissions = ['user'];
-  
+
   switch (role) {
     case 'admin':
       permissions = ['admin', 'moderator', 'teacher', 'user'];
@@ -133,15 +288,15 @@ export const mockLogin = (username, role = 'user') => {
     default:
       permissions = ['user'];
   }
-  
+
   const mockUserInfo = {
-    message: "登录成功",
+    message: '登录成功',
     user_id: 1,
-    username: username || "测试用户",
-    uuid: "2bfd19c5-abf9-40d0-903d-185c80e69fd4",
-    permissions: permissions
+    username: username || '测试用户',
+    uuid: '2bfd19c5-abf9-40d0-903d-185c80e69fd4',
+    permissions: permissions,
   };
-  
+
   saveUserInfo(mockUserInfo);
   return mockUserInfo;
 };

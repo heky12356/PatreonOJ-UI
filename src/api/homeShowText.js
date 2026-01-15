@@ -42,3 +42,46 @@ export async function updateHomeText(text) {
     return err;
   }
 }
+
+/**
+ * 获取公告
+ * @returns 公告内容
+ */
+export async function getAnnouncement() {
+  try {
+    const response = await fetch(baseUrl + '/overview/getAnnouncement');
+    if (!response.ok) {
+      throw new Error('获取公告失败');
+    }
+    const data = await response.json();
+    return data.announcement;
+  } catch (err) {
+    console.error('获取公告失败:', err);
+    return err;
+  }
+}
+
+/**
+ * 更新公告
+ * @param {*} announcement 公告内容
+ * @returns 更新结果
+ */
+export async function updateAnnouncement(announcement) {
+  try {
+    const response = await fetch(baseUrl + '/overview/updateAnnouncement', {
+      method: 'post',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ announcement }),
+    });
+    if (!response.ok) {
+      throw new Error('更新公告失败');
+    }
+    const result = await response.json();
+    return result;
+  } catch (err) {
+    console.error('更新公告失败:', err);
+    return err;
+  }
+}

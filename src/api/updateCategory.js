@@ -1,10 +1,9 @@
 /**
- * 创建分类
+ * 更新分类
  */
-
-export async function createCategory(data) {
+export async function updateCategory(data, id) {
   try {
-    const response = await fetch('/api/category/', {
+    const response = await fetch(`/api/category/${id}`, {
       method: 'post',
       headers: {
         'Content-Type': 'application/json',
@@ -12,24 +11,25 @@ export async function createCategory(data) {
       body: JSON.stringify(data),
     });
     // console.log(JSON.stringify(data));
+    // console.log(response);
     if (!response.ok) {
-      console.error('创建分类失败');
+      console.error('更新分类失败');
       return {
         code: 500,
-        message: '创建分类失败',
+        message: '更新分类失败',
       };
     }
     const result = await response.json();
     return {
       code: 200,
-      message: '创建分类成功',
+      message: '更新分类成功',
       data: result,
     };
   } catch (error) {
     console.error(error);
     return {
       code: 500,
-      message: '创建分类失败',
+      message: '更新分类失败',
     };
   }
 }

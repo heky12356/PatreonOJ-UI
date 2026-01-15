@@ -1,6 +1,7 @@
-import { Container, Row, Col, Modal, Button } from 'react-bootstrap';
-import { useState } from 'react';
+import { Container, Row, Col, Modal, Button, Spinner } from 'react-bootstrap';
+import { useState, useEffect } from 'react';
 import { createCategory } from '../../api/createCategoty.js';
+import { getCategories } from '../../api/getcategories.js';
 import styles from './createCategoryPage.module.css';
 
 export default function CreateCategoryPage() {
@@ -12,17 +13,23 @@ export default function CreateCategoryPage() {
   });
   const [errInfo, setErrInfo] = useState('');
   const [show, setShow] = useState(false);
+  const [categoryList, setCategoryList] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  // 获取分类列表
+  const fetchCategories = async () => {
+    const result = await getCategories();
+    setCategoryList(result || []);
+  };
 
   // 关闭弹窗
   const handleClose = () => setShow(false);
   // 打开弹窗
   const handleShow = () => setShow(true);
-
-  // 添加分类
-  const addCategory = async (categoryData) => {
-    const result = await createCategory(categoryData);
-    console.log(result);
-  };
 
   // 处理输入变化
   const handleInputChange = (e) => {
@@ -31,27 +38,40 @@ export default function CreateCategoryPage() {
       ...formData,
       [name]: value,
     });
+    if (errInfo) setErrInfo('');
   };
 
   // 添加分类函数
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name) {
+    if (loading) return;
+
+    setErrInfo('');
+
+    if (!String(formData.name || '').trim()) {
       setErrInfo('请填写分类名称');
       return;
     }
-    const result = await addCategory(formData);
-    if (result.code === 200) {
-      setErrInfo('');
-      setFormData({
-        name: '',
-        slug: '',
-        parent_id: '',
-        description: '',
-      });
-      handleShow();
-    } else {
-      setErrInfo(result.msg || '创建分类失败，请稍后再试');
+
+    setLoading(true);
+    try {
+      const result = await createCategory(formData);
+      if (result?.code === 200) {
+        setFormData({
+          name: '',
+          slug: '',
+          parent_id: '',
+          description: '',
+        });
+        await fetchCategories();
+        handleShow();
+      } else {
+        setErrInfo(result?.msg || '创建分类失败，请稍后再试');
+      }
+    } catch (err) {
+      setErrInfo(err?.message || '创建分类失败，请稍后再试');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -84,7 +104,10 @@ export default function CreateCategoryPage() {
           <Col>
             <div className={styles['category-container']}>
               <div>
-                <form className={styles['category-form']}>
+                <form
+                  className={styles['category-form']}
+                  onSubmit={handleSubmit}
+                >
                   <div className={styles['form-group']}>
                     <label className={styles['form-label']}>分类名称</label>
                     <input
@@ -112,12 +135,15 @@ export default function CreateCategoryPage() {
                     <select
                       className={styles.parentSelect}
                       name="parent_id"
-                      value={formData.difficulty}
+                      value={formData.parent_id}
                       onChange={handleInputChange}
                     >
-                      <option value="简单">简单</option>
-                      <option value="中等">中等</option>
-                      <option value="困难">困难</option>
+                      <option value="">无</option>
+                      {categoryList.map((category) => (
+                        <option key={category.id} value={parseInt(category.id)}>
+                          {category.name}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div className={styles['form-group']}>
@@ -134,13 +160,21 @@ export default function CreateCategoryPage() {
                     <div className={styles['error-message']}>{errInfo}</div>
                   )}
                   <div className={styles['form-group']}>
-                    <div
+                    <Button
                       type="submit"
-                      className={`${styles['custom-button']}`}
-                      onClick={handleSubmit}
+                      variant="primary"
+                      disabled={loading}
+                      className={styles['custom-button']}
                     >
-                      添加分类
-                    </div>
+                      {loading ? (
+                        <>
+                          <Spinner size="sm" className="me-2" />
+                          提交中...
+                        </>
+                      ) : (
+                        '添加分类'
+                      )}
+                    </Button>
                   </div>
                 </form>
               </div>
@@ -148,6 +182,7 @@ export default function CreateCategoryPage() {
           </Col>
         </Row>
       </Container>
+      {successModal}
     </div>
   );
 }

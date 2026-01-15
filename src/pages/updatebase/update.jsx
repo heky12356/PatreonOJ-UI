@@ -37,7 +37,7 @@ export default function Updatebase() {
   const getProblem = async () => {
     const data = await getProblemApi({
       pageIdx: pageIdx,
-      //   pageSize: pageSize,
+      pageSize: 5,
     });
     setProblem(data.result || []);
     setPageIdx(data.pageIdx || 1);

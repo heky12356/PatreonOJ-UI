@@ -1,7 +1,7 @@
 // pages/addproblem/AddProblem.jsx
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import styles from './AddProblem.module.css';
-import { Row, Col, Modal, Button } from 'react-bootstrap';
+import { Row, Col, Modal, Button, Collapse } from 'react-bootstrap';
 import { createProm } from '../../api/creatproblem';
 import MDEditor from '@uiw/react-md-editor';
 import { getCategories } from '../../api/getcategories';
@@ -20,6 +20,8 @@ const AddProblem = () => {
     category_id: 0,
     status: 'published',
   });
+
+  const [expandedCategoryIds, setExpandedCategoryIds] = useState({});
 
   // 分类
   const [categories, setCategories] = useState([]);
@@ -47,12 +49,74 @@ const AddProblem = () => {
     fetchCategories();
   }, []);
 
+  const normalizeId = (v) => {
+    const s = String(v ?? '').trim();
+    return s === '' ? null : s;
+  };
+
+  const normalizeParentId = (v) => {
+    if (v === undefined || v === null) return null;
+    const s = String(v).trim();
+    if (s === '' || s === '0') return null;
+    return s;
+  };
+
+  const categoryTree = useMemo(() => {
+    const list = Array.isArray(categories) ? categories : [];
+    const byId = new Map();
+
+    list.forEach((c) => {
+      const id = normalizeId(c?.id ?? c?.Id);
+      if (!id) return;
+      byId.set(id, {
+        ...c,
+        id,
+        name: c?.name ?? c?.Name,
+        parent_id: normalizeParentId(c?.parent_id ?? c?.ParentId ?? c?.parentId),
+        children: [],
+      });
+    });
+
+    const roots = [];
+
+    byId.forEach((node) => {
+      const pid = node.parent_id;
+      if (pid && byId.has(pid) && pid !== node.id) {
+        byId.get(pid).children.push(node);
+      } else {
+        roots.push(node);
+      }
+    });
+
+    const sortNodes = (arr) => {
+      arr.sort((a, b) => String(a?.name ?? '').localeCompare(String(b?.name ?? ''), 'zh'));
+      arr.forEach((n) => sortNodes(n.children));
+    };
+
+    sortNodes(roots);
+    return roots;
+  }, [categories]);
+
+  const toggleCategoryExpand = (id) => {
+    setExpandedCategoryIds((prev) => ({
+      ...prev,
+      [id]: !prev?.[id],
+    }));
+  };
+
   // 处理输入变化
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    // 清除错误和成功信息
-    // console.log(name, value);
+    if (error) setError('');
+    if (success) setSuccess('');
+  };
+
+  const handleCategoryToggle = (id, checked) => {
+    setFormData((prev) => ({
+      ...prev,
+      category_id: checked ? id : 0,
+    }));
     if (error) setError('');
     if (success) setSuccess('');
   };
@@ -239,19 +303,63 @@ const AddProblem = () => {
           <div className={styles.rightContainer}>
             <div className={styles.right}>
               <p>分类</p>
-              {categories.map((category) => (
-                <div key={category.Id}>
-                  <label className={styles.formLabel}>
-                    <input
-                      type="radio"
-                      name="category_id"
-                      value={category.Id}
-                      onChange={handleInputChange}
-                    />
-                    {category.Name}
-                  </label>
-                </div>
-              ))}
+              {categoryTree.length === 0 ? (
+                <div className="text-secondary">暂无分类</div>
+              ) : null}
+
+              {categoryTree.map((node) => {
+                const renderNode = (n, depth = 0, visited = new Set()) => {
+                  if (!n?.id) return null;
+                  if (visited.has(n.id)) return null;
+                  const nextVisited = new Set(visited);
+                  nextVisited.add(n.id);
+
+                  const hasChildren = Array.isArray(n.children) && n.children.length > 0;
+                  const isOpen = !!expandedCategoryIds?.[n.id];
+                  const indent = Math.min(depth, 6) * 14;
+                  const checked = String(formData.category_id) === String(n.id);
+
+                  return (
+                    <div key={n.id} style={{ paddingLeft: indent }}>
+                      <div className="d-flex align-items-center justify-content-between">
+                        <label className={styles.formLabel} style={{ marginBottom: 0 }}>
+                          <input
+                            type="checkbox"
+                            name="category_id"
+                            value={n.id}
+                            checked={checked}
+                            onChange={(e) => handleCategoryToggle(n.id, e.target.checked)}
+                          />
+                          {n.name}
+                        </label>
+
+                        {hasChildren ? (
+                          <Button
+                            variant="link"
+                            size="sm"
+                            className="p-0 text-decoration-none"
+                            onClick={() => toggleCategoryExpand(n.id)}
+                          >
+                            {isOpen ? '▾' : '▸'}
+                          </Button>
+                        ) : null}
+                      </div>
+
+                      {hasChildren ? (
+                        <Collapse in={isOpen}>
+                          <div>
+                            {n.children.map((child) =>
+                              renderNode(child, depth + 1, nextVisited)
+                            )}
+                          </div>
+                        </Collapse>
+                      ) : null}
+                    </div>
+                  );
+                };
+
+                return renderNode(node, 0, new Set());
+              })}
             </div>
             <div className={styles.right}>
               <div>

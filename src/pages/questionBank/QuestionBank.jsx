@@ -28,7 +28,12 @@ const QuestionBank = ({ setCurrentKey }) => {
       try {
         // console.log('searchTerm:', searchTerm);
         setLoading(true);
-        let data = await getProblem({ q: searchTerm, pageIdx, difficult });
+        let data = await getProblem({
+          q: searchTerm,
+          pageSize: 10,
+          pageIdx,
+          difficult,
+        });
         setQuestions(data.result || []);
         setPageIdx(data.pageIdx || 1);
         setPageSize(data.pageSize || 50);

@@ -27,6 +27,9 @@ export default function UpdateProblem() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // 分类
+  const [categories, setCategories] = useState([]);
+
   // 弹窗状态
   const [show, setShow] = useState(false);
 
@@ -90,8 +93,16 @@ export default function UpdateProblem() {
     }
   };
 
+  // 获取分类
+  const fetchCategories = async () => {
+    const result = await getCategories();
+    // console.log(result);
+    setCategories(result);
+  };
+
   useEffect(() => {
     fetchProblemData();
+    fetchCategories();
   }, []);
 
   // 成功弹窗
@@ -228,7 +239,22 @@ export default function UpdateProblem() {
         </Col>
         <Col md={3}>
           <div className={styles.rightContainer}>
-            <div className={styles.right}>分类</div>
+            <div className={styles.right}>
+              <p>分类</p>
+              {categories.map((category) => (
+                <div key={category.Id}>
+                  <label className={styles.formLabel}>
+                    <input
+                      type="radio"
+                      name="category_id"
+                      value={category.id}
+                      onChange={handleInputChange}
+                    />
+                    {category.name}
+                  </label>
+                </div>
+              ))}
+            </div>
             <div className={styles.right}>
               <div>
                 <div className={styles.formGroup}>

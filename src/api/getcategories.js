@@ -16,7 +16,8 @@ export async function getCategories() {
       return [];
     }
     const result = await response.json();
-    return result.result;
+    // console.log(result);
+    return result.data;
   } catch (error) {
     console.error(error);
     return [];

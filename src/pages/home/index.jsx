@@ -6,14 +6,15 @@ import { getMotto } from '../../api/getMotto';
 import { FaSearch } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { getHomeShowText } from '../../api/homeShowText';
+import { getAnnouncement, getHomeShowText } from '../../api/homeShowText';
 
 export default function Home() {
   const [totalProblemsNum, setTotalProblemsNum] = useState(0); // 总题目数
-  const [motto, setMotto] = useState(''); // 一言
+  const [motto, setMotto] = useState({}); // 一言
   const [newProblems, setNewProblems] = useState([]); // 最新题目
   const [searchTerm, setSearchTerm] = useState(''); // 搜索题目
   const [homeShowText, setHomeShowText] = useState(''); // OJ首页展示文本
+  const [announcement, setAnnouncement] = useState(''); // 公告
 
   // 获取总题目数和最新题目
   const fetchProblemsNum = async () => {
@@ -27,7 +28,7 @@ export default function Home() {
   const fetchMotto = async () => {
     const res = await getMotto();
     //   console.log(res);
-    setMotto(res.motto);
+    setMotto(res);
   };
 
   // 获取OJ首页文本
@@ -37,10 +38,17 @@ export default function Home() {
     setHomeShowText(res);
   };
 
+  // 获取公告
+  const fetchAnnouncement = async () => {
+    const res = await getAnnouncement();
+    setAnnouncement(res || '');
+  };
+
   useEffect(() => {
     fetchProblemsNum();
     fetchMotto();
     fetchHomeShowText();
+    fetchAnnouncement();
   }, []);
 
   const searchProblem = () => {
@@ -61,12 +69,21 @@ export default function Home() {
               {homeShowText}
             </ReactMarkdown>
           </div>
-          <div className={styles.Left}>公告</div>
+          <div className={styles.Left}>
+            <h3>公告</h3>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {announcement || '暂无公告'}
+            </ReactMarkdown>
+          </div>
         </Col>
         <Col lg={3}>
           <div className={styles.Right}>
             <p>一言：</p>
-            <p>{motto}</p>
+            <p>{motto.hitokoto}</p>
+            <div className={styles.from}>
+              <p>来源：{motto.from}</p>
+              <p>——{motto.from_who ? motto.from_who : motto.from}</p>
+            </div>
           </div>
           <div className={styles.Right}>总题目数：{totalProblemsNum}</div>
           <div className={styles.Right}>

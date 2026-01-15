@@ -20,6 +20,10 @@ import SettingPage from './pages/settingPage/settingPage.jsx';
 import AddpPage1 from './pages/addpPage1/index.jsx';
 import CategoryAdminPage from './pages/CategoryAdminPage/CategoryAdminPage.jsx';
 import CreateCategoryPage from './pages/createCategoryPage/createCategoryPage.jsx';
+import UpdateCategoryPage from './pages/updateCategoryPage/updateCategoryPage.jsx';
+import Frame from './atlasComponent/frame.jsx';
+import ProblemSubmissionsPage from './pages/submitionPage/ProblemSubmissionsPage.jsx';
+import UserSubmissionsPage from './pages/submitionPage/UserSubmissionsPage.jsx';
 
 // Ant Design 白色主题配置
 const whiteTheme = {
@@ -43,12 +47,21 @@ function App() {
             {/* <Route index element={<HomeComponent />} /> */}
             <Route index element={<Home />} />
             <Route path="study" element={<StudyComponent />} />
+            <Route path="graph" element={<Frame />} />
             {/* <Route path="problem" element={<ProblemComponent />} /> */}
             <Route path="problem" element={<QuestionBank />} />
             {/* <Route path="rank" element={<Rank />} /> */}
             <Route path="profile" element={<Profile />} />
             {/* 题目详情页，也使用主布局 */}
             <Route path="problem/:id" element={<ProblemPage />} />
+            <Route
+              path="problem/:question_number/submissions"
+              element={<ProblemSubmissionsPage />}
+            />
+            <Route
+              path="profile/submissions"
+              element={<UserSubmissionsPage />}
+            />
             {/* 评测结果详情页 */}
             <Route
               path="submission/:submissionId"
@@ -116,6 +129,15 @@ function App() {
               element={
                 <ProtectedRoute requiredPermissions={['admin']}>
                   <CreateCategoryPage />
+                </ProtectedRoute>
+              }
+            />
+            {/* 编辑分类页面 - 需要管理员权限 */}
+            <Route
+              path="updatecategory/:id"
+              element={
+                <ProtectedRoute requiredPermissions={['admin']}>
+                  <UpdateCategoryPage />
                 </ProtectedRoute>
               }
             />

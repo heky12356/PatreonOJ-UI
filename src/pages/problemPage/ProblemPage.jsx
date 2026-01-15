@@ -93,6 +93,10 @@ function ProblemPage() {
     navigate('/problem');
   };
 
+  const handleViewSubmissions = () => {
+    navigate(`/problem/${question.question_number}/submissions`);
+  };
+
   // 解析标签字符串为数组
   const parseTags = (tagsString) => {
     if (!tagsString) return [];
@@ -153,7 +157,9 @@ function ProblemPage() {
               复制题目
             </button>
             {/* <button className={styles['custom-button']}>查看题解</button> */}
-            {/* <button className={styles['custom-button']}>提交记录</button> */}
+            <button className="btn btn-outline-secondary" onClick={handleViewSubmissions}>
+              提交记录
+            </button>
             <button
               type="primary"
               className={styles['ide-button']}
