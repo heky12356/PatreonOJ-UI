@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Navbar, Container, Nav, NavDropdown } from 'react-bootstrap';
 import { getUserInfo, clearUserInfo } from '../../api/user';
+import logoUrl from '../../assets/tgu.jpg';
 
 const UserPanel = ({ userInfo, setIsLogin, setUserInfo }) => {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -52,7 +53,7 @@ export default function HeaderNav() {
         <Navbar.Brand href="/">
           <img
             alt=""
-            src="../../public/images/tgu.jpg"
+            src={logoUrl}
             width="35"
             height="35"
             className="d-inline-block align-top"
