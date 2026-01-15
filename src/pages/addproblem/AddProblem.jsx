@@ -17,7 +17,7 @@ const AddProblem = () => {
     time_limit: 1000,
     memory_limit: 128,
     tags: '',
-    category_id: 0,
+    category_id: '',
     status: 'published',
   });
 
@@ -72,7 +72,9 @@ const AddProblem = () => {
         ...c,
         id,
         name: c?.name ?? c?.Name,
-        parent_id: normalizeParentId(c?.parent_id ?? c?.ParentId ?? c?.parentId),
+        parent_id: normalizeParentId(
+          c?.parent_id ?? c?.ParentId ?? c?.parentId
+        ),
         children: [],
       });
     });
@@ -89,7 +91,9 @@ const AddProblem = () => {
     });
 
     const sortNodes = (arr) => {
-      arr.sort((a, b) => String(a?.name ?? '').localeCompare(String(b?.name ?? ''), 'zh'));
+      arr.sort((a, b) =>
+        String(a?.name ?? '').localeCompare(String(b?.name ?? ''), 'zh')
+      );
       arr.forEach((n) => sortNodes(n.children));
     };
 
@@ -314,7 +318,8 @@ const AddProblem = () => {
                   const nextVisited = new Set(visited);
                   nextVisited.add(n.id);
 
-                  const hasChildren = Array.isArray(n.children) && n.children.length > 0;
+                  const hasChildren =
+                    Array.isArray(n.children) && n.children.length > 0;
                   const isOpen = !!expandedCategoryIds?.[n.id];
                   const indent = Math.min(depth, 6) * 14;
                   const checked = String(formData.category_id) === String(n.id);
@@ -322,13 +327,18 @@ const AddProblem = () => {
                   return (
                     <div key={n.id} style={{ paddingLeft: indent }}>
                       <div className="d-flex align-items-center justify-content-between">
-                        <label className={styles.formLabel} style={{ marginBottom: 0 }}>
+                        <label
+                          className={styles.formLabel}
+                          style={{ marginBottom: 0 }}
+                        >
                           <input
                             type="checkbox"
                             name="category_id"
                             value={n.id}
                             checked={checked}
-                            onChange={(e) => handleCategoryToggle(n.id, e.target.checked)}
+                            onChange={(e) =>
+                              handleCategoryToggle(n.id, e.target.checked)
+                            }
                           />
                           {n.name}
                         </label>
