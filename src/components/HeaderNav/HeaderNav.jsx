@@ -24,6 +24,7 @@ const UserPanel = ({ userInfo, setIsLogin, setUserInfo }) => {
   return (
     <NavDropdown title={userInfo?.username} id="basic-nav-dropdown">
       <NavDropdown.Item href="/profile">个人信息</NavDropdown.Item>
+      <NavDropdown.Item href="/settings">设置</NavDropdown.Item>
       {/* <NavDropdown.Item href="/rank">Rank</NavDropdown.Item> */}
       {isAdmin && <NavDropdown.Item href="/admin">管理员面板</NavDropdown.Item>}
       <NavDropdown.Divider />

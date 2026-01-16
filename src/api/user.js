@@ -123,6 +123,35 @@ const withOperatorUuid = (operator_uuid) => {
   return op ? { operator_uuid: op } : {};
 };
 
+// 辅助函数：确保路径以斜杠结尾
+const ensureDirSuffix = (prefix) => {
+  if (!prefix) return '';
+  return prefix.endsWith('/') ? prefix : `${prefix}/`;
+};
+
+// 辅助函数：通过预签名URL上传文件到OSS
+const putToPresignedUrl = async (url, file) => {
+  const contentType =
+    file && file.type ? file.type : 'application/octet-stream';
+
+  await axios.put(url, file, {
+    headers: {
+      'Content-Type': contentType,
+    },
+  });
+};
+
+// 获取OSS预签名上传URL
+const getOssUploadUrl = async ({ filename, path }) => {
+  const response = await axios.get(`${API_BASE_URL}/oss/upload-url`, {
+    params: {
+      filename,
+      path,
+    },
+  });
+  return response.data;
+};
+
 // 获取用户信息
 export const getUserByUuid = async (uuid, { operator_uuid } = {}) => {
   try {
@@ -149,6 +178,67 @@ export const updateUserByUuid = async (
   } catch (error) {
     throw error;
   }
+};
+
+// 更新用户头像并同步更新用户信息
+export const uploadUserAvatarAndUpdateUserByUuid = async (
+  uuid,
+  avatarFile,
+  {
+    operator_uuid,
+    path,
+    filename,
+    avatarField = 'avatar_url',
+    extraPayload,
+  } = {}
+) => {
+  if (!uuid) throw new Error('uuid 不能为空');
+  if (!avatarFile) throw new Error('avatarFile 不能为空');
+
+  const trimmedFilename = typeof filename === 'string' ? filename.trim() : '';
+
+  let resolvedFilename = trimmedFilename;
+  if (!resolvedFilename) {
+    const originalName =
+      typeof avatarFile.name === 'string' ? avatarFile.name : '';
+    const dotIdx = originalName.lastIndexOf('.');
+    const ext = dotIdx >= 0 ? originalName.slice(dotIdx) : '';
+    resolvedFilename = ext && ext.length <= 10 ? `avatar${ext}` : 'avatar';
+  }
+
+  const dir = ensureDirSuffix(path ?? `avatars/${uuid}`);
+  const uploaded = await getOssUploadUrl({
+    filename: resolvedFilename,
+    path: dir,
+  });
+
+  await putToPresignedUrl(uploaded.url, avatarFile);
+
+  const bucket = uploaded?.bucket ?? '';
+
+  let avatarValue =
+    uploaded?.public_url ??
+    uploaded?.publicUrl ??
+    uploaded?.key ??
+    uploaded?.url;
+
+  if (bucket) {
+    avatarValue = `oss/${bucket}/${avatarValue}`;
+  }
+
+  const mergedExtraPayload =
+    extraPayload && typeof extraPayload === 'object' ? extraPayload : {};
+
+  const updateResp = await updateUserByUuid(
+    uuid,
+    {
+      ...mergedExtraPayload,
+      [avatarField]: avatarValue,
+    },
+    { operator_uuid }
+  );
+
+  return { upload: uploaded, avatar: avatarValue, update: updateResp };
 };
 
 // 获取用户掌握的题目列表

@@ -131,7 +131,7 @@ export default function Profile({ uuid } = {}) {
       const data = await getUserByUuid(targetUuid, {
         operator_uuid: operatorUuid,
       });
-      console.log(data.result);
+      // console.log(data.result);
       setUserProfile(data.result);
     } catch (e) {
       setUserError(parseAxiosError(e, '获取用户信息失败'));
@@ -156,8 +156,10 @@ export default function Profile({ uuid } = {}) {
         order,
       });
 
+      // console.log(data);
+
       const { rows, total } = normalizeMasteryQuestions(data);
-      console.log(rows, total);
+      // console.log(rows, total);
       setMasteryRows(Array.isArray(rows) ? rows : []);
       setMasteryTotal(typeof total === 'number' ? total : 0);
     } catch (e) {
@@ -203,6 +205,9 @@ export default function Profile({ uuid } = {}) {
         <Col xs={12} md="auto" className="d-flex gap-2">
           <Button as={Link} to="/profile/submissions" variant="outline-primary">
             我的提交记录
+          </Button>
+          <Button as={Link} to="/settings" variant="outline-secondary">
+            设置
           </Button>
           <Button
             variant="outline-secondary"

@@ -17,6 +17,7 @@ import ManageTestCasePage from './pages/manage_test_case_page/index.jsx';
 import Home from './pages/home/index.jsx';
 import Admin from './pages/admin/index.jsx';
 import SettingPage from './pages/settingPage/settingPage.jsx';
+import UserSettingPage from './pages/userSettingPage/UserSettingPage.jsx';
 import AddpPage1 from './pages/addpPage1/index.jsx';
 import CategoryAdminPage from './pages/CategoryAdminPage/CategoryAdminPage.jsx';
 import CreateCategoryPage from './pages/createCategoryPage/createCategoryPage.jsx';
@@ -52,6 +53,7 @@ function App() {
             <Route path="problem" element={<QuestionBank />} />
             {/* <Route path="rank" element={<Rank />} /> */}
             <Route path="profile" element={<Profile />} />
+            <Route path="settings" element={<UserSettingPage />} />
             {/* 题目详情页，也使用主布局 */}
             <Route path="problem/:id" element={<ProblemPage />} />
             <Route
