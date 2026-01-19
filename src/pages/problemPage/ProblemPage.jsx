@@ -1,21 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Tag, Tabs, message } from 'antd';
+import { Tabs, message } from 'antd';
 import {
   ArrowLeftOutlined,
   CodeOutlined,
   FileTextOutlined,
+  CopyOutlined,
+  HistoryOutlined,
 } from '@ant-design/icons';
 import CodeEditor from '../../components/codeEditor/CodeEditor';
-import { getProblemById } from '../../api/getproblem';
+import {
+  getProblemById,
+  getProblemRecommendations,
+} from '../../api/getproblem';
 import styles from './ProblemPage.module.css';
 import remarkGfm from 'remark-gfm';
-import ReactMarkdown from 'react-markdown';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { solarizedlight } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { FaChevronDown } from 'react-icons/fa';
-import { MdContentCopy } from 'react-icons/md';
 import MDEditor from '@uiw/react-md-editor';
+import { FaTags, FaLightbulb } from 'react-icons/fa';
 
 function ProblemPage() {
   const { id } = useParams();
@@ -23,7 +24,8 @@ function ProblemPage() {
   const [question, setQuestion] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('description'); // 新增：当前激活的标签页
+  const [activeTab, setActiveTab] = useState('description');
+  const [recommendations, setRecommendations] = useState([]);
 
   // 获取题目详情
   useEffect(() => {
@@ -32,10 +34,8 @@ function ProblemPage() {
         setLoading(true);
         const data = await getProblemById(id);
         setQuestion(data.data);
-        // console.log(data);
       } catch (err) {
         setError(err.message);
-        // console.error('获取题目详情失败:', err);
       } finally {
         setLoading(false);
       }
@@ -46,27 +46,28 @@ function ProblemPage() {
     }
   }, [id]);
 
-  const handleAddToList = () => {
-    if (!question) return;
-    const existing = JSON.parse(localStorage.getItem('myProblemList') || '[]');
-    if (!existing.includes(question.id)) {
-      existing.push(question.id);
-      localStorage.setItem('myProblemList', JSON.stringify(existing));
-      alert('题目已加入题单！');
-    } else {
-      alert('该题已在题单中！');
+  // 获取推荐题目
+  useEffect(() => {
+    if (question && question.question_number) {
+      getProblemRecommendations(question.question_number)
+        .then((data) => {
+          if (data && data.recommendations) {
+            setRecommendations(data.recommendations);
+          }
+        })
+        .catch((err) => console.error('获取推荐题目失败:', err));
     }
-  };
+  }, [question]);
 
   const handleCopyProblem = async () => {
     if (!question) return;
-    const textToCopy = `${question.question_number} ${question.title}\n\n${question.content}`;
+    const textToCopy = `${question.question_id} ${question.title}\n\n${question.content}`;
     try {
       await navigator.clipboard.writeText(textToCopy);
-      alert('题目信息已复制到剪贴板！');
+      message.success('题目信息已复制到剪贴板！');
     } catch (err) {
       console.error('复制失败:', err);
-      alert('复制失败，请手动复制');
+      message.error('复制失败，请手动复制');
     }
   };
 
@@ -103,6 +104,13 @@ function ProblemPage() {
     return tagsString.split(',').map((tag) => tag.trim());
   };
 
+  const getDifficultyClass = (diff) => {
+    if (diff === '简单') return styles.easy;
+    if (diff === '中等') return styles.medium;
+    if (diff === '困难') return styles.hard;
+    return '';
+  };
+
   if (loading) {
     return (
       <div className={styles.content}>
@@ -131,38 +139,47 @@ function ProblemPage() {
     <div className={styles.content}>
       <div className={styles['problem-header']}>
         <h1>
-          {question.question_number} {question.title}
+          {question.question_id}. {question.title}
         </h1>
         <div className={styles['problem-meta']}>
           <div className={styles['problem-info']}>
-            <p>难度: {question.difficulty}</p>
-            <p>题目编号: {question.question_number}</p>
-            <p>时间限制: {question.time_limit}ms</p>
-            <p>内存限制: {question.memory_limit}MB</p>
+            <div className={styles['info-item']}>
+              <strong>难度:</strong>
+              <span
+                className={`${styles['difficulty-badge']} ${getDifficultyClass(question.difficulty)}`}
+              >
+                {question.difficulty}
+              </span>
+            </div>
+            <div className={styles['info-item']}>
+              <strong>时间限制:</strong> {question.time_limit}ms
+            </div>
+            <div className={styles['info-item']}>
+              <strong>内存限制:</strong> {question.memory_limit}MB
+            </div>
           </div>
           <div className={styles['problem-actions']}>
             <button
-              className={styles['custom-button']}
+              className={`${styles.btn} ${styles['btn-danger']}`}
               onClick={handleExit}
-              style={{ backgroundColor: '#f56c6c', color: 'white' }}
             >
-              <ArrowLeftOutlined /> 退出到题库
+              <ArrowLeftOutlined /> 退出
             </button>
 
-            {/* <button className={styles['custom-button']} onClick={handleAddToList}>加入题单</button> */}
             <button
-              className={styles['custom-button']}
+              className={`${styles.btn} ${styles['btn-outline']}`}
               onClick={handleCopyProblem}
             >
-              复制题目
-            </button>
-            {/* <button className={styles['custom-button']}>查看题解</button> */}
-            <button className="btn btn-outline-secondary" onClick={handleViewSubmissions}>
-              提交记录
+              <CopyOutlined /> 复制
             </button>
             <button
-              type="primary"
-              className={styles['ide-button']}
+              className={`${styles.btn} ${styles['btn-outline']}`}
+              onClick={handleViewSubmissions}
+            >
+              <HistoryOutlined /> 提交记录
+            </button>
+            <button
+              className={`${styles.btn} ${styles['btn-primary']}`}
               onClick={switchToIdeTab}
             >
               <CodeOutlined /> 开始编程
@@ -171,7 +188,6 @@ function ProblemPage() {
         </div>
       </div>
 
-      {/* 使用Tabs组件实现题目描述和代码编辑器的切换 */}
       <Tabs
         activeKey={activeTab}
         onChange={setActiveTab}
@@ -180,45 +196,88 @@ function ProblemPage() {
           {
             key: 'description',
             label: (
-              <div style={{ marginLeft: '10px' }}>
+              <span
+                style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+              >
                 <FileTextOutlined />
                 题目描述
-              </div>
+              </span>
             ),
             children: (
               <div className={styles['tab-content']}>
                 <div className={styles['problem-content']}>
                   <div className={styles['problem-description']}>
-                    {/* <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {question.content}
-                    </ReactMarkdown> */}
-
                     <MDEditor.Markdown
                       source={question.content || ''}
                       remarkPlugins={[remarkGfm]}
                       style={{
-                        padding: 16,
-                        border: '1px solid #ccc',
-                        borderRadius: 4,
-                        marginTop: 12,
+                        backgroundColor: 'transparent',
+                        color: '#333',
+                        fontFamily:
+                          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
                       }}
                     />
                   </div>
                 </div>
                 <div className={styles['problem-sidebar']}>
-                  <div className={styles['problem-tags']}>
-                    <h3>标签</h3>
-                    {parseTags(question.tags).map((tag, index) => (
-                      <Tag key={index}>{tag}</Tag>
-                    ))}
+                  <div className={styles['sidebar-card']}>
+                    <div className={styles['sidebar-title']}>
+                      <FaTags color="#51624f" /> 标签
+                    </div>
+                    <div className={styles['tag-list']}>
+                      {parseTags(question.tags).map((tag, index) => (
+                        <span key={index} className={styles.tag}>
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                  <div className={styles['problem-discussions']}>
-                    <h3>讨论</h3>
-                    <p>暂无讨论</p>
-                  </div>
-                  <div className={styles['problem-recommendations']}>
-                    <h3>推荐题目</h3>
-                    <div>暂无推荐题目</div>
+
+                  <div className={styles['sidebar-card']}>
+                    <div className={styles['sidebar-title']}>
+                      <FaLightbulb color="#f57f17" /> 推荐题目
+                    </div>
+                    {recommendations.length > 0 ? (
+                      <ul className={styles['recommendation-list']}>
+                        {recommendations.map((rec) => (
+                          <li
+                            key={rec.question_id}
+                            className={styles['recommendation-item']}
+                          >
+                            <a
+                              href={`/problem/${rec.question_id}`}
+                              className={styles['rec-link']}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                navigate(`/problem/${rec.question_id}`);
+                              }}
+                            >
+                              <span>
+                                {rec.question_id}. {rec.title}
+                              </span>
+                              <span
+                                className={`${styles['difficulty-badge']} ${getDifficultyClass(rec.difficulty)}`}
+                              >
+                                {rec.difficulty}
+                              </span>
+                            </a>
+                            <div className={styles['rec-reason']}>
+                              {rec.reason}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div
+                        style={{
+                          color: '#999',
+                          fontSize: '0.9rem',
+                          textAlign: 'center',
+                        }}
+                      >
+                        暂无推荐
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -227,14 +286,15 @@ function ProblemPage() {
           {
             key: 'ide',
             label: (
-              <span>
+              <span
+                style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+              >
                 <CodeOutlined />
                 代码编辑器
               </span>
             ),
             children: (
-              <div className={styles['tab-content']}>
-                {/* 集成的代码编辑器组件 */}
+              <div className={`${styles['tab-content']} ${styles.codeEditor}`}>
                 <CodeEditor problem={question} onSubmit={handleCodeSubmit} />
               </div>
             ),

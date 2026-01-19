@@ -1,0 +1,107 @@
+.headerNavbar {
+  background-color: #ffffff !important;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.04);
+  padding: 0.8rem 0;
+  border-bottom: 1px solid rgba(0,0,0,0.02);
+  margin-bottom: 0 !important; /* Override bootstrap mb-4 if needed, or keep it layout dependent */
+}
+
+.brand {
+  font-weight: 700;
+  font-size: 1.3rem;
+  color: #333 !important;
+  display: flex;
+  align-items: center;
+  transition: opacity 0.2s;
+}
+
+.brand:hover {
+  opacity: 0.8;
+  color: #51624f !important;
+}
+
+.brandLogo {
+  border-radius: 50%;
+  margin-right: 12px;
+  border: 2px solid #f0f2f5;
+}
+
+.navLink {
+  color: #555 !important;
+  font-weight: 500;
+  margin: 0 0.5rem;
+  padding: 0.5rem 1rem !important;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.navLink:hover, .navLinkActive {
+  color: #51624f !important;
+  background-color: rgba(81, 98, 79, 0.08);
+}
+
+.userDropdown :global(.dropdown-toggle) {
+  color: #555 !important;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+.userDropdown :global(.dropdown-toggle)::after {
+  margin-left: 0.5rem;
+}
+
+.userDropdown :global(.dropdown-menu) {
+  border: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  margin-top: 10px;
+  padding: 0.5rem;
+}
+
+.userDropdown :global(.dropdown-item) {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  color: #555;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.userDropdown :global(.dropdown-item):hover {
+  background-color: rgba(81, 98, 79, 0.08);
+  color: #51624f;
+}
+
+.userDropdown :global(.dropdown-item):active {
+  background-color: #51624f;
+  color: #fff;
+}
+
+/* Auth buttons */
+.authLink {
+  color: #51624f !important;
+  font-weight: 600;
+  margin-left: 1rem;
+  padding: 0.4rem 1.2rem !important;
+  border: 1px solid #51624f;
+  border-radius: 20px;
+  transition: all 0.2s;
+}
+
+.authLink:hover {
+  background-color: #51624f;
+  color: #fff !important;
+  text-decoration: none;
+}
+
+.authLinkPrimary {
+  background-color: #51624f;
+  color: #fff !important;
+  margin-left: 0.5rem;
+}
+
+.authLinkPrimary:hover {
+  background-color: #3e4b3c;
+  border-color: #3e4b3c;
+  box-shadow: 0 4px 10px rgba(81, 98, 79, 0.2);
+}

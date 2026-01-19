@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Navbar, Container, Nav, NavDropdown } from 'react-bootstrap';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { getUserInfo, clearUserInfo } from '../../api/user';
 import logoUrl from '../../assets/tgu.jpg';
+import styles from './HeaderNav.module.css';
 
 const UserPanel = ({ userInfo, setIsLogin, setUserInfo }) => {
   const [isAdmin, setIsAdmin] = useState(false);
+  const navigate = useNavigate();
 
   // 检查用户是否为管理员
   useEffect(() => {
@@ -14,19 +17,33 @@ const UserPanel = ({ userInfo, setIsLogin, setUserInfo }) => {
   }, [userInfo]);
 
   // 退出登录
-  const handleLogout = () => {
+  const handleLogout = (e) => {
+    e.preventDefault();
     clearUserInfo();
     setUserInfo(null);
     setIsLogin(false);
-    window.location.href = '/';
+    navigate('/');
   };
 
   return (
-    <NavDropdown title={userInfo?.username} id="basic-nav-dropdown">
-      <NavDropdown.Item href="/profile">个人信息</NavDropdown.Item>
-      <NavDropdown.Item href="/settings">设置</NavDropdown.Item>
-      {/* <NavDropdown.Item href="/rank">Rank</NavDropdown.Item> */}
-      {isAdmin && <NavDropdown.Item href="/admin">管理员面板</NavDropdown.Item>}
+    <NavDropdown
+      title={userInfo?.username}
+      id="basic-nav-dropdown"
+      className={styles.userDropdown}
+      align="end"
+    >
+      <NavDropdown.Item as={Link} to="/profile">
+        个人信息
+      </NavDropdown.Item>
+      <NavDropdown.Item as={Link} to="/settings">
+        设置
+      </NavDropdown.Item>
+      {/* <NavDropdown.Item as={Link} to="/rank">Rank</NavDropdown.Item> */}
+      {isAdmin && (
+        <NavDropdown.Item as={Link} to="/admin">
+          管理员面板
+        </NavDropdown.Item>
+      )}
       <NavDropdown.Divider />
       <NavDropdown.Item href="#" onClick={handleLogout}>
         退出登录
@@ -38,6 +55,7 @@ const UserPanel = ({ userInfo, setIsLogin, setUserInfo }) => {
 export default function HeaderNav() {
   const [userInfo, setUserInfo] = useState(null);
   const [isLogin, setIsLogin] = useState(false);
+  const location = useLocation();
 
   // 获取用户信息
   useEffect(() => {
@@ -49,42 +67,64 @@ export default function HeaderNav() {
   }, []);
 
   return (
-    <Navbar expand="lg" className="bg-body-tertiary mb-4">
+    <Navbar expand="lg" className={`${styles.headerNavbar} mb-4`}>
       <Container>
-        <Navbar.Brand href="/">
+        <Navbar.Brand as={Link} to="/" className={styles.brand}>
           <img
-            alt=""
+            alt="Tgu-OJ Logo"
             src={logoUrl}
             width="35"
             height="35"
-            className="d-inline-block align-top"
-            style={{
-              borderRadius: '100',
-              marginRight: '10px',
-            }}
+            className={`d-inline-block align-top ${styles.brandLogo}`}
           />
           Tgu-OJ
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
-            <Nav.Link href="/">首页</Nav.Link>
-            <Nav.Link href="/problem">题库</Nav.Link>
-            <Nav.Link href="/graph">知识图谱</Nav.Link>
+            <Nav.Link
+              as={Link}
+              to="/"
+              className={`${styles.navLink} ${location.pathname === '/' ? styles.navLinkActive : ''}`}
+            >
+              首页
+            </Nav.Link>
+            <Nav.Link
+              as={Link}
+              to="/problem"
+              className={`${styles.navLink} ${location.pathname.startsWith('/problem') ? styles.navLinkActive : ''}`}
+            >
+              题库
+            </Nav.Link>
+            <Nav.Link
+              as={Link}
+              to="/graph"
+              className={`${styles.navLink} ${location.pathname.startsWith('/graph') ? styles.navLinkActive : ''}`}
+            >
+              知识图谱
+            </Nav.Link>
           </Nav>
+          {isLogin ? (
+            <UserPanel
+              userInfo={userInfo}
+              setIsLogin={setIsLogin}
+              setUserInfo={setUserInfo}
+            />
+          ) : (
+            <Nav className="align-items-center">
+              <Nav.Link as={Link} to="/login" className={styles.authLink}>
+                登录
+              </Nav.Link>
+              <Nav.Link
+                as={Link}
+                to="/register"
+                className={`${styles.authLink} ${styles.authLinkPrimary}`}
+              >
+                注册
+              </Nav.Link>
+            </Nav>
+          )}
         </Navbar.Collapse>
-        {isLogin ? (
-          <UserPanel
-            userInfo={userInfo}
-            setIsLogin={setIsLogin}
-            setUserInfo={setUserInfo}
-          />
-        ) : (
-          <Nav>
-            <Nav.Link href="/login">登录</Nav.Link>
-            <Nav.Link href="/register">注册</Nav.Link>
-          </Nav>
-        )}
       </Container>
     </Navbar>
   );

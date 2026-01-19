@@ -7,6 +7,7 @@ import { FaSearch } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { getAnnouncement, getHomeShowText } from '../../api/homeShowText';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function Home() {
   const [totalProblemsNum, setTotalProblemsNum] = useState(0); // 总题目数
@@ -15,6 +16,7 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState(''); // 搜索题目
   const [homeShowText, setHomeShowText] = useState(''); // OJ首页展示文本
   const [announcement, setAnnouncement] = useState(''); // 公告
+  const navigate = useNavigate();
 
   // 获取总题目数和最新题目
   const fetchProblemsNum = async () => {
@@ -52,71 +54,80 @@ export default function Home() {
   }, []);
 
   const searchProblem = () => {
-    window.location.href = `/problem?q=${searchTerm}`;
+    navigate(`/problem?q=${searchTerm}`);
   };
 
   return (
-    <Container>
-      <Row>
-        <Col lg={9}>
-          <div className={styles.Left}>
-            {/* <h1 className={styles.title}>欢迎来到 TGU-OJ</h1>
-            <p className={styles.subtitle}>在线编程练习平台</p>
-            <p className={styles.description}>
-              提升编程技能，挑战算法题目，与同学一起成长
-            </p> */}
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {homeShowText}
-            </ReactMarkdown>
-          </div>
-          <div className={styles.Left}>
-            <h3>公告</h3>
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {announcement || '暂无公告'}
-            </ReactMarkdown>
-          </div>
-        </Col>
-        <Col lg={3}>
-          <div className={styles.Right}>
-            <p>一言：</p>
-            <p>{motto.hitokoto}</p>
-            <div className={styles.from}>
-              <p>来源：{motto.from}</p>
-              <p>——{motto.from_who ? motto.from_who : motto.from}</p>
+    <div className={styles.homeContainer}>
+      <Container>
+        <Row>
+          <Col lg={9}>
+            <div className={styles.card}>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {homeShowText}
+              </ReactMarkdown>
             </div>
-          </div>
-          <div className={styles.Right}>总题目数：{totalProblemsNum}</div>
-          <div className={styles.Right}>
-            <p>搜索</p>
-            <div className={styles.searchBar}>
-              <input
-                type="text"
-                placeholder="搜索题目..."
-                className={styles.searchInput}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <div
-                onClick={() => searchProblem(searchTerm)}
-                className={styles.searchButton}
-              >
-                <FaSearch />
+            <div className={styles.card}>
+              <h3 className={styles.sectionTitle}>公告</h3>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {announcement || '暂无公告'}
+              </ReactMarkdown>
+            </div>
+          </Col>
+          <Col lg={3}>
+            <div className={styles.card}>
+              <h3 className={styles.sectionTitle}>一言</h3>
+              <p className={styles.mottoText}>{motto.hitokoto}</p>
+              <div className={styles.from}>
+                <span>{motto.from}</span>
+                <span>—— {motto.from_who ? motto.from_who : motto.from}</span>
               </div>
             </div>
-          </div>
-          <div className={styles.Right}>
-            <p>最新题目：</p>
-            {newProblems.map((problem) => (
-              <div key={problem.id}>
-                <a href={`/problem/${problem.question_number}`}>
-                  {problem.title}
-                </a>
+
+            <div className={styles.card}>
+              <div className={styles.statItem}>
+                <span>总题目数</span>
+                <span className={styles.statNumber}>{totalProblemsNum}</span>
               </div>
-            ))}
-          </div>
-          <div className={styles.Right}>倒计时</div>
-        </Col>
-      </Row>
-    </Container>
+            </div>
+
+            <div className={styles.card}>
+              <h3 className={styles.sectionTitle}>搜索</h3>
+              <div className={styles.searchBar}>
+                <input
+                  type="text"
+                  placeholder="搜索题目..."
+                  className={styles.searchInput}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && searchProblem()}
+                />
+                <div
+                  onClick={() => searchProblem(searchTerm)}
+                  className={styles.searchButton}
+                >
+                  <FaSearch />
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.card}>
+              <h3 className={styles.sectionTitle}>最新题目</h3>
+              <div className={styles.problemList}>
+                {newProblems.map((problem) => (
+                  <Link
+                    key={problem.id}
+                    to={`/problem/${problem.question_id}`}
+                    className={styles.problemLink}
+                  >
+                    {problem.title}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </Col>
+        </Row>
+      </Container>
+    </div>
   );
 }

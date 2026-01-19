@@ -1,171 +1,155 @@
-.home {
-  /* background-color: white; */
-  /* background-color: red; */
-  display: flex;
-  width: 100%;
-  min-height: 93vh;
-  /* padding: 2rem 0; */
-  /* background-image: url('../../public/images/bg.png'); */
-  background-size: cover;
-  background-position: center;
-  justify-content: center;
-  align-items: center;
-}
-
-.title {
-  font-size: 3rem;
-  font-weight: 700;
+.homeContainer {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   color: #333;
-  margin-bottom: 1rem;
-}
-.subtitle {
-  font-size: 1.5rem;
-  font-weight: 300;
-  color: #666;
-  margin-bottom: 1rem;
 }
 
-.description {
-  font-size: 1rem;
-  line-height: 1.6;
-  color: #666;
-  margin-bottom: 2rem;
+/* Card Component Style */
+.card {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.02);
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.featureCard {
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-  height: 100%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.featureCard:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 12px rgba(81, 98, 79, 0.15);
-  border-color: #51624f;
-}
-
-.featureIcon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  display: block;
-}
-
-.featureCard .card-title {
-  color: #51624f;
-  font-weight: 600;
-  margin-bottom: 1rem;
-}
-
-.featureCard .card-text {
-  color: #666;
-  line-height: 1.5;
-}
-
-.statCard {
-  padding: 1.5rem;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
-  transition: all 0.3s ease;
-}
-
-.statCard:hover {
-  background-color: #c6d1bd;
+.card:hover {
   transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
 }
 
-.statNumber {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #51624f;
-  margin-bottom: 0.5rem;
+/* Typography inside cards */
+.card h1, .card h2, .card h3 {
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  font-weight: 600;
 }
 
-.statLabel {
-  font-size: 1rem;
-  color: #666;
-  margin: 0;
-  font-weight: 500;
+.card p {
+  color: #5a6c7d;
+  line-height: 1.6;
 }
 
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .title {
-    font-size: 2.5rem;
-  }
-
-  .subtitle {
-    font-size: 1.2rem;
-  }
-
-  .description {
-    font-size: 1rem;
-  }
-
-  .statNumber {
-    font-size: 2rem;
-  }
-
-  .buttonGroup .btn {
-    margin-bottom: 0.5rem;
-  }
-}
-
-@media (max-width: 576px) {
-  .title {
-    font-size: 2rem;
-  }
-
-  .buttonGroup .btn {
-    display: block;
-    width: 100%;
-    margin-bottom: 1rem;
-  }
-}
-
-.Left {
-  margin: 2rem 0.2rem;
-  padding: 1rem;
-  border: 1px solid #999;
-}
-
-.Right {
-  display: flex;
-  flex-direction: column;
-  /* justify-content: center; */
-  /* align-items: center; */
-  margin: 2rem 0.2rem;
-  padding: 1rem;
-  border: 1px solid #999;
+/* Search Bar */
+.searchWrapper {
+  margin-top: 0.5rem;
 }
 
 .searchBar {
   display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-  border: 1px solid #ccc;
-  border-radius: 2px;
+  align-items: center;
+  background: #f5f7fa;
+  border: 1px solid #e1e4e8;
+  border-radius: 50px; /* Fully rounded */
+  padding: 0.5rem 1rem;
+  transition: all 0.2s ease;
+}
+
+.searchBar:focus-within {
+  background: #fff;
+  border-color: #51624f; /* Primary brand color */
+  box-shadow: 0 0 0 3px rgba(81, 98, 79, 0.1);
 }
 
 .searchInput {
-  flex: 1;
-  padding: 8px;
   border: none;
+  background: transparent;
+  flex: 1;
+  outline: none;
+  font-size: 0.95rem;
+  color: #333;
+  margin-right: 0.5rem;
 }
 
 .searchButton {
+  background: none;
+  border: none;
+  color: #51624f;
   cursor: pointer;
-  /* flex : 1; */
-  min-width: 30px;
   display: flex;
   align-items: center;
-  justify-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.searchButton:hover {
+  background: rgba(81, 98, 79, 0.1);
+}
+
+/* New Problems List */
+.problemList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.problemLink {
+  display: block;
+  padding: 0.8rem 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  color: #2c3e50;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+
+.problemLink:hover {
+  background: #fff;
+  border-color: #51624f;
+  color: #51624f;
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+/* Motto Section */
+.mottoText {
+  font-size: 1rem;
+  font-style: italic;
+  color: #444;
+  margin-bottom: 0.5rem;
+  font-family: 'Georgia', serif;
 }
 
 .from {
-  align-self: flex-end;
-  font-size: 0.8rem;
-  color: #666;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 0.85rem;
+  color: #888;
+  margin-top: 0.5rem;
+}
+
+/* Stats */
+.statItem {
+  font-size: 1.1rem;
+  color: #555;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0;
+}
+
+.statNumber {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #51624f;
+  margin-left: 0.5rem;
+}
+
+.sectionTitle {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #f0f2f5;
+    padding-bottom: 0.5rem;
+    display: block;
 }

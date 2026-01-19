@@ -1,11 +1,19 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Container } from 'react-bootstrap';
 import ForceDirectedGraph from './grouph';
+import styles from './frame.module.css';
 import {
   getGraphNodePage,
   findLearningPath,
   getRecommendations,
 } from '../api/graph';
+import {
+  FaSearch,
+  FaInfoCircle,
+  FaSync,
+  FaTimes,
+  FaLink,
+} from 'react-icons/fa';
 
 export default function Frame() {
   // 状态管理
@@ -63,9 +71,10 @@ export default function Frame() {
       const edgesRaw = Array.isArray(resp?.edges) ? resp.edges : [];
 
       const questionNodes = questions.map((q) => ({
-        id: `Q:${q.question_number}`,
+        id: `Q:${q.question_id}`,
         node_type: 'question',
         question_number: q.question_number,
+        question_id: q.question_id,
         title: q.title,
         difficulty: q.difficulty,
         tags: q.tags || '',
@@ -106,8 +115,8 @@ export default function Frame() {
             typeof e?.weight === 'number'
               ? e.weight
               : typeof e?.value === 'number'
-              ? e.value
-              : 1,
+                ? e.value
+                : 1,
         }))
         .filter((l) => l.source && l.target);
 
@@ -142,8 +151,6 @@ export default function Frame() {
 
   useEffect(() => {
     // 这是一个副作用，用于触发 filteredData 重新计算
-    // 实际上 filteredData 是在渲染期间计算的，只要 state 变化就会更新
-    // 但如果有些副作用需要依赖 filteredData，可以在这里处理
   }, [edgeFilters]);
 
   // 处理节点点击事件
@@ -180,8 +187,8 @@ export default function Frame() {
         const recommendations = Array.isArray(recResp?.recommendations)
           ? recResp.recommendations
           : Array.isArray(recResp)
-          ? recResp
-          : [];
+            ? recResp
+            : [];
 
         if (recommendations.length > 0) {
           const recommendedIds = recommendations.map(
@@ -231,8 +238,8 @@ export default function Frame() {
       const pathNumbers = Array.isArray(pathResp?.path)
         ? pathResp.path
         : Array.isArray(pathResp)
-        ? pathResp
-        : [];
+          ? pathResp
+          : [];
 
       if (pathNumbers.length > 0) {
         const pathIds = pathNumbers.map((n) => `Q:${n}`);
@@ -300,557 +307,443 @@ export default function Frame() {
   const filteredData = getFilteredData();
 
   return (
-    <Container>
-      {/* 控制面板 */}
-      <div className="card mb-3">
-        <div className="card-body">
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: 12,
-              marginBottom: 12,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 18, fontWeight: 600 }}>知识图谱</span>
-              <i className="bi bi-info-circle text-secondary" />
-            </div>
-          </div>
-
-          {flash ? (
-            <div
-              className={`alert alert-${flash.type} alert-dismissible fade show mb-3`}
-              role="alert"
-            >
-              {flash.text}
-              <button
-                type="button"
-                className="btn-close"
-                aria-label="Close"
-                onClick={() => setFlash(null)}
-              />
-            </div>
-          ) : null}
-
-          {loadError ? (
-            <div className="alert alert-danger mb-3" role="alert">
-              {loadError}
-            </div>
-          ) : null}
-
-          <div
-            style={{
-              display: 'flex',
-              gap: '16px',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-            }}
-          >
-            <div className="input-group" style={{ width: 260 }}>
-              <span className="input-group-text">
-                <i className="bi bi-search" />
-              </span>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="搜索题目标题或标签"
-                value={searchKeyword}
-                onChange={(e) => setSearchKeyword(e.target.value)}
-              />
+    <div className={styles.container}>
+      <Container>
+        {/* 控制面板 */}
+        <div className={styles.card}>
+          <div className={styles.cardBody}>
+            <div className={styles.header}>
+              <div className={styles.title}>
+                <FaInfoCircle size={20} color="#51624f" />
+                <span>知识图谱探索</span>
+              </div>
+              <div className={styles.controls}>
+                <button
+                  className={`${styles.btn} ${styles.btnSecondary}`}
+                  onClick={resetHighlight}
+                  disabled={loading}
+                >
+                  <FaTimes /> 重置高亮
+                </button>
+                <button
+                  className={`${styles.btn} ${styles.btnSecondary}`}
+                  onClick={loadGraphData}
+                  disabled={loading}
+                >
+                  <FaSync className={loading ? 'fa-spin' : ''} /> 刷新数据
+                </button>
+              </div>
             </div>
 
-            {/* 边类型过滤器 */}
-            <div
-              className="d-flex align-items-center gap-3 border-start ps-3"
-              style={{ height: 38 }}
-            >
-              <span className="text-secondary small">显示关系:</span>
-              {[
-                { key: 'HAS_SKILL', label: '包含技能' },
-                { key: 'PREREQUISITE', label: '前置' },
-                { key: 'SKILL_CO_OCCUR', label: '技能共现' },
-              ].map(({ key, label }) => (
-                <div className="form-check form-check-inline mb-0" key={key}>
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id={`filter-${key}`}
-                    checked={!!edgeFilters[key]}
-                    onChange={(e) =>
-                      setEdgeFilters((prev) => ({
-                        ...prev,
-                        [key]: e.target.checked,
-                      }))
-                    }
-                  />
-                  <label
-                    className="form-check-label small"
-                    htmlFor={`filter-${key}`}
-                  >
+            {flash && (
+              <div
+                className={`alert alert-${flash.type} alert-dismissible fade show mb-3`}
+              >
+                {flash.text}
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setFlash(null)}
+                />
+              </div>
+            )}
+
+            {loadError && (
+              <div className="alert alert-danger mb-3">{loadError}</div>
+            )}
+
+            <div className={styles.controls} style={{ marginBottom: '1rem' }}>
+              {/* 搜索 */}
+              <div className={styles.inputGroup}>
+                <FaSearch className={styles.inputIcon} />
+                <input
+                  type="text"
+                  className={styles.formControl}
+                  placeholder="搜索题目标题或标签..."
+                  value={searchKeyword}
+                  onChange={(e) => setSearchKeyword(e.target.value)}
+                />
+              </div>
+
+              {/* 边类型过滤器 */}
+              <div className={styles.filterSection}>
+                <span style={{ fontSize: '0.9rem', color: '#999' }}>
+                  显示关系:
+                </span>
+                {[
+                  { key: 'HAS_SKILL', label: '包含技能' },
+                  { key: 'PREREQUISITE', label: '前置' },
+                  { key: 'SKILL_CO_OCCUR', label: '技能共现' },
+                ].map(({ key, label }) => (
+                  <label key={key} className={styles.checkboxLabel}>
+                    <input
+                      className={styles.checkboxInput}
+                      type="checkbox"
+                      checked={!!edgeFilters[key]}
+                      onChange={(e) =>
+                        setEdgeFilters((prev) => ({
+                          ...prev,
+                          [key]: e.target.checked,
+                        }))
+                      }
+                    />
                     {label}
                   </label>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
 
             {/* 路径查找 */}
-            <div style={{ width: 220 }}>
-              <input
-                className="form-control"
-                list="graph-path-start"
-                placeholder="选择起点"
-                value={pathStart || ''}
-                onChange={(e) => setPathStart(e.target.value || null)}
-              />
-              <datalist id="graph-path-start">
-                {graphData.nodes
-                  .filter(
-                    (n) =>
-                      n?.node_type === 'question' ||
-                      String(n?.id || '').startsWith('Q:')
-                  )
-                  .map((node) => (
-                    <option key={node.id} value={node.id}>
-                      {node.title} ({String(node.id).replace(/^Q:/, '')})
-                    </option>
-                  ))}
-              </datalist>
+            <div
+              className={styles.controls}
+              style={{
+                backgroundColor: '#f9f9f9',
+                padding: '1rem',
+                borderRadius: '8px',
+              }}
+            >
+              <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>
+                路径探索:
+              </span>
+              <div style={{ width: 200 }}>
+                <input
+                  className={styles.formControl}
+                  list="graph-path-start"
+                  placeholder="选择起点"
+                  value={pathStart || ''}
+                  onChange={(e) => setPathStart(e.target.value || null)}
+                />
+                <datalist id="graph-path-start">
+                  {graphData.nodes
+                    .filter(
+                      (n) =>
+                        n?.node_type === 'question' ||
+                        String(n?.id || '').startsWith('Q:')
+                    )
+                    .map((node) => (
+                      <option key={node.id} value={node.id}>
+                        {node.title} ({String(node.id).replace(/^Q:/, '')})
+                      </option>
+                    ))}
+                </datalist>
+              </div>
+
+              <div style={{ width: 200 }}>
+                <input
+                  className={styles.formControl}
+                  list="graph-path-end"
+                  placeholder="选择终点"
+                  value={pathEnd || ''}
+                  onChange={(e) => setPathEnd(e.target.value || null)}
+                />
+                <datalist id="graph-path-end">
+                  {graphData.nodes
+                    .filter(
+                      (n) =>
+                        n?.node_type === 'question' ||
+                        String(n?.id || '').startsWith('Q:')
+                    )
+                    .map((node) => (
+                      <option key={node.id} value={node.id}>
+                        {node.title} ({String(node.id).replace(/^Q:/, '')})
+                      </option>
+                    ))}
+                </datalist>
+              </div>
+
+              <button
+                className={`${styles.btn} ${styles.btnPrimary}`}
+                onClick={handleFindPath}
+                disabled={loading}
+              >
+                <FaLink /> 查找路径
+              </button>
             </div>
 
-            <div style={{ width: 220 }}>
-              <input
-                className="form-control"
-                list="graph-path-end"
-                placeholder="选择终点"
-                value={pathEnd || ''}
-                onChange={(e) => setPathEnd(e.target.value || null)}
-              />
-              <datalist id="graph-path-end">
-                {graphData.nodes
-                  .filter(
-                    (n) =>
-                      n?.node_type === 'question' ||
+            {/* 统计信息 */}
+            <div className={styles.statsBar}>
+              <div className={styles.statItem}>
+                <span>题目节点:</span>
+                <span className={styles.statValue}>
+                  {
+                    filteredData.nodes.filter((n) =>
                       String(n?.id || '').startsWith('Q:')
-                  )
-                  .map((node) => (
-                    <option key={node.id} value={node.id}>
-                      {node.title} ({String(node.id).replace(/^Q:/, '')})
-                    </option>
-                  ))}
-              </datalist>
+                    ).length
+                  }
+                </span>
+              </div>
+              <div className={styles.statItem}>
+                <span>技能节点:</span>
+                <span className={styles.statValue}>
+                  {
+                    filteredData.nodes.filter((n) =>
+                      String(n?.id || '').startsWith('S:')
+                    ).length
+                  }
+                </span>
+              </div>
+              <div className={styles.statItem}>
+                <span>边数量:</span>
+                <span className={styles.statValue}>
+                  {filteredData.links.length}
+                </span>
+              </div>
+              {learningPath.length > 0 && (
+                <div className={styles.statItem}>
+                  <span>学习路径:</span>
+                  <span className={styles.statValue}>
+                    {learningPath.length} 个题目
+                  </span>
+                </div>
+              )}
             </div>
-
-            <button
-              type="button"
-              className="btn text-white"
-              style={{ backgroundColor: '#4d5d4b', borderColor: '#4d5d4b' }}
-              onClick={handleFindPath}
-              disabled={loading}
-            >
-              查找路径
-            </button>
-
-            <button
-              type="button"
-              className="btn btn-outline-secondary"
-              onClick={resetHighlight}
-              disabled={loading}
-            >
-              重置高亮
-            </button>
-
-            <button
-              type="button"
-              className="btn btn-outline-secondary"
-              onClick={loadGraphData}
-              disabled={loading}
-            >
-              <i className="bi bi-arrow-clockwise me-1" />
-              刷新数据
-            </button>
-          </div>
-
-          {/* 统计信息 */}
-          <div
-            style={{
-              marginTop: '12px',
-              display: 'flex',
-              gap: '16px',
-              flexWrap: 'wrap',
-            }}
-          >
-            <span>
-              题目节点:{' '}
-              {
-                filteredData.nodes.filter((n) =>
-                  String(n?.id || '').startsWith('Q:')
-                ).length
-              }
-            </span>
-            <span>
-              技能节点:{' '}
-              {
-                filteredData.nodes.filter((n) =>
-                  String(n?.id || '').startsWith('S:')
-                ).length
-              }
-            </span>
-            <span>边数量: {filteredData.links.length}</span>
-            {learningPath.length > 0 ? (
-              <span>学习路径: {learningPath.length} 个题目</span>
-            ) : null}
           </div>
         </div>
-      </div>
 
-      {/* 图谱容器 */}
-      <div className="card flex-fill position-relative">
-        <div className="card-body p-0 h-100">
+        {/* 图谱容器 */}
+        <div className={`${styles.card} ${styles.graphContainer}`}>
           {loading ? (
-            <div
-              className="d-flex flex-column justify-content-center align-items-center"
-              style={{ height: '400px' }}
-            >
+            <div className={styles.loadingContainer}>
               <div className="spinner-border text-secondary" role="status" />
-              <div className="mt-2 text-secondary">加载图谱数据中...</div>
+              <div className="mt-3">加载图谱数据中...</div>
             </div>
           ) : (
-            <ForceDirectedGraph
-              data={filteredData}
-              highlightedNodes={highlightedNodes}
-              onNodeClick={handleNodeClick}
-            />
+            <>
+              <ForceDirectedGraph
+                data={filteredData}
+                highlightedNodes={highlightedNodes}
+                onNodeClick={handleNodeClick}
+              />
+
+              <div className={styles.legend}>
+                <div className={styles.legendTitle}>图例说明</div>
+                <div className={styles.legendItem}>
+                  <span style={{ color: '#1890ff' }}>●</span> 简单
+                </div>
+                <div className={styles.legendItem}>
+                  <span style={{ color: '#52c41a' }}>●</span> 中等
+                </div>
+                <div className={styles.legendItem}>
+                  <span style={{ color: '#f5222d' }}>●</span> 困难
+                </div>
+                <div className={styles.legendItem}>
+                  <span style={{ color: '#faad14' }}>●</span> 高亮节点
+                </div>
+                <div
+                  className={styles.legendTitle}
+                  style={{ marginTop: '12px' }}
+                >
+                  关系类型
+                </div>
+                <div className={styles.legendItem}>
+                  <span style={{ color: '#722ed1' }}>━</span> PREREQUISITE
+                </div>
+                <div className={styles.legendItem}>
+                  <span style={{ color: '#13c2c2' }}>━</span> NEXT
+                </div>
+                <div className={styles.legendItem}>
+                  <span style={{ color: '#fa8c16' }}>━</span> RELATED
+                </div>
+              </div>
+            </>
           )}
-
-          <div
-            style={{
-              position: 'absolute',
-              top: '16px',
-              right: '16px',
-              background: 'rgba(255, 255, 255, 0.9)',
-              padding: '12px',
-              borderRadius: '6px',
-              border: '1px solid #d9d9d9',
-            }}
-          >
-            <div style={{ marginBottom: '8px', fontWeight: 'bold' }}>图例</div>
-            <div
-              style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}
-            >
-              <div>
-                <span style={{ color: '#1890ff' }}>●</span> 简单
-              </div>
-              <div>
-                <span style={{ color: '#52c41a' }}>●</span> 中等
-              </div>
-              <div>
-                <span style={{ color: '#f5222d' }}>●</span> 困难
-              </div>
-              <div>
-                <span style={{ color: '#faad14' }}>●</span> 高亮节点
-              </div>
-              <div style={{ marginTop: 8, fontWeight: 'bold' }}>关系</div>
-              <div>
-                <span style={{ color: '#722ed1' }}>━</span> PREREQUISITE
-              </div>
-              <div>
-                <span style={{ color: '#13c2c2' }}>━</span> NEXT
-              </div>
-              <div>
-                <span style={{ color: '#fa8c16' }}>━</span> RELATED
-              </div>
-              <div>
-                <span style={{ color: '#8c8c8c' }}>━</span> SIMILAR
-              </div>
-            </div>
-          </div>
         </div>
-      </div>
 
-      {/* 节点详情弹窗 */}
-      {showNodeInfo ? (
-        <>
+        {/* 节点详情弹窗 */}
+        {showNodeInfo && selectedNode && (
           <div
-            className="modal show"
-            style={{ display: 'block' }}
-            tabIndex="-1"
-            role="dialog"
-            aria-modal="true"
+            className={styles.modalOverlay}
+            onClick={() => setShowNodeInfo(false)}
           >
             <div
-              className="modal-dialog modal-lg modal-dialog-scrollable"
-              role="document"
+              className={styles.modalContent}
+              onClick={(e) => e.stopPropagation()}
             >
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title">
-                    {String(selectedNode?.id || '').startsWith('S:')
-                      ? '技能详情'
-                      : '题目详情'}
-                  </h5>
-                  <button
-                    type="button"
-                    className="btn-close"
-                    aria-label="Close"
-                    onClick={() => setShowNodeInfo(false)}
-                  />
-                </div>
-                <div className="modal-body">
-                  {selectedNode ? (
-                    String(selectedNode.id || '').startsWith('S:') ||
-                    selectedNode.node_type === 'skill' ? (
-                      <div>
-                        <h3>{selectedNode.title}</h3>
-                        <div style={{ marginBottom: 16 }}>
-                          <p>
-                            <strong>技能 Key:</strong>{' '}
-                            {selectedNode.skill_key ||
-                              String(selectedNode.id).replace(/^S:/, '')}
-                          </p>
-                          {selectedNode.updated_at ? (
-                            <p className="text-secondary">
-                              <strong>更新时间:</strong>{' '}
-                              {String(selectedNode.updated_at)}
-                            </p>
-                          ) : null}
-                        </div>
-
-                        <div style={{ marginBottom: 16 }}>
-                          <strong>相关题目:</strong>
-                          <div className="mt-2 d-flex flex-wrap gap-2">
-                            {[
-                              ...new Set(
-                                graphData.links
-                                  .filter((l) => {
-                                    const sid = String(selectedNode.id);
-                                    const s = String(l.source);
-                                    const t = String(l.target);
-                                    return (
-                                      (s === sid && t.startsWith('Q:')) ||
-                                      (t === sid && s.startsWith('Q:'))
-                                    );
-                                  })
-                                  .map((l) => {
-                                    const sid = String(selectedNode.id);
-                                    const s = String(l.source);
-                                    const t = String(l.target);
-                                    return s === sid ? t : s;
-                                  })
-                              ),
-                            ]
-                              .slice(0, 50)
-                              .map((qid) => (
-                                <a
-                                  key={qid}
-                                  className="btn btn-sm btn-outline-secondary"
-                                  href={`/problem/${String(qid).replace(
-                                    /^Q:/,
-                                    ''
-                                  )}`}
-                                >
-                                  {String(qid).replace(/^Q:/, '')}
-                                </a>
-                              ))}
-                          </div>
-                          <div className="text-secondary small mt-2">
-                            最多展示 50 个
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        <h3>{selectedNode.title}</h3>
-                        <div style={{ marginBottom: 16 }}>
-                          <p>
-                            <strong>题目编号:</strong>{' '}
-                            {String(selectedNode.id).replace(/^Q:/, '')}
-                          </p>
-                          <p>
-                            <strong>难度:</strong>{' '}
-                            <span
-                              className={`badge ${
-                                selectedNode.difficulty === '简单'
-                                  ? 'bg-success'
-                                  : selectedNode.difficulty === '中等'
-                                  ? 'bg-warning text-dark'
-                                  : selectedNode.difficulty === '困难'
-                                  ? 'bg-danger'
-                                  : 'bg-secondary'
-                              }`}
-                            >
-                              {selectedNode.difficulty}
-                            </span>
-                          </p>
-                          <p>
-                            <strong>标签:</strong>{' '}
-                            {selectedNode.tags
-                              ? selectedNode.tags.split(',').map((tag) => {
-                                  const t = tag.trim();
-                                  if (!t) return null;
-                                  return (
-                                    <span
-                                      key={t}
-                                      className="badge bg-secondary me-1 mb-1"
-                                    >
-                                      {t}
-                                    </span>
-                                  );
-                                })
-                              : null}
-                          </p>
-                          {selectedNode.source ? (
-                            <p>
-                              <strong>来源:</strong> {selectedNode.source}
-                            </p>
-                          ) : null}
-                          <div className="mt-2">
+              <div className={styles.modalHeader}>
+                <h5 className={styles.modalTitle}>
+                  {String(selectedNode?.id || '').startsWith('S:')
+                    ? '技能详情'
+                    : '题目详情'}
+                </h5>
+                <button
+                  className={styles.closeBtn}
+                  onClick={() => setShowNodeInfo(false)}
+                >
+                  <FaTimes />
+                </button>
+              </div>
+              <div className={styles.modalBody}>
+                {String(selectedNode.id || '').startsWith('S:') ||
+                selectedNode.node_type === 'skill' ? (
+                  <div>
+                    <h3 style={{ marginBottom: '1rem', color: '#333' }}>
+                      {selectedNode.title}
+                    </h3>
+                    <div className={styles.infoSection}>
+                      <p>
+                        <span className={styles.infoLabel}>技能 Key:</span>{' '}
+                        {selectedNode.skill_key ||
+                          String(selectedNode.id).replace(/^S:/, '')}
+                      </p>
+                      {selectedNode.updated_at && (
+                        <p>
+                          <span className={styles.infoLabel}>更新时间:</span>{' '}
+                          {String(selectedNode.updated_at)}
+                        </p>
+                      )}
+                    </div>
+                    <div className={styles.infoSection}>
+                      <span className={styles.infoLabel}>相关题目:</span>
+                      <div className="mt-2">
+                        {[
+                          ...new Set(
+                            graphData.links
+                              .filter((l) => {
+                                const sid = String(selectedNode.id);
+                                const s = String(l.source);
+                                const t = String(l.target);
+                                return (
+                                  (s === sid && t.startsWith('Q:')) ||
+                                  (t === sid && s.startsWith('Q:'))
+                                );
+                              })
+                              .map((l) => {
+                                const sid = String(selectedNode.id);
+                                return String(l.source) === sid
+                                  ? String(l.target)
+                                  : String(l.source);
+                              })
+                          ),
+                        ]
+                          .slice(0, 50)
+                          .map((qid) => (
                             <a
-                              className="btn btn-sm btn-outline-secondary"
-                              href={`/problem/${String(selectedNode.id).replace(
-                                /^Q:/,
-                                ''
-                              )}`}
+                              key={qid}
+                              className={styles.relatedLink}
+                              href={`/problem/${String(qid).replace(/^Q:/, '')}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
                             >
-                              打开题目
+                              {String(qid).replace(/^Q:/, '')}
                             </a>
+                          ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start',
+                      }}
+                    >
+                      <h3 style={{ marginBottom: '1rem', color: '#333' }}>
+                        {selectedNode.title}
+                      </h3>
+                      <a
+                        className={`${styles.btn} ${styles.btnPrimary}`}
+                        href={`/problem/${String(selectedNode.id).replace(/^Q:/, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ padding: '0.4rem 1rem', fontSize: '0.9rem' }}
+                      >
+                        去做题
+                      </a>
+                    </div>
+
+                    <div className={styles.infoSection}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          gap: '2rem',
+                          marginBottom: '1rem',
+                        }}
+                      >
+                        <div>
+                          <span className={styles.infoLabel}>题目编号</span>
+                          {String(selectedNode.id).replace(/^Q:/, '')}
+                        </div>
+                        <div>
+                          <span className={styles.infoLabel}>难度</span>
+                          <span
+                            className={`${styles.badge} ${
+                              selectedNode.difficulty === '简单'
+                                ? styles.badgeEasy
+                                : selectedNode.difficulty === '中等'
+                                  ? styles.badgeMedium
+                                  : selectedNode.difficulty === '困难'
+                                    ? styles.badgeHard
+                                    : styles.badgeDefault
+                            }`}
+                          >
+                            {selectedNode.difficulty}
+                          </span>
+                        </div>
+                      </div>
+
+                      {selectedNode.tags && (
+                        <div style={{ marginBottom: '1rem' }}>
+                          <span className={styles.infoLabel}>标签</span>
+                          {selectedNode.tags.split(',').map(
+                            (tag) =>
+                              tag.trim() && (
+                                <span
+                                  key={tag}
+                                  className={`${styles.badge} ${styles.badgeDefault}`}
+                                  style={{ marginRight: '6px' }}
+                                >
+                                  {tag.trim()}
+                                </span>
+                              )
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {selectedNode.description && (
+                      <div className={styles.infoSection}>
+                        <span className={styles.infoLabel}>题目描述</span>
+                        <div
+                          style={{
+                            backgroundColor: '#f9f9f9',
+                            padding: '1rem',
+                            borderRadius: '8px',
+                            lineHeight: '1.6',
+                          }}
+                        >
+                          {selectedNode.description}
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedNode.sample_input &&
+                      selectedNode.sample_output && (
+                        <div className={styles.infoSection}>
+                          <div style={{ display: 'flex', gap: '1rem' }}>
+                            <div style={{ flex: 1 }}>
+                              <span className={styles.infoLabel}>样例输入</span>
+                              <div className={styles.codeBlock}>
+                                {selectedNode.sample_input}
+                              </div>
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <span className={styles.infoLabel}>样例输出</span>
+                              <div className={styles.codeBlock}>
+                                {selectedNode.sample_output}
+                              </div>
+                            </div>
                           </div>
                         </div>
-
-                        {selectedNode.description ? (
-                          <div style={{ marginBottom: 16 }}>
-                            <strong>题目描述:</strong>
-                            <div
-                              style={{
-                                marginTop: 8,
-                                padding: 12,
-                                backgroundColor: '#f5f5f5',
-                                borderRadius: 4,
-                              }}
-                            >
-                              {selectedNode.description}
-                            </div>
-                          </div>
-                        ) : null}
-
-                        {selectedNode.input_format ? (
-                          <div style={{ marginBottom: 16 }}>
-                            <strong>输入格式:</strong>
-                            <div
-                              style={{
-                                marginTop: 8,
-                                padding: 12,
-                                backgroundColor: '#f0f8ff',
-                                borderRadius: 4,
-                                whiteSpace: 'pre-line',
-                              }}
-                            >
-                              {selectedNode.input_format}
-                            </div>
-                          </div>
-                        ) : null}
-
-                        {selectedNode.output_format ? (
-                          <div style={{ marginBottom: 16 }}>
-                            <strong>输出格式:</strong>
-                            <div
-                              style={{
-                                marginTop: 8,
-                                padding: 12,
-                                backgroundColor: '#f0f8ff',
-                                borderRadius: 4,
-                                whiteSpace: 'pre-line',
-                              }}
-                            >
-                              {selectedNode.output_format}
-                            </div>
-                          </div>
-                        ) : null}
-
-                        {selectedNode.sample_input &&
-                        selectedNode.sample_output ? (
-                          <div style={{ marginBottom: 16 }}>
-                            <strong>样例:</strong>
-                            <div
-                              style={{ display: 'flex', gap: 16, marginTop: 8 }}
-                            >
-                              <div style={{ flex: 1 }}>
-                                <div
-                                  style={{
-                                    marginBottom: 4,
-                                    fontWeight: 'bold',
-                                  }}
-                                >
-                                  输入:
-                                </div>
-                                <div
-                                  style={{
-                                    padding: 12,
-                                    backgroundColor: '#fff7e6',
-                                    borderRadius: 4,
-                                    whiteSpace: 'pre-line',
-                                    fontFamily: 'monospace',
-                                  }}
-                                >
-                                  {selectedNode.sample_input}
-                                </div>
-                              </div>
-                              <div style={{ flex: 1 }}>
-                                <div
-                                  style={{
-                                    marginBottom: 4,
-                                    fontWeight: 'bold',
-                                  }}
-                                >
-                                  输出:
-                                </div>
-                                <div
-                                  style={{
-                                    padding: 12,
-                                    backgroundColor: '#f6ffed',
-                                    borderRadius: 4,
-                                    whiteSpace: 'pre-line',
-                                    fontFamily: 'monospace',
-                                  }}
-                                >
-                                  {selectedNode.sample_output}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ) : null}
-
-                        {selectedNode.hint ? (
-                          <div style={{ marginBottom: 16 }}>
-                            <strong>提示:</strong>
-                            <div
-                              style={{
-                                marginTop: 8,
-                                padding: 12,
-                                backgroundColor: '#fffbe6',
-                                borderRadius: 4,
-                                border: '1px solid #ffe58f',
-                              }}
-                            >
-                              {selectedNode.hint}
-                            </div>
-                          </div>
-                        ) : null}
-                      </div>
-                    )
-                  ) : null}
-                </div>
+                      )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
-          <div
-            className="modal-backdrop fade show"
-            onClick={() => setShowNodeInfo(false)}
-          />
-        </>
-      ) : null}
-    </Container>
+        )}
+      </Container>
+    </div>
   );
 }

@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import styles from './UpdateProblem.module.css';
 import { Row, Col, Modal, Button } from 'react-bootstrap';
 import { updateProblem } from '../../api/updateProblem';
-import { getProblemById } from '../../api/getproblem';
+import { getProblemById, getProblemByNumber } from '../../api/getproblem';
 import MDEditor from '@uiw/react-md-editor';
 
 export default function UpdateProblem() {
@@ -12,6 +12,7 @@ export default function UpdateProblem() {
   // 表单数据状态
   const [formData, setFormData] = useState({
     question_id: '',
+    question_number: '',
     title: '',
     content: '',
     difficulty: '简单',
@@ -63,7 +64,7 @@ export default function UpdateProblem() {
 
     try {
       // 发送创建题目请求
-      const response = await updateProblem(formData, id);
+      const response = await updateProblem(formData, formData.question_number);
 
       // 更新成功
       setSuccess('题目更新成功！');
@@ -71,8 +72,9 @@ export default function UpdateProblem() {
       // console.log('题目更新成功:', response.data);
 
       // 刷新题目数据
-      fetchProblemData();
+      // fetchProblemData();
       setSuccess('');
+      window.location.href = `/admin/updateproblem/${formData.question_id}`;
     } catch (err) {
       console.error('题目更新失败:', err);
       setError(err.response?.data?.message || '题目更新失败，请稍后再试');

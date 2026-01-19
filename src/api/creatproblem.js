@@ -22,6 +22,8 @@ export async function createProm(data) {
       body: JSON.stringify(data),
     });
     if (!response.ok) {
+      const result = await response.json();
+      console.log(result);
       throw new Error('创建题目失败');
     }
     const result = await response.json();

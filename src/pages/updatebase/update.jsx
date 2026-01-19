@@ -104,18 +104,16 @@ export default function Updatebase() {
       <h2>更新题目</h2>
       {problem.map((item, i) => (
         <div key={i} className={styles.problemBox}>
-          <div className={styles.problemTitle}>
-            Problem {item.question_number}
-          </div>
+          <div className={styles.problemTitle}>Problem {item.question_id}</div>
           <p>{item.content}</p>
           <a
-            href={`/admin/updateproblem/${item.question_number}`}
+            href={`/admin/updateproblem/${item.question_id}`}
             style={{ marginRight: '10px' }}
           >
             更新
           </a>
           <a
-            href={`/admin/manageTestCase/${item.question_number}`}
+            href={`/admin/manageTestCase/${item.question_id}`}
             style={{ marginRight: '10px' }}
           >
             管理测试用例

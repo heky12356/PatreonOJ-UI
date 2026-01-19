@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import styles from './QuestionBank.module.css';
 import { getProblem } from '../../api/getproblem';
 import FootNav from '../../components/footNav/footNav.jsx';
 import { Container, Row, Col } from 'react-bootstrap';
-import { FaSearch } from 'react-icons/fa';
+import { FaSearch, FaPlus } from 'react-icons/fa';
 import { hasPermission } from '../../api/user.js';
 
 const QuestionBank = ({ setCurrentKey }) => {
@@ -18,8 +18,10 @@ const QuestionBank = ({ setCurrentKey }) => {
   const [difficult, setDifficult] = useState('');
   const [isEdit, setIsEdit] = useState(false);
   const [selectProm, setSelctProm] = useState(new Set());
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(location.search);
 
   // 获取题目列表
   // 监听pageIdx，如果pageIdx发生变化就调用搜索函数将data数组做一个变化
@@ -46,10 +48,11 @@ const QuestionBank = ({ setCurrentKey }) => {
       }
     };
 
-    setSearchTerm(params.get('q') || '');
+    const q = params.get('q') || '';
+    setSearchTerm(q);
     // console.log(params.get('q'));
-    fetchQuestions(params.get('q'));
-  }, [pageIdx, difficult]);
+    fetchQuestions(q);
+  }, [pageIdx, difficult, location.search]);
 
   // useEffect(() => {
   //   console.log('测试' + hasPermission('admin'));
@@ -62,7 +65,7 @@ const QuestionBank = ({ setCurrentKey }) => {
   };
 
   const searchProblem = async (q) => {
-    window.location.href = `/problem?q=${q}`;
+    navigate(`/problem?q=${q}`);
   };
 
   // 选择单个题目
@@ -81,7 +84,9 @@ const QuestionBank = ({ setCurrentKey }) => {
   if (loading) {
     return (
       <div className={styles.container}>
-        <div className={styles.loading}>加载中...</div>
+        <Container>
+          <div className={styles.loading}>加载中...</div>
+        </Container>
       </div>
     );
   }
@@ -89,117 +94,128 @@ const QuestionBank = ({ setCurrentKey }) => {
   if (error) {
     return (
       <div className={styles.container}>
-        <div className={styles.error}>错误: {error}</div>
+        <Container>
+          <div className={styles.error}>错误: {error}</div>
+        </Container>
       </div>
     );
   }
 
   return (
-    <Container>
-      {/* <h1 className={styles.title}>题库列表</h1> */}
-      <Row>
-        <Col md={10}>
-          <div className={styles.searchBar}>
-            <input
-              type="text"
-              placeholder="搜索题目..."
-              className={styles.searchInput}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <div
-              onClick={() => searchProblem(searchTerm)}
-              className={styles.searchButton}
-            >
-              <FaSearch />
+    <div className={styles.container}>
+      <Container>
+        {/* <h1 className={styles.title}>题库列表</h1> */}
+        <Row>
+          <Col md={9}>
+            <div className={styles.card}>
+              <div className={styles.searchBar}>
+                <input
+                  type="text"
+                  placeholder="搜索题目..."
+                  className={styles.searchInput}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) =>
+                    e.key === 'Enter' && searchProblem(searchTerm)
+                  }
+                />
+                <div
+                  onClick={() => searchProblem(searchTerm)}
+                  className={styles.searchButton}
+                >
+                  <FaSearch />
+                </div>
+              </div>
+
+              <div className={styles.tableContainer}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      {isEdit && (
+                        <th>
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            value=""
+                            id="checkDefault"
+                          ></input>
+                        </th>
+                      )}
+                      <th style={{ width: '80px' }}>ID</th>
+                      <th>题目名称</th>
+                      <th style={{ width: '100px' }}>难度</th>
+                      <th>标签</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {questions.map((question) => (
+                      <tr key={question.id} className={styles.row}>
+                        {isEdit && (
+                          <td>
+                            <input
+                              className="form-check-input"
+                              type="checkbox"
+                              value={question.id}
+                              id={question.id}
+                              onChange={(e) => {
+                                console.log(e.target.value);
+                              }}
+                            ></input>
+                          </td>
+                        )}
+                        <td>
+                          {question.question_id || question.question_number}
+                        </td>
+                        <td>
+                          <Link
+                            to={`/problem/${question.question_id}`}
+                            className={styles.link}
+                          >
+                            {question.title}
+                            {question.status != 'published' && (
+                              <span>(隐藏)</span>
+                            )}
+                          </Link>
+                        </td>
+                        <td>
+                          <span
+                            className={`${styles.difficulty} ${
+                              styles[question.difficulty]
+                            }`}
+                          >
+                            {question.difficulty}
+                          </span>
+                        </td>
+                        <td>
+                          {parseTags(question.tags).map((tag, index) => (
+                            <span key={index} className={styles.tag}>
+                              {tag}
+                            </span>
+                          ))}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className={styles.footNav}>
+                <FootNav
+                  pageIdx={pageIdx}
+                  setIdx={setPageIdx}
+                  pageCnt={Math.ceil(totalCnt / pageSize)}
+                />
+              </div>
+
+              {questions.length === 0 && !loading && (
+                <div className={styles.noData}>暂无题目数据</div>
+              )}
             </div>
-          </div>
-
-          <div className={styles.tableContainer}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  {isEdit && (
-                    <th>
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        value=""
-                        id="checkDefault"
-                      ></input>
-                    </th>
-                  )}
-                  <th>题号</th>
-                  <th>题目名称</th>
-                  <th>难度</th>
-                  <th>标签</th>
-                </tr>
-              </thead>
-              <tbody>
-                {questions.map((question) => (
-                  <tr key={question.id} className={styles.row}>
-                    {isEdit && (
-                      <td>
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          value={question.id}
-                          id={question.id}
-                          onChange={(e) => {
-                            console.log(e.target.value);
-                          }}
-                        ></input>
-                      </td>
-                    )}
-                    <td>{question.question_number}</td>
-                    <td>
-                      <Link
-                        to={`/problem/${question.question_number}`}
-                        className={styles.link}
-                      >
-                        {question.title}
-                        {question.status != 'published' && <span>(隐藏)</span>}
-                      </Link>
-                    </td>
-                    <td>
-                      <span
-                        className={`${styles.difficulty} ${
-                          styles[question.difficulty]
-                        }`}
-                      >
-                        {question.difficulty}
-                      </span>
-                    </td>
-                    <td>
-                      {parseTags(question.tags).map((tag, index) => (
-                        <span key={index} className={styles.tag}>
-                          {tag}
-                        </span>
-                      ))}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className={styles.footNav}>
-            <FootNav
-              pageIdx={pageIdx}
-              setIdx={setPageIdx}
-              pageCnt={Math.ceil(totalCnt / pageSize)}
-            />
-          </div>
-
-          {questions.length === 0 && !loading && (
-            <div className={styles.noData}>暂无题目数据</div>
-          )}
-        </Col>
-        <Col md={2} className={styles.Left}>
-          <div className={styles.LeftBase}>
-            <div>
+          </Col>
+          <Col md={3} className={styles.Left}>
+            <div className={styles.card}>
               <select
-                className={styles.filter}
+                className={styles.filterSelect}
                 value={difficult}
                 onChange={(e) => setDifficult(e.target.value)}
               >
@@ -209,44 +225,19 @@ const QuestionBank = ({ setCurrentKey }) => {
                 <option value="困难">困难</option>
               </select>
             </div>
-          </div>
 
-          {hasPermission('admin') && (
-            <div className={`${styles.LeftBase} ${styles.EditBar}`}>
-              {!isEdit && (
-                <div
-                  onClick={() => {
-                    setIsEdit(true);
-                  }}
-                >
-                  进入编辑模式
-                </div>
-              )}
-              {isEdit && (
-                <div
-                  onClick={() => {
-                    setIsEdit(false);
-                  }}
-                >
-                  退出编辑模式
-                </div>
-              )}
-            </div>
-          )}
-
-          {hasPermission('admin') && (
-            <div
-              className={`${styles.LeftBase} ${styles.addButton}`}
-              onClick={() => {
-                window.location.href = '/admin/addproblem';
-              }}
-            >
-              添加题目
-            </div>
-          )}
-        </Col>
-      </Row>
-    </Container>
+            {hasPermission('admin') && (
+              <div
+                className={styles.actionButton}
+                onClick={() => navigate('/admin/addproblem')}
+              >
+                <FaPlus style={{ marginRight: '8px' }} /> 添加题目
+              </div>
+            )}
+          </Col>
+        </Row>
+      </Container>
+    </div>
   );
 };
 

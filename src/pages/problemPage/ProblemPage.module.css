@@ -1,404 +1,341 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: 'Arial', sans-serif;
-    background-color: white;
-    color: #333;
-}
-
 .content {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    background-color: white;
-    max-width: 80vw;
-    margin: 0 auto;
-    margin-top: 3vh;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, sans-serif;
+  color: #333;
+  width: 80%;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
+/* Header */
 .problem-header {
-    background: #fff;
-    padding: 20px;
-    margin: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  background: #ffffff;
+  padding: 1.5rem 2rem;
+  margin-bottom: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.02);
 }
 
 .problem-header h1 {
-    font-size: 24px;
-    margin-bottom: 15px;
-    color: #333;
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #333;
 }
 
 .problem-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    flex-wrap: wrap;
-    gap: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
 }
 
 .problem-info {
-    flex: 1;
-    min-width: 300px;
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
 }
 
-.problem-info p {
-    margin: 5px 0;
-    color: #666;
-    font-size: 14px;
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: #666;
 }
 
+.info-item strong {
+  color: #333;
+  font-weight: 600;
+}
+
+/* Actions */
 .problem-actions {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
+  display: flex;
+  gap: 10px;
 }
 
-.custom-button {
-    padding: 8px 16px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    background: #fff;
-    color: #333;
-    cursor: pointer;
-    font-size: 14px;
-    transition: all 0.3s;
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.custom-button:hover {
-    background: #f5f5f5;
-    border-color: #999;
+.btn-primary {
+  background-color: #51624f;
+  color: white;
+  border-color: #51624f;
 }
 
-.ide-button {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    background: #007bff;
-    color: white;
-    cursor: pointer;
-    font-size: 14px;
-    transition: all 0.3s;
+.btn-primary:hover {
+  background-color: #3e4b3c;
+  border-color: #3e4b3c;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(81, 98, 79, 0.2);
 }
 
-.ide-button:hover {
-    background: #0056b3;
+.btn-outline {
+  background-color: white;
+  color: #555;
+  border-color: #e1e4e8;
+}
+
+.btn-outline:hover {
+  background-color: #f8f9fa;
+  border-color: #d1d4d8;
+  color: #333;
+  transform: translateY(-1px);
+}
+
+.btn-danger {
+  background-color: #fff;
+  color: #dc3545;
+  border-color: #e1e4e8;
+}
+
+.btn-danger:hover {
+  background-color: #fff5f5;
+  border-color: #dc3545;
+  color: #dc3545;
+}
+
+/* Tabs */
+.problem-tabs {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.02);
+  overflow: hidden;
+}
+
+.problem-tabs :global(.ant-tabs-nav) {
+  margin: 0;
+  padding: 0 1.5rem;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #f0f2f5;
+}
+
+.problem-tabs :global(.ant-tabs-tab) {
+  padding: 1rem 0;
+  margin: 0 1.5rem 0 0;
+  font-size: 0.95rem;
+  color: #666;
+  transition: color 0.2s;
+}
+
+.problem-tabs :global(.ant-tabs-tab-active) .ant-tabs-tab-btn {
+  color: #51624f !important;
+  font-weight: 600;
+}
+
+.problem-tabs :global(.ant-tabs-ink-bar) {
+  background: #51624f !important;
+}
+
+/* Tab Content Layout */
+.tab-content {
+  display: flex;
+  gap: 2rem;
+  padding: 2rem;
+  min-height: 600px;
 }
 
 .problem-content {
-    flex: 1;
-    background: #fff;
-    padding: 20px;
-    margin: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.problem-description,
-.problem-notes,
-.problem-input-output,
-.problem-input-format,
-.problem-output-format,
-.problem-explanation,
-.problem-data-range,
-.problem-hint {
-    margin-bottom: 20px;
-}
-
-.problem-description h2,
-.problem-notes h2 {
-    font-size: 18px;
-    margin-bottom: 10px;
-    color: #333;
-    border-bottom: 2px solid #007bff;
-    padding-bottom: 5px;
-}
-
-.problem-description p,
-.problem-notes li,
-.problem-explanation p,
-.problem-hint p {
-    line-height: 1.6;
-    color: #555;
-    margin-bottom: 8px;
-}
-
-.problem-notes ul {
-    padding-left: 20px;
-}
-
-.problem-input-output {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-}
-
-.input-section,
-.output-section {
-    flex: 1;
-    min-width: 300px;
-}
-
-.input-section h3,
-.output-section h3,
-.problem-input-format h3,
-.problem-output-format h3,
-.problem-explanation h3,
-.problem-data-range h3,
-.problem-hint h3 {
-    font-size: 16px;
-    margin-bottom: 8px;
-    color: #333;
-}
-
-.input-section pre,
-.output-section pre,
-.problem-input-format pre,
-.problem-output-format pre,
-.problem-data-range pre {
-    background: #f8f9fa;
-    padding: 15px;
-    border-radius: 4px;
-    border-left: 4px solid #007bff;
-    font-family: 'Courier New', monospace;
-    font-size: 14px;
-    line-height: 1.4;
-    overflow-x: auto;
-    white-space: pre-wrap;
+  flex: 3;
 }
 
 .problem-sidebar {
-    background: #fff;
-    padding: 20px;
-    margin: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  flex: 1;
+  min-width: 280px;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-.problem-tags,
-.problem-discussions,
-.problem-recommendations {
-    margin-bottom: 20px;
+/* Markdown Content */
+.problem-description {
+  color: #333;
+  line-height: 1.7;
 }
 
-.problem-tags h3,
-.problem-discussions h3,
-.problem-recommendations h3 {
-    font-size: 16px;
-    margin-bottom: 10px;
-    color: #333;
+.problem-description :global(h1),
+.problem-description :global(h2),
+.problem-description :global(h3) {
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  color: #333;
+  font-weight: 600;
 }
 
-.problem-tags .ant-tag {
-    margin: 2px;
+.problem-description :global(p) {
+  margin-bottom: 1rem;
 }
 
-.problem-discussions p {
-    color: #666;
-    font-size: 14px;
+.problem-description :global(pre) {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #e1e4e8;
+  overflow-x: auto;
 }
 
-.problem-recommendations ul {
-    list-style: none;
-    padding: 0;
+.problem-description :global(code) {
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.9em;
 }
 
-.problem-recommendations li {
-    margin: 5px 0;
+/* Sidebar Cards */
+.sidebar-card {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.2rem;
+  border: 1px solid #f0f2f5;
 }
 
-.problem-recommendations a {
-    color: #007bff;
-    text-decoration: none;
-    font-size: 14px;
+.sidebar-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.problem-recommendations a:hover {
-    text-decoration: underline;
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-.loading {
-    text-align: center;
-    padding: 40px;
-    font-size: 16px;
-    color: #666;
+.tag {
+  background-color: #fff;
+  border: 1px solid #e1e4e8;
+  color: #555;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  transition: all 0.2s;
+}
+
+.tag:hover {
+  border-color: #51624f;
+  color: #51624f;
+}
+
+.recommendation-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.recommendation-item {
+  background-color: #fff;
+  border: 1px solid #e1e4e8;
+  border-radius: 6px;
+  padding: 10px;
+  transition: all 0.2s;
+}
+
+.recommendation-item:hover {
+  border-color: #51624f;
+  transform: translateX(2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.rec-link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.rec-reason {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 4px;
+}
+
+/* Loading & Error */
+.loading,
+.error {
+  text-align: center;
+  padding: 4rem;
+  color: #666;
+  background: #fff;
+  border-radius: 12px;
+  margin-top: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
 .error {
-    text-align: center;
-    padding: 40px;
-    font-size: 16px;
-    color: #d32f2f;
-    background-color: #ffebee;
-    border-radius: 4px;
-    margin: 20px;
+  color: #dc3545;
+  background-color: #fff5f5;
 }
 
-/* 新增：标签页相关样式 */
-.problem-tabs {
-    margin: 20px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    overflow: hidden;
+/* Difficulty Badge */
+.difficulty-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
-.problem-tabs .ant-tabs-nav {
-    background: #f8f9fa;
-    margin: 0;
-    padding: 0 20px;
+.easy {
+  background-color: #e6f4ea;
+  color: #1e7e34;
+}
+.medium {
+  background-color: #fff8e1;
+  color: #f57f17;
+}
+.hard {
+  background-color: #fce4ec;
+  color: #c2185b;
 }
 
-.problem-tabs .ant-tabs-tab {
-    font-weight: 500;
-    color: #666;
-}
-
-.problem-tabs .ant-tabs-tab-active {
-    color: #007bff;
-}
-
-.problem-tabs .ant-tabs-ink-bar {
-    background: #007bff;
-}
-
-.tab-content {
-    display: flex;
-    gap: 20px;
-    padding: 20px;
-    min-height: 600px;
-}
-
-/* 在标签页模式下调整内容布局 */
-.tab-content .problem-content {
-    flex: 2;
-    margin: 0;
-    padding: 0;
-    background: transparent;
-    box-shadow: none;
-}
-
-.tab-content .problem-sidebar {
-    flex: 1;
-    margin: 0;
-    padding: 20px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    max-width: 300px;
-}
-
-/* IDE标签页的特殊样式 */
+/* IDE Mode adjustments */
 .tab-content:has(.codeEditor) {
-    flex-direction: column;
+  flex-direction: column;
+  padding: 0;
 }
 
 .tab-content:has(.codeEditor) .problem-sidebar {
-    display: none; /* 在IDE模式下隐藏侧边栏 */
+  display: none;
 }
 
-/* 响应式设计优化 */
-@media (max-width: 1200px) {
-    .tab-content {
-        flex-direction: column;
-    }
-    
-    .tab-content .problem-sidebar {
-        max-width: none;
-        flex: none;
-    }
-}
+@media (max-width: 992px) {
+  .tab-content {
+    flex-direction: column;
+  }
 
-@media (max-width: 768px) {
-    .problem-tabs {
-        margin: 10px;
-    }
-    
-    .tab-content {
-        padding: 15px;
-        gap: 15px;
-    }
-    
-    .problem-meta {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .problem-actions {
-        justify-content: center;
-    }
-}
-
-/* ProblemList.module.css */
-
-/* 按钮基础样式 */
-.custom-button {
-    font-family: 'Arial', sans-serif;
-    font-size: 14px;
-    color: #4a5537;
-    background-color: #ffffff;
-    border: 1px solid #4a5537;
-    padding: 8px 16px;
-    margin: 0 5px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-/* 按钮 hover 样式 */
-.custom-button:hover {
-    background-color: #4a5537;
-    color: #ffffff;
-    border-color: #fbfbfb;
-}
-
-/* 按钮 active 样式 */
-.custom-button:active {
-    background-color: #3a4527;
-    transform: translateY(1px);
-}
-
-/* 按钮 focus 样式 */
-.custom-button:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(74, 85, 55, 0.5);
-}
-
-/* IDE 按钮样式 */
-.ide-button {
-    font-family: 'Arial', sans-serif;
-    font-size: 14px;
-    color:  #5a6747;
-    background-color: #e5d4a8;
-    border: 1px solid #e5d4a8;
-    padding: 8px 16px;
-    margin: 0 5px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-/* IDE 按钮 hover 样式 */
-.ide-button:hover {
-    background-color: #4a5537;
-    border-color: #4a5537;
-    color: white;
-}
-
-/* IDE 按钮 active 样式 */
-.ide-button:active {
-    background-color: #3a4527;
-    transform: translateY(1px);
-
-}
-
-/* IDE 按钮 focus 样式 */
-.ide-button:focus {
-    outline: none;
-    color:#ffffff;
-    box-shadow: 0 0 0 2px rgba(55, 62, 42, 0.5);
+  .problem-sidebar {
+    max-width: none;
+  }
 }

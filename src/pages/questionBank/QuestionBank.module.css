@@ -1,178 +1,224 @@
-.title {
-    text-align: center;
-    margin-bottom: 20px;
-    color: black;
+.container {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  color: #333;
 }
 
+/* Card Style */
+.card {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.02);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Search Bar */
 .searchBar {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    border: 1px solid #ccc;
-    border-radius: 2px;
+  display: flex;
+  align-items: center;
+  background: #f5f7fa;
+  border: 1px solid #e1e4e8;
+  border-radius: 50px;
+  padding: 0.5rem 1rem;
+  transition: all 0.2s ease;
+  margin-bottom: 1.5rem;
+}
+
+.searchBar:focus-within {
+  background: #fff;
+  border-color: #51624f;
+  box-shadow: 0 0 0 3px rgba(81, 98, 79, 0.1);
 }
 
 .searchInput {
-    flex: 1;
-    padding: 8px;
-    border: none;
+  border: none;
+  background: transparent;
+  flex: 1;
+  outline: none;
+  font-size: 0.95rem;
+  color: #333;
+  margin-right: 0.5rem;
 }
 
 .searchButton {
-    cursor: pointer;
-    /* flex : 1; */
-    min-width: 30px;
-    display: flex;
-    align-items: center;
-    justify-items: center;
+  background: none;
+  border: none;
+  color: #51624f;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background 0.2s;
 }
 
-.filter {
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+.searchButton:hover {
+  background: rgba(81, 98, 79, 0.1);
 }
 
+/* Table Styling */
 .tableContainer {
-    overflow-x: auto;
+  overflow-x: auto;
+  border-radius: 8px;
 }
 
 .table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.table th, .table td {
-    padding: 10px;
-    border: 1px solid #ddd;
-    text-align: left;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 .table th {
-    background-color: #f2f2f2;
+  background-color: #f8f9fa;
+  color: #6c757d;
+  font-weight: 600;
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 2px solid #e9ecef;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 1rem;
+  border-bottom: 1px solid #f0f2f5;
+  vertical-align: middle;
+  color: #333;
+}
+
+.row {
+  transition: background-color 0.2s;
 }
 
 .row:hover {
-    background-color: #f5f5f5;
+  background-color: #f8fdf9; /* Very light green tint */
 }
 
 .link {
-    color: #007bff;
-    text-decoration: none;
+  color: #333;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+  display: block;
 }
 
 .link:hover {
-    text-decoration: underline;
+  color: #51624f;
 }
 
+.link span {
+  font-size: 0.8em;
+  color: #999;
+  margin-left: 0.5rem;
+  font-weight: normal;
+}
+
+/* Badges & Tags */
 .difficulty {
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 0.9em;
-    display: inline-block;
-}
-
-.入门 {
-    background-color: #d4edda;
-    color: #155724;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  display: inline-block;
+  min-width: 60px;
+  text-align: center;
 }
 
 .简单 {
-    background-color: #cce5ff;
-    color: #004085;
+  background-color: #e6f4ea;
+  color: #1e7e34;
 }
 
 .中等 {
-    background-color: #fff3cd;
-    color: #856404;
+  background-color: #fff8e1;
+  color: #f57f17;
 }
 
 .困难 {
-    background-color: #f8d7da;
-    color: #721c24;
+  background-color: #fce4ec;
+  color: #c2185b;
 }
 
 .tag {
-    background-color: #e2e8f0;
-    color: #4a5568;
-    padding: 2px 6px;
-    border-radius: 4px;
-    margin-right: 5px;
-    font-size: 0.8em;
-    display: inline-block;
+  background-color: #f1f3f5;
+  color: #495057;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-right: 6px;
+  font-size: 0.8rem;
+  display: inline-block;
+  margin-bottom: 2px;
 }
 
-.status {
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 0.9em;
-    display: inline-block;
+/* Sidebar & Filters */
+.Left {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-.published {
-    background-color: #d4edda;
-    color: #155724;
+.filterSelect {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  border: 1px solid #e1e4e8;
+  border-radius: 8px;
+  background-color: #fff;
+  color: #555;
+  font-size: 0.95rem;
+  outline: none;
+  transition: all 0.2s;
+  cursor: pointer;
 }
 
-.unpublished {
-    background-color: #f8d7da;
-    color: #721c24;
+.filterSelect:focus {
+  border-color: #51624f;
+  box-shadow: 0 0 0 3px rgba(81, 98, 79, 0.1);
 }
 
-.loading {
-    text-align: center;
-    padding: 40px;
-    font-size: 16px;
-    color: #666;
+.actionButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.8rem;
+  border-radius: 8px;
+  background-color: #51624f;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  text-decoration: none;
+}
+
+.actionButton:hover {
+  background-color: #3e4b3c;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(81, 98, 79, 0.2);
+  color: white;
+}
+
+/* Utilities */
+.loading, .error, .noData {
+  text-align: center;
+  padding: 3rem;
+  color: #666;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-top: 1rem;
 }
 
 .error {
-    text-align: center;
-    padding: 40px;
-    font-size: 16px;
-    color: #d32f2f;
-    background-color: #ffebee;
-    border-radius: 4px;
-    margin: 20px 0;
-}
-
-.noData {
-    text-align: center;
-    padding: 40px;
-    font-size: 16px;
-    color: #666;
-    background-color: #f5f5f5;
-    border-radius: 4px;
-    margin: 20px 0;
-}
-
-.Left {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.LeftBase {
-    border: 1px solid #ccc;
-    border-radius: 2px;
-    min-height: 32px;
-    padding: 0.5rem;
+  color: #dc3545;
+  background: #fff5f5;
 }
 
 .footNav {
-    margin-top: 1rem;
-}
-
-.EditBar {
-    display: flex;
-    flex-direction: column;
-    cursor: pointer
-}
-
-.addButton {
-    cursor: pointer
-}
-
-td span {
-    color: red;
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
 }

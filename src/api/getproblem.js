@@ -55,12 +55,30 @@ export async function getProblem({ q, pageIdx, pageSize, difficult } = {}) {
 
 /**
  *
- * @param {*} id
- * @returns 根据id对应的题目数据
+ * @param {*} question_number 题目编号
+ * @returns 根据题目编号对应的题目数据
+ */
+export async function getProblemByNumber(question_number) {
+  try {
+    const response = await fetch(baseUrl + `/question/${question_number}`);
+    if (!response.ok) {
+      throw new Error('获取题目详情失败');
+    }
+    const data = await response.json();
+    return data;
+  } catch (err) {
+    throw err;
+  }
+}
+
+/**
+ *
+ * @param {*} id 题目ID
+ * @returns 根据题目ID对应的题目数据
  */
 export async function getProblemById(id) {
   try {
-    const response = await fetch(baseUrl + `/question/${id}`);
+    const response = await fetch(baseUrl + `/question/id/${id}`);
     if (!response.ok) {
       throw new Error('获取题目详情失败');
     }
@@ -82,5 +100,27 @@ export async function getNewProblems() {
   } catch (err) {
     console.error('获取最新题目失败:', err);
     return err;
+  }
+}
+
+/**
+ * 获取题目推荐
+ * @param {string|number} questionNumber 题目编号
+ * @param {number} limit 限制数量
+ * @returns 推荐题目列表
+ */
+export async function getProblemRecommendations(questionNumber, limit = 5) {
+  try {
+    const response = await fetch(
+      `${baseUrl}/graph/questions/${questionNumber}/recommendations?limit=${limit}`
+    );
+    if (!response.ok) {
+      throw new Error('获取推荐题目失败');
+    }
+    const data = await response.json();
+    return data;
+  } catch (err) {
+    console.error('获取推荐题目失败:', err);
+    throw err;
   }
 }
