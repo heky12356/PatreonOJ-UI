@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Outlet, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Card, Spinner } from 'react-bootstrap';
 import AdminNav from '../../components/adminNav/adminNav';
-import { Outlet } from 'react-router-dom';
 import { getGraphNodePage } from '../../api/graph';
 import { getCategories } from '../../api/getcategories';
 import {
@@ -28,9 +27,10 @@ ChartJS.register(
 );
 
 export default function Admin() {
-  const path = window.location.pathname;
+  const location = useLocation();
+  const path = location.pathname;
 
-  if (path == '/admin') {
+  if (path === '/admin') {
     return (
       <>
         <AdminNav />

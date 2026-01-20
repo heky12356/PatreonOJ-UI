@@ -1,66 +1,68 @@
+import { Link } from "react-router-dom";
+
 export default function AdminNav() {
   return (
     <div>
       <nav className="navbar navbar-expand-lg bg-body-tertiary">
         <div className="container">
-          <a className="navbar-brand" href="/admin">
+          <Link className="navbar-brand" to="/admin">
             TGU-OJ | Admin
-          </a>
+          </Link>
           <div className="collapse navbar-collapse" id="navbarSupportedContent">
             <ul className="navbar-nav me-auto mb-2 mb-lg-0">
               <li className="nav-item">
-                <a
+                <Link
                   className="nav-link active"
                   aria-current="page"
-                  href="/admin"
+                  to="/admin"
                 >
                   首页
-                </a>
+                </Link>
               </li>
               <li className="nav-item">
-                <a
+                <Link
                   className="nav-link active"
                   aria-current="page"
-                  href="/admin/addproblem"
+                  to="/admin/addproblem"
                 >
                   添加题目
-                </a>
+                </Link>
               </li>
               <li className="nav-item">
-                <a
+                <Link
                   className="nav-link active"
                   aria-current="page"
-                  href="/admin/updateproblem"
+                  to="/admin/updateproblem"
                 >
                   题目管理
-                </a>
+                </Link>
               </li>
               <li className="nav-item">
-                <a
+                <Link
                   className="nav-link active"
                   aria-current="page"
-                  href="/admin/category"
+                  to="/admin/category"
                 >
                   分类管理
-                </a>
+                </Link>
               </li>
               <li className="nav-item">
-                <a
+                <Link
                   className="nav-link active"
                   aria-current="page"
-                  href="/admin/setting"
+                  to="/admin/setting"
                 >
                   设置
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
           <div>
             <ul className="navbar-nav me-auto mb-2 mb-lg-0">
               <li className="nav-item">
-                <a className="nav-link active" aria-current="page" href="/">
+                <Link className="nav-link active" aria-current="page" to="/">
                   返回网页
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
