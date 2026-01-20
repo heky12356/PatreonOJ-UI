@@ -4,7 +4,7 @@ import * as d3 from 'd3';
 const ForceDirectedGraph = ({ data, highlightedNodes = [], onNodeClick }) => {
     const containerRef = useRef(null);
     const svgRef = useRef(null);
-    const [nodesData, setNodesData] = useState([]);
+    const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, content: null });
     const [size, setSize] = useState({ width: 1200, height: 600 });
 
     useEffect(() => {
@@ -32,26 +32,27 @@ const ForceDirectedGraph = ({ data, highlightedNodes = [], onNodeClick }) => {
     useEffect(() => {
         if (!data) return;
 
-        // 初始化节点数据，添加一个isHighlighted属性
+        // 初始化节点数据
         const initialNodes = data.nodes.map(node => ({
             ...node,
             isHighlighted: highlightedNodes.includes(node.id)
         }));
-        setNodesData(initialNodes);
 
         // 清理之前的图表
-        while (svgRef.current.firstChild) {
-            svgRef.current.removeChild(svgRef.current.firstChild);
+        const svgElement = svgRef.current;
+        while (svgElement.firstChild) {
+            svgElement.removeChild(svgElement.firstChild);
         }
 
         const width = size.width;
         const height = size.height;
 
+        // Colors (Original Scheme)
         const getDifficultyColor = (difficulty) => {
             switch (difficulty) {
-                case '简单': return '#1890ff';
-                case '中等': return '#52c41a';
-                case '困难': return '#f5222d';
+                case '简单': return '#1890ff'; // Blue
+                case '中等': return '#52c41a'; // Green
+                case '困难': return '#f5222d'; // Red
                 default: return '#d9d9d9';
             }
         };
@@ -71,41 +72,54 @@ const ForceDirectedGraph = ({ data, highlightedNodes = [], onNodeClick }) => {
         };
 
         const getNodeColor = (d) => {
-            if (d.isHighlighted) return '#faad14'; // 高亮节点用金色
-            if (d.node_type === 'skill' || String(d.id).startsWith('S:')) return '#722ed1'; // 技能节点紫色
+            if (d.isHighlighted) return '#faad14'; // Gold
+            if (d.node_type === 'skill' || String(d.id).startsWith('S:')) return '#722ed1'; // Purple
             return getDifficultyColor(d.difficulty);
         };
 
-        // 创建链接副本
+        // Create links copy
         const links = data.links.map(d => ({ ...d }));
 
-        // 创建力导向模拟
+        // Force Simulation
         const simulation = d3.forceSimulation(initialNodes)
             .force("link", d3.forceLink(links).id(d => d.id).distance(100).strength(0.3))
             .force("charge", d3.forceManyBody().strength(-200))
             .force("center", d3.forceCenter(width / 2, height / 2))
             .force("collision", d3.forceCollide().radius(40));
 
-        // 创建 SVG 容器
-        const svg = d3.select(svgRef.current)
+        // SVG Setup
+        const svg = d3.select(svgElement)
             .attr("width", width)
             .attr("height", height)
             .attr("viewBox", [0, 0, width, height])
-            .attr("style", "max-width: 100%; height: 100%;")
-            .call(d3.zoom()
-                .scaleExtent([0.1, 4])
-                .on("zoom", function(event) {
-                    svg.select("g.graph-container").attr("transform", event.transform);
-                })
-            );
+            .attr("style", "max-width: 100%; height: 100%;");
 
-        // 创建图形容器组
-        const container = svg.append("g").attr("class", "graph-container");
-
-        // 定义箭头
-        const defs = container.append("defs");
-        const arrowTypes = ['HAS_SKILL', 'PREREQUISITE', 'NEXT', 'RELATED', 'SIMILAR', 'SKILL_CO_OCCUR', 'SKILL_SUBSUMES', 'default'];
+        // Defs for shadows and arrows
+        const defs = svg.append("defs");
         
+        // 柔和的阴影滤镜
+        const filter = defs.append("filter")
+            .attr("id", "drop-shadow")
+            .attr("height", "130%");
+        filter.append("feGaussianBlur")
+            .attr("in", "SourceAlpha")
+            .attr("stdDeviation", 2) // 减小模糊，更精致
+            .attr("result", "blur");
+        filter.append("feOffset")
+            .attr("in", "blur")
+            .attr("dx", 1) // 减小偏移
+            .attr("dy", 1)
+            .attr("result", "offsetBlur");
+        filter.append("feComponentTransfer")
+            .append("feFuncA")
+            .attr("type", "linear")
+            .attr("slope", 0.15); // 降低不透明度，使阴影更浅
+        const feMerge = filter.append("feMerge");
+        feMerge.append("feMergeNode").attr("in", "offsetBlur");
+        feMerge.append("feMergeNode").attr("in", "SourceGraphic");
+
+        // Arrow Markers
+        const arrowTypes = ['HAS_SKILL', 'PREREQUISITE', 'NEXT', 'RELATED', 'SIMILAR', 'SKILL_CO_OCCUR', 'SKILL_SUBSUMES', 'default'];
         arrowTypes.forEach(type => {
             defs.append("marker")
                 .attr("id", `arrowhead-${type}`)
@@ -120,7 +134,15 @@ const ForceDirectedGraph = ({ data, highlightedNodes = [], onNodeClick }) => {
                 .attr("fill", getRelationColor(type === 'default' ? '' : type));
         });
 
-        const link = container.append("g")
+        // Zoom Behavior
+        const g = svg.append("g").attr("class", "graph-container");
+        svg.call(d3.zoom()
+            .scaleExtent([0.1, 4])
+            .on("zoom", (event) => g.attr("transform", event.transform))
+        );
+
+        // Links
+        const link = g.append("g")
             .attr("stroke-opacity", 0.6)
             .selectAll("line")
             .data(links)
@@ -129,7 +151,8 @@ const ForceDirectedGraph = ({ data, highlightedNodes = [], onNodeClick }) => {
             .attr("stroke-width", d => Math.sqrt(d.value))
             .attr("marker-end", d => `url(#arrowhead-${d.relation_type || 'default'})`);
 
-        const linkLabels = container.append("g")
+        // Link Labels
+        const linkLabels = g.append("g")
             .selectAll("text")
             .data(links)
             .join("text")
@@ -139,11 +162,10 @@ const ForceDirectedGraph = ({ data, highlightedNodes = [], onNodeClick }) => {
             .attr("text-anchor", "middle")
             .attr("dy", -4)
             .style("pointer-events", "none")
-            .style("user-select", "none")
             .style("opacity", 0.8);
 
-        // 节点容器
-        const nodeGroup = container.append("g")
+        // Nodes
+        const nodeGroup = g.append("g")
             .selectAll(".node")
             .data(initialNodes)
             .join("g")
@@ -153,13 +175,66 @@ const ForceDirectedGraph = ({ data, highlightedNodes = [], onNodeClick }) => {
                 .on("start", dragstarted)
                 .on("drag", dragged)
                 .on("end", dragended))
-            .on("click", function(event, d) {
-                if (onNodeClick) {
-                    onNodeClick(d);
+            .on("click", (event, d) => onNodeClick && onNodeClick(d))
+            .on("mouseenter", (event, d) => {
+                // Determine content based on node type
+                const isSkill = d.node_type === 'skill' || String(d.id).startsWith('S:');
+                let content;
+                if (isSkill) {
+                    content = (
+                        <div>
+                            <div style={{fontWeight: 'bold', marginBottom: '4px'}}>{d.title || d.skill_key}</div>
+                            <div style={{fontSize: '0.8rem', color: '#ccc'}}>ID: {String(d.id).replace(/^S:/, '')}</div>
+                            <div style={{marginTop: '4px', fontSize: '0.75rem', color: '#a0d911'}}>Type: 技能点</div>
+                        </div>
+                    );
+                } else {
+                    const diffColor = getDifficultyColor(d.difficulty);
+                    content = (
+                        <div>
+                            <div style={{fontWeight: 'bold', marginBottom: '4px'}}>{d.question_number}: {d.title}</div>
+                            <div style={{display:'flex', alignItems:'center', gap:'6px', marginBottom: '4px'}}>
+                                <span style={{
+                                    display:'inline-block', width:'8px', height:'8px', borderRadius:'50%', 
+                                    backgroundColor: diffColor
+                                }}></span>
+                                <span style={{fontSize: '0.85rem'}}>{d.difficulty}</span>
+                            </div>
+                            {d.tags && (
+                                <div style={{fontSize: '0.75rem', color: '#eee', maxWidth:'200px'}}>
+                                    Tags: {d.tags}
+                                </div>
+                            )}
+                        </div>
+                    );
                 }
+
+                // Show SVG decoration (stroke width increase)
+                d3.select(event.currentTarget).selectAll("circle, rect")
+                  .transition().duration(200)
+                  .attr("stroke", "#fff")
+                  .attr("stroke-width", 4);
+
+                setTooltip({
+                    visible: true,
+                    x: event.clientX,
+                    y: event.clientY,
+                    content
+                });
+            })
+            .on("mousemove", (event) => {
+                 setTooltip(prev => ({ ...prev, x: event.clientX, y: event.clientY }));
+            })
+            .on("mouseleave", (event) => {
+                 d3.select(event.currentTarget).selectAll("circle, rect")
+                  .transition().duration(200)
+                  .attr("stroke", "#fff")
+                  .attr("stroke-width", 2);
+                  
+                 setTooltip(prev => ({ ...prev, visible: false }));
             });
 
-        // 绘制节点形状：Skills用矩形，Questions用圆形
+        // Draw shapes without Drop Shadow
         nodeGroup.each(function(d) {
             const el = d3.select(this);
             const color = getNodeColor(d);
@@ -171,7 +246,7 @@ const ForceDirectedGraph = ({ data, highlightedNodes = [], onNodeClick }) => {
                     .attr("height", 40)
                     .attr("x", -20)
                     .attr("y", -20)
-                    .attr("rx", 6) // 圆角矩形
+                    .attr("rx", 6)
                     .attr("ry", 6)
                     .attr("fill", color)
                     .attr("stroke", "#fff")
@@ -185,33 +260,20 @@ const ForceDirectedGraph = ({ data, highlightedNodes = [], onNodeClick }) => {
             }
         });
 
-        // 添加节点标签
+        // Node Labels
         nodeGroup.append("text")
             .text(d => {
                 const isSkill = d.node_type === 'skill' || String(d.id).startsWith('S:');
-                if (isSkill) {
-                    // 技能显示Title（中文名）
-                    return d.title || String(d.id).replace(/^S:/, '');
-                }
-                // 题目显示题号
+                if (isSkill) return d.title || String(d.id).replace(/^S:/, '');
                 return d.question_number || String(d.id).replace(/^Q:/, '');
             })
-            .attr("font-size", "12px")
-            .attr("font-weight", "bold")
+            .attr("font-size", "11px")
+            .attr("font-weight", "600")
             .attr("text-anchor", "middle")
             .attr("dy", "0.35em")
             .attr("fill", "#fff")
-            .style("pointer-events", "none");
-
-        // 添加悬停提示 (Title)
-        nodeGroup.append("title")
-            .text(d => {
-                const isSkill = d.node_type === 'skill' || String(d.id).startsWith('S:');
-                if (isSkill) {
-                     return `技能: ${d.title || d.skill_key}\nID: ${d.id}`;
-                }
-                return `${d.question_number}: ${d.title}\n难度: ${d.difficulty || '未知'}\n标签: ${d.tags || '无'}`;
-            });
+            .style("pointer-events", "none")
+            .style("text-shadow", "0 1px 2px rgba(0,0,0,0.5)"); // Better text readability
 
         simulation.on("tick", () => {
             link
@@ -227,7 +289,6 @@ const ForceDirectedGraph = ({ data, highlightedNodes = [], onNodeClick }) => {
             nodeGroup.attr("transform", d => `translate(${d.x},${d.y})`);
         });
 
-        // 拖拽函数
         function dragstarted(event) {
             if (!event.active) simulation.alphaTarget(0.3).restart();
             event.subject.fx = event.subject.x;
@@ -245,15 +306,34 @@ const ForceDirectedGraph = ({ data, highlightedNodes = [], onNodeClick }) => {
             event.subject.fy = null;
         }
 
-        // 组件卸载时停止模拟
-        return () => {
-            simulation.stop();
-        };
-    }, [data, highlightedNodes, onNodeClick, size.width, size.height]); // 添加onNodeClick到依赖项
+        return () => simulation.stop();
+    }, [data, highlightedNodes, onNodeClick, size]);
 
     return (
-        <div ref={containerRef} style={{ width: '100%', height: '100%' }}>
-            <svg ref={svgRef} style={{ width: '100%', height: '100%' }} />
+        <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
+            <svg ref={svgRef} />
+            
+            {/* Custom Tooltip */}
+            {tooltip.visible && (
+                <div style={{
+                    position: 'fixed',
+                    top: tooltip.y - 10,
+                    left: tooltip.x + 15,
+                    backgroundColor: 'rgba(0, 0, 0, 0.95)', // Darker background
+                    color: 'white',
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    pointerEvents: 'none',
+                    zIndex: 9999,
+                    fontSize: '0.95rem',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                    maxWidth: '320px',
+                    backdropFilter: 'blur(4px)',
+                    border: '1px solid rgba(255,255,255,0.1)' // Subtle border for contrast
+                }}>
+                    {tooltip.content}
+                </div>
+            )}
         </div>
     );
 };

@@ -1,3 +1,4 @@
+/* Global Container */
 .container {
   padding-top: 1.5rem;
   padding-bottom: 1.5rem;
@@ -6,23 +7,31 @@
   gap: 1.5rem;
   min-height: calc(100vh - 100px);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: #ffffff;
+  
+  /* Layout Adjustment: 80% Width */
+  width: 80%;
+  max-width: 1600px; /* Optional cap for very large screens */
+  margin: 0 auto;
 }
 
-/* Card Styling */
-.card {
+/* Base Card Styling (Shared) */
+.card, .controlPanel, .graphContainer {
   background: #ffffff;
   border-radius: 12px;
+  /* Sync with Homepage Shadow */
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   border: 1px solid rgba(0, 0, 0, 0.02);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   overflow: hidden;
 }
 
-.cardBody {
+/* Control Panel Specifics */
+.controlPanel {
   padding: 1.5rem;
 }
 
-/* Header Section */
+/* Header */
 .header {
   display: flex;
   align-items: center;
@@ -41,14 +50,22 @@
   gap: 0.5rem;
 }
 
-/* Controls Section */
 .controls {
   display: flex;
   gap: 1rem;
   align-items: center;
-  flex-wrap: wrap;
 }
 
+/* Main Controls Layout */
+.mainControls {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+/* Input Styles - Sage Green Focus */
 .inputGroup {
   position: relative;
   display: flex;
@@ -77,10 +94,11 @@
 .formControl:focus {
   background-color: #fff;
   border-color: #51624f;
-  box-shadow: 0 0 0 3px rgba(81, 98, 79, 0.1);
+  box-shadow: 0 0 0 3px rgba(81, 98, 79, 0.05); /* Softer focus shadow */
 }
 
-.filterSection {
+/* Filters */
+.filterGroup {
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -106,7 +124,43 @@
   cursor: pointer;
 }
 
-/* Buttons */
+/* Path Finder Section */
+.pathFinder {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background-color: #f8fdf9;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #e8f0e9;
+}
+
+.pathLabel {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #51624f;
+}
+
+.pathInput {
+  width: 200px;
+  padding: 0.6rem 1rem 0.6rem 1rem;
+  border: 1px solid #e1e4e8;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+  outline: none;
+  background-color: #f9f9f9;
+}
+.pathInput:focus {
+  border-color: #51624f;
+  outline: none;
+}
+
+.arrow {
+  color: #999;
+}
+
+/* Buttons - Sage Green Theme */
 .btn {
   padding: 0.6rem 1.2rem;
   border-radius: 50px;
@@ -123,12 +177,21 @@
 .btnPrimary {
   background-color: #51624f;
   color: white;
+  /* Softer Shadow */
+  box-shadow: 0 2px 8px rgba(81, 98, 79, 0.15);
 }
 
 .btnPrimary:hover {
   background-color: #3e4b3c;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(81, 98, 79, 0.2);
+  box-shadow: 0 4px 12px rgba(81, 98, 79, 0.25);
+}
+
+.btnPrimary:disabled {
+  background-color: #aeb5ad;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .btnSecondary {
@@ -143,7 +206,7 @@
   color: #333;
 }
 
-/* Stats */
+/* Stats Bar */
 .statsBar {
   margin-top: 1.5rem;
   padding-top: 1rem;
@@ -159,8 +222,7 @@
   align-items: center;
   gap: 6px;
 }
-
-.statValue {
+.statItem strong {
   font-weight: 600;
   color: #333;
 }
@@ -171,10 +233,19 @@
   min-height: 600px;
   position: relative;
   border-radius: 12px;
-  overflow: hidden;
   background-color: #fafafa;
 }
 
+.loadingContainer {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: #999;
+}
+
+/* Legend */
 .legend {
   position: absolute;
   top: 20px;
@@ -182,7 +253,8 @@
   background: rgba(255, 255, 255, 0.95);
   padding: 1rem;
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  /* Softer Shadow */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   border: 1px solid rgba(0, 0, 0, 0.05);
   backdrop-filter: blur(5px);
   min-width: 160px;
@@ -204,7 +276,7 @@
   color: #555;
 }
 
-/* Modal Styling */
+/* Modal Styling - Rounded & Shadowed */
 .modalOverlay {
   position: fixed;
   top: 0;
@@ -223,7 +295,8 @@
 .modalContent {
   background-color: #fff;
   border-radius: 16px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  /* Softer Shadow */
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
   width: 100%;
   max-width: 800px;
   max-height: 90vh;
@@ -245,11 +318,13 @@
   justify-content: space-between;
 }
 
-.modalTitle {
+.modalType {
   font-size: 1.25rem;
   font-weight: 600;
   color: #333;
   margin: 0;
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 .closeBtn {
@@ -271,20 +346,57 @@
   overflow-y: auto;
 }
 
+.modalNodeTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 1rem 0;
+}
+
+.modalHeaderActions {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.infoGrid {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+}
+
 .infoSection {
   margin-bottom: 1.5rem;
 }
 
 .infoLabel {
   font-weight: 600;
-  color: #333;
+  color: #333; /* Darker label */
   margin-bottom: 0.5rem;
   display: block;
+  font-size: 0.95rem;
 }
 
-.infoValue {
-  color: #555;
+.tagList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.descriptionBox {
+  background: #f9f9f9;
+  padding: 1rem;
+  border-radius: 8px;
   line-height: 1.6;
+  border: none;
+  color: #333;
+}
+
+.sampleGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
 }
 
 .codeBlock {
@@ -296,14 +408,17 @@
   color: #333;
   border: 1px solid #e1e4e8;
   white-space: pre-wrap;
+  min-height: auto;
 }
 
+/* Badges & Links */
 .badge {
   padding: 4px 10px;
   border-radius: 20px;
   font-size: 0.85rem;
   font-weight: 500;
   display: inline-block;
+  border: none;
 }
 
 .badgeEasy { background-color: #e6f4ea; color: #1e7e34; }
@@ -329,12 +444,28 @@
   background-color: #f8fdf9;
 }
 
-/* Loading */
-.loadingContainer {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  color: #999;
+/* Flash Alert - Top Center */
+.flashContainer {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000;
+  min-width: 320px;
+  text-align: center;
+  pointer-events: none;
 }
+.alert {
+  display: inline-block;
+  padding: 0.8rem 1.5rem;
+  border-radius: 50px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  font-size: 0.95rem;
+  font-weight: 500;
+  border: none;
+  color: #333;
+}
+.alert-success { background-color: #52c41a; }
+.alert-warning { background-color: #faad14; }
+.alert-danger { background-color: #f5222d; }
+.alert-info { background-color: #1890ff; }

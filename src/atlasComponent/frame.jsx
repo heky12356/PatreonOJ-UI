@@ -1,19 +1,25 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { Container } from 'react-bootstrap';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import ForceDirectedGraph from './grouph';
+import FrameControlPanel from './FrameControlPanel';
+import NodeDetailsModal from './NodeDetailsModal';
 import styles from './frame.module.css';
 import {
   getGraphNodePage,
   findLearningPath,
   getRecommendations,
 } from '../api/graph';
-import {
-  FaSearch,
-  FaInfoCircle,
-  FaSync,
-  FaTimes,
-  FaLink,
-} from 'react-icons/fa';
+
+// Simple debounce hook
+function useDebounce(value, delay) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debouncedValue;
+}
 
 export default function Frame() {
   // 状态管理
@@ -39,7 +45,10 @@ export default function Frame() {
     SKILL_CO_OCCUR: false,
     SKILL_SUBSUMES: false,
   });
+  
   const [searchKeyword, setSearchKeyword] = useState('');
+  const debouncedSearchKeyword = useDebounce(searchKeyword, 300); // 300ms debounce
+  
   const [showNodeInfo, setShowNodeInfo] = useState(false);
   const [loadError, setLoadError] = useState('');
   const [flash, setFlash] = useState(null);
@@ -149,10 +158,6 @@ export default function Frame() {
     }
   }, [showFlash]);
 
-  useEffect(() => {
-    // 这是一个副作用，用于触发 filteredData 重新计算
-  }, [edgeFilters]);
-
   // 处理节点点击事件
   const handleNodeClick = useCallback(
     async (nodeData) => {
@@ -166,22 +171,17 @@ export default function Frame() {
         typeof nodeData?.question_number === 'number';
 
       if (!isQuestion) {
+        // Skill node logic
         const neighbors = graphData.links
           .filter((l) => l.source === nodeId || l.target === nodeId)
           .flatMap((l) => [l.source, l.target])
           .filter(Boolean);
         const uniq = [...new Set([nodeId, ...neighbors])];
         setHighlightedNodes(uniq);
-        showFlash(
-          'info',
-          `已高亮与技能「${nodeData.title || nodeId}」相关的 ${Math.max(
-            0,
-            uniq.length - 1
-          )} 个节点`
-        );
         return;
       }
 
+      // Question node logic
       try {
         const recResp = await getRecommendations(nodeData.question_number);
         const recommendations = Array.isArray(recResp?.recommendations)
@@ -208,7 +208,6 @@ export default function Frame() {
       } catch (error) {
         console.error('获取推荐题目失败:', error);
         setHighlightedNodes([nodeId]);
-        showFlash('warning', '获取推荐题目失败，仅高亮当前题目');
       }
     },
     [graphData.links, showFlash]
@@ -256,494 +255,149 @@ export default function Frame() {
     } finally {
       setLoading(false);
     }
-  }, [pathStart, pathEnd, graphData.nodes]);
+  }, [pathStart, pathEnd, graphData.nodes, showFlash]);
 
   // 重置高亮
-  const resetHighlight = () => {
+  const handleReset = useCallback(() => {
     setHighlightedNodes([]);
     setSelectedNode(null);
     setLearningPath([]);
     setPathStart(null);
     setPathEnd(null);
-  };
+    setSearchKeyword('');
+  }, []);
 
-  // 根据筛选条件过滤节点
-  const getFilteredData = () => {
-    const kw = String(searchKeyword || '').trim();
-
+  // Filter Logic with Memoization
+  const filteredData = useMemo(() => {
+    const kw = String(debouncedSearchKeyword || '').trim().toLowerCase();
+    
     let filteredNodes = graphData.nodes;
 
-    // 1. 关键词搜索过滤节点
+    // 1. Keyword Filter
     if (kw) {
       filteredNodes = filteredNodes.filter((node) => {
-        const title = String(node?.title || '');
-        const tags = String(node?.tags || '');
-        const key = String(node?.skill_key || node?.id || '');
+        const title = String(node?.title || '').toLowerCase();
+        const tags = String(node?.tags || '').toLowerCase();
+        const key = String(node?.skill_key || node?.id || '').toLowerCase();
         return title.includes(kw) || tags.includes(kw) || key.includes(kw);
       });
     }
 
     const filteredNodeIds = new Set(filteredNodes.map((n) => n.id));
 
-    // 2. 边过滤：只保留起止点都在 filteredNodes 中，且类型符合 edgeFilters 的边
+    // 2. Edge Filter
     const filteredLinks = graphData.links.filter((link) => {
-      if (
-        !filteredNodeIds.has(link.source) ||
-        !filteredNodeIds.has(link.target)
-      )
+      if (!filteredNodeIds.has(link.source) || !filteredNodeIds.has(link.target)) {
         return false;
-
-      // 归一化关系类型 key
+      }
+      // Normalize type key
       let typeKey = link.relation_type;
       if (typeKey === 'NEXT_LEVEL') typeKey = 'NEXT';
-
-      // 如果 edgeFilters 中有定义该类型，则遵循开关；未定义默认显示
       return edgeFilters[typeKey] !== false;
     });
 
     return { nodes: filteredNodes, links: filteredLinks };
-  };
+  }, [graphData, debouncedSearchKeyword, edgeFilters]);
 
-  const filteredData = getFilteredData();
+  // Derived Statistics
+  const stats = useMemo(() => {
+    const questionCount = filteredData.nodes.filter(n => String(n?.id).startsWith('Q:')).length;
+    const skillCount = filteredData.nodes.filter(n => String(n?.id).startsWith('S:')).length;
+    const edgeCount = filteredData.links.length;
+    const pathLength = learningPath.length;
+    
+    return { questionCount, skillCount, edgeCount, pathLength };
+  }, [filteredData, learningPath]);
+
+  // Node Options for Datalist
+  const nodeOptions = useMemo(() => {
+    return graphData.nodes.filter(
+      (n) => n?.node_type === 'question' || String(n?.id || '').startsWith('Q:')
+    );
+  }, [graphData.nodes]);
 
   return (
     <div className={styles.container}>
-      <Container>
-        {/* 控制面板 */}
-        <div className={styles.card}>
-          <div className={styles.cardBody}>
-            <div className={styles.header}>
-              <div className={styles.title}>
-                <FaInfoCircle size={20} color="#51624f" />
-                <span>知识图谱探索</span>
-              </div>
-              <div className={styles.controls}>
-                <button
-                  className={`${styles.btn} ${styles.btnSecondary}`}
-                  onClick={resetHighlight}
-                  disabled={loading}
-                >
-                  <FaTimes /> 重置高亮
-                </button>
-                <button
-                  className={`${styles.btn} ${styles.btnSecondary}`}
-                  onClick={loadGraphData}
-                  disabled={loading}
-                >
-                  <FaSync className={loading ? 'fa-spin' : ''} /> 刷新数据
-                </button>
-              </div>
-            </div>
-
-            {flash && (
-              <div
-                className={`alert alert-${flash.type} alert-dismissible fade show mb-3`}
-              >
-                {flash.text}
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setFlash(null)}
-                />
-              </div>
-            )}
-
-            {loadError && (
-              <div className="alert alert-danger mb-3">{loadError}</div>
-            )}
-
-            <div className={styles.controls} style={{ marginBottom: '1rem' }}>
-              {/* 搜索 */}
-              <div className={styles.inputGroup}>
-                <FaSearch className={styles.inputIcon} />
-                <input
-                  type="text"
-                  className={styles.formControl}
-                  placeholder="搜索题目标题或标签..."
-                  value={searchKeyword}
-                  onChange={(e) => setSearchKeyword(e.target.value)}
-                />
-              </div>
-
-              {/* 边类型过滤器 */}
-              <div className={styles.filterSection}>
-                <span style={{ fontSize: '0.9rem', color: '#999' }}>
-                  显示关系:
-                </span>
-                {[
-                  { key: 'HAS_SKILL', label: '包含技能' },
-                  { key: 'PREREQUISITE', label: '前置' },
-                  { key: 'SKILL_CO_OCCUR', label: '技能共现' },
-                ].map(({ key, label }) => (
-                  <label key={key} className={styles.checkboxLabel}>
-                    <input
-                      className={styles.checkboxInput}
-                      type="checkbox"
-                      checked={!!edgeFilters[key]}
-                      onChange={(e) =>
-                        setEdgeFilters((prev) => ({
-                          ...prev,
-                          [key]: e.target.checked,
-                        }))
-                      }
-                    />
-                    {label}
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {/* 路径查找 */}
-            <div
-              className={styles.controls}
-              style={{
-                backgroundColor: '#f9f9f9',
-                padding: '1rem',
-                borderRadius: '8px',
-              }}
-            >
-              <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>
-                路径探索:
-              </span>
-              <div style={{ width: 200 }}>
-                <input
-                  className={styles.formControl}
-                  list="graph-path-start"
-                  placeholder="选择起点"
-                  value={pathStart || ''}
-                  onChange={(e) => setPathStart(e.target.value || null)}
-                />
-                <datalist id="graph-path-start">
-                  {graphData.nodes
-                    .filter(
-                      (n) =>
-                        n?.node_type === 'question' ||
-                        String(n?.id || '').startsWith('Q:')
-                    )
-                    .map((node) => (
-                      <option key={node.id} value={node.id}>
-                        {node.title} ({String(node.id).replace(/^Q:/, '')})
-                      </option>
-                    ))}
-                </datalist>
-              </div>
-
-              <div style={{ width: 200 }}>
-                <input
-                  className={styles.formControl}
-                  list="graph-path-end"
-                  placeholder="选择终点"
-                  value={pathEnd || ''}
-                  onChange={(e) => setPathEnd(e.target.value || null)}
-                />
-                <datalist id="graph-path-end">
-                  {graphData.nodes
-                    .filter(
-                      (n) =>
-                        n?.node_type === 'question' ||
-                        String(n?.id || '').startsWith('Q:')
-                    )
-                    .map((node) => (
-                      <option key={node.id} value={node.id}>
-                        {node.title} ({String(node.id).replace(/^Q:/, '')})
-                      </option>
-                    ))}
-                </datalist>
-              </div>
-
-              <button
-                className={`${styles.btn} ${styles.btnPrimary}`}
-                onClick={handleFindPath}
-                disabled={loading}
-              >
-                <FaLink /> 查找路径
-              </button>
-            </div>
-
-            {/* 统计信息 */}
-            <div className={styles.statsBar}>
-              <div className={styles.statItem}>
-                <span>题目节点:</span>
-                <span className={styles.statValue}>
-                  {
-                    filteredData.nodes.filter((n) =>
-                      String(n?.id || '').startsWith('Q:')
-                    ).length
-                  }
-                </span>
-              </div>
-              <div className={styles.statItem}>
-                <span>技能节点:</span>
-                <span className={styles.statValue}>
-                  {
-                    filteredData.nodes.filter((n) =>
-                      String(n?.id || '').startsWith('S:')
-                    ).length
-                  }
-                </span>
-              </div>
-              <div className={styles.statItem}>
-                <span>边数量:</span>
-                <span className={styles.statValue}>
-                  {filteredData.links.length}
-                </span>
-              </div>
-              {learningPath.length > 0 && (
-                <div className={styles.statItem}>
-                  <span>学习路径:</span>
-                  <span className={styles.statValue}>
-                    {learningPath.length} 个题目
-                  </span>
-                </div>
-              )}
-            </div>
+      {flash && (
+        <div className={styles.flashContainer}>
+          <div className={`${styles.alert} alert-${flash.type}`}>
+             {flash.text}
           </div>
         </div>
+      )}
+      
+      {loadError && (
+         <div className="alert alert-danger mb-3 mx-4 mt-2">{loadError}</div>
+      )}
 
-        {/* 图谱容器 */}
-        <div className={`${styles.card} ${styles.graphContainer}`}>
-          {loading ? (
-            <div className={styles.loadingContainer}>
-              <div className="spinner-border text-secondary" role="status" />
-              <div className="mt-3">加载图谱数据中...</div>
-            </div>
-          ) : (
-            <>
-              <ForceDirectedGraph
-                data={filteredData}
-                highlightedNodes={highlightedNodes}
-                onNodeClick={handleNodeClick}
-              />
+      <FrameControlPanel 
+        searchKeyword={searchKeyword}
+        onSearchChange={setSearchKeyword}
+        edgeFilters={edgeFilters}
+        // Handle single filter change in parent or adapt child
+        onFilterChange={(key, checked) => setEdgeFilters(prev => ({...prev, [key]: checked}))}
+        pathStart={pathStart}
+        pathEnd={pathEnd}
+        onPathStartChange={setPathStart}
+        onPathEndChange={setPathEnd}
+        onFindPath={handleFindPath}
+        onReset={handleReset}
+        onRefresh={loadGraphData}
+        loading={loading}
+        stats={stats}
+        nodeOptions={nodeOptions}
+      />
 
-              <div className={styles.legend}>
-                <div className={styles.legendTitle}>图例说明</div>
-                <div className={styles.legendItem}>
-                  <span style={{ color: '#1890ff' }}>●</span> 简单
-                </div>
-                <div className={styles.legendItem}>
-                  <span style={{ color: '#52c41a' }}>●</span> 中等
-                </div>
-                <div className={styles.legendItem}>
-                  <span style={{ color: '#f5222d' }}>●</span> 困难
-                </div>
-                <div className={styles.legendItem}>
-                  <span style={{ color: '#faad14' }}>●</span> 高亮节点
-                </div>
-                <div
-                  className={styles.legendTitle}
-                  style={{ marginTop: '12px' }}
-                >
-                  关系类型
-                </div>
-                <div className={styles.legendItem}>
-                  <span style={{ color: '#722ed1' }}>━</span> PREREQUISITE
-                </div>
-                <div className={styles.legendItem}>
-                  <span style={{ color: '#13c2c2' }}>━</span> NEXT
-                </div>
-                <div className={styles.legendItem}>
-                  <span style={{ color: '#fa8c16' }}>━</span> RELATED
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* 节点详情弹窗 */}
-        {showNodeInfo && selectedNode && (
-          <div
-            className={styles.modalOverlay}
-            onClick={() => setShowNodeInfo(false)}
-          >
-            <div
-              className={styles.modalContent}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className={styles.modalHeader}>
-                <h5 className={styles.modalTitle}>
-                  {String(selectedNode?.id || '').startsWith('S:')
-                    ? '技能详情'
-                    : '题目详情'}
-                </h5>
-                <button
-                  className={styles.closeBtn}
-                  onClick={() => setShowNodeInfo(false)}
-                >
-                  <FaTimes />
-                </button>
-              </div>
-              <div className={styles.modalBody}>
-                {String(selectedNode.id || '').startsWith('S:') ||
-                selectedNode.node_type === 'skill' ? (
-                  <div>
-                    <h3 style={{ marginBottom: '1rem', color: '#333' }}>
-                      {selectedNode.title}
-                    </h3>
-                    <div className={styles.infoSection}>
-                      <p>
-                        <span className={styles.infoLabel}>技能 Key:</span>{' '}
-                        {selectedNode.skill_key ||
-                          String(selectedNode.id).replace(/^S:/, '')}
-                      </p>
-                      {selectedNode.updated_at && (
-                        <p>
-                          <span className={styles.infoLabel}>更新时间:</span>{' '}
-                          {String(selectedNode.updated_at)}
-                        </p>
-                      )}
-                    </div>
-                    <div className={styles.infoSection}>
-                      <span className={styles.infoLabel}>相关题目:</span>
-                      <div className="mt-2">
-                        {[
-                          ...new Set(
-                            graphData.links
-                              .filter((l) => {
-                                const sid = String(selectedNode.id);
-                                const s = String(l.source);
-                                const t = String(l.target);
-                                return (
-                                  (s === sid && t.startsWith('Q:')) ||
-                                  (t === sid && s.startsWith('Q:'))
-                                );
-                              })
-                              .map((l) => {
-                                const sid = String(selectedNode.id);
-                                return String(l.source) === sid
-                                  ? String(l.target)
-                                  : String(l.source);
-                              })
-                          ),
-                        ]
-                          .slice(0, 50)
-                          .map((qid) => (
-                            <a
-                              key={qid}
-                              className={styles.relatedLink}
-                              href={`/problem/${String(qid).replace(/^Q:/, '')}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              {String(qid).replace(/^Q:/, '')}
-                            </a>
-                          ))}
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'flex-start',
-                      }}
-                    >
-                      <h3 style={{ marginBottom: '1rem', color: '#333' }}>
-                        {selectedNode.title}
-                      </h3>
-                      <a
-                        className={`${styles.btn} ${styles.btnPrimary}`}
-                        href={`/problem/${String(selectedNode.id).replace(/^Q:/, '')}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ padding: '0.4rem 1rem', fontSize: '0.9rem' }}
-                      >
-                        去做题
-                      </a>
-                    </div>
-
-                    <div className={styles.infoSection}>
-                      <div
-                        style={{
-                          display: 'flex',
-                          gap: '2rem',
-                          marginBottom: '1rem',
-                        }}
-                      >
-                        <div>
-                          <span className={styles.infoLabel}>题目编号</span>
-                          {String(selectedNode.id).replace(/^Q:/, '')}
-                        </div>
-                        <div>
-                          <span className={styles.infoLabel}>难度</span>
-                          <span
-                            className={`${styles.badge} ${
-                              selectedNode.difficulty === '简单'
-                                ? styles.badgeEasy
-                                : selectedNode.difficulty === '中等'
-                                  ? styles.badgeMedium
-                                  : selectedNode.difficulty === '困难'
-                                    ? styles.badgeHard
-                                    : styles.badgeDefault
-                            }`}
-                          >
-                            {selectedNode.difficulty}
-                          </span>
-                        </div>
-                      </div>
-
-                      {selectedNode.tags && (
-                        <div style={{ marginBottom: '1rem' }}>
-                          <span className={styles.infoLabel}>标签</span>
-                          {selectedNode.tags.split(',').map(
-                            (tag) =>
-                              tag.trim() && (
-                                <span
-                                  key={tag}
-                                  className={`${styles.badge} ${styles.badgeDefault}`}
-                                  style={{ marginRight: '6px' }}
-                                >
-                                  {tag.trim()}
-                                </span>
-                              )
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    {selectedNode.description && (
-                      <div className={styles.infoSection}>
-                        <span className={styles.infoLabel}>题目描述</span>
-                        <div
-                          style={{
-                            backgroundColor: '#f9f9f9',
-                            padding: '1rem',
-                            borderRadius: '8px',
-                            lineHeight: '1.6',
-                          }}
-                        >
-                          {selectedNode.description}
-                        </div>
-                      </div>
-                    )}
-
-                    {selectedNode.sample_input &&
-                      selectedNode.sample_output && (
-                        <div className={styles.infoSection}>
-                          <div style={{ display: 'flex', gap: '1rem' }}>
-                            <div style={{ flex: 1 }}>
-                              <span className={styles.infoLabel}>样例输入</span>
-                              <div className={styles.codeBlock}>
-                                {selectedNode.sample_input}
-                              </div>
-                            </div>
-                            <div style={{ flex: 1 }}>
-                              <span className={styles.infoLabel}>样例输出</span>
-                              <div className={styles.codeBlock}>
-                                {selectedNode.sample_output}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                  </div>
-                )}
-              </div>
-            </div>
+      <div className={styles.graphContainer}>
+        {loading ? (
+          <div className={styles.loadingContainer}>
+            <div className="spinner-border text-primary" role="status" />
+            <div className="mt-3">加载图谱数据中...</div>
           </div>
+        ) : (
+          <>
+            <ForceDirectedGraph
+              data={filteredData}
+              highlightedNodes={highlightedNodes}
+              onNodeClick={handleNodeClick}
+            />
+            <div className={styles.legend}>
+              <div className={styles.legendTitle}>图例说明</div>
+              <div className={styles.legendItem}>
+                <span style={{ color: '#1890ff' }}>●</span> 简单
+              </div>
+              <div className={styles.legendItem}>
+                <span style={{ color: '#52c41a' }}>●</span> 中等
+              </div>
+              <div className={styles.legendItem}>
+                <span style={{ color: '#f5222d' }}>●</span> 困难
+              </div>
+              <div className={styles.legendItem}>
+                <span style={{ color: '#faad14' }}>●</span> 高亮节点
+              </div>
+              <div style={{ marginTop: '0.5rem', fontWeight: 600, fontSize: '0.85rem' }}>关系类型</div>
+              <div className={styles.legendItem}>
+                <span style={{ color: '#722ed1' }}>━</span> 包含技能
+              </div>
+              <div className={styles.legendItem}>
+                <span style={{ color: '#13c2c2' }}>━</span> 前置
+              </div>
+              <div className={styles.legendItem}>
+                <span style={{ color: '#52c41a' }}>━</span> 后续
+              </div>
+            </div>
+          </>
         )}
-      </Container>
+      </div>
+
+      {showNodeInfo && selectedNode && (
+        <NodeDetailsModal 
+          node={selectedNode}
+          onClose={() => setShowNodeInfo(false)}
+          graphLinks={graphData.links}
+        />
+      )}
     </div>
   );
 }
+
