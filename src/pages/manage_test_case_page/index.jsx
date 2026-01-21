@@ -4,6 +4,7 @@ import {
   getProblemTestcaseFileTree,
   uploadTestCaseViaOss,
 } from '../../api/test_case_api';
+import { getProblemById } from '../../api/getproblem';
 import {
   Container,
   Row,
@@ -132,7 +133,8 @@ const AddTestPage = ({ problem_number, setIsAdd, show, onUploaded }) => {
 };
 
 export default function ManageTestCasePage() {
-  const { problem_number } = useParams();
+  const { problem_number: problemId } = useParams(); // URL 参数现在是 ID
+  const [problemNumber, setProblemNumber] = useState(null); // 真实的题目编号
   const [isadd, setIsAdd] = useState(false);
 
   const [tree, setTree] = useState(null);
@@ -140,18 +142,37 @@ export default function ManageTestCasePage() {
   const [treeError, setTreeError] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
 
+  // 根据 ID 获取题目编号
+  useEffect(() => {
+    const fetchProblemInfo = async () => {
+      if (!problemId) return;
+      try {
+        const res = await getProblemById(problemId);
+        if (res && res.data && res.data.question_number) {
+          setProblemNumber(res.data.question_number);
+        } else {
+          setTreeError('无法获取题目信息');
+        }
+      } catch (err) {
+        console.error('获取题目信息失败:', err);
+        setTreeError('获取题目信息失败');
+      }
+    };
+    fetchProblemInfo();
+  }, [problemId]);
+
   const handleAddClick = () => {
     setIsAdd(true);
   };
 
   const refreshTree = async () => {
-    if (!problem_number) return;
+    if (!problemNumber) return;
 
     setTreeLoading(true);
     setTreeError('');
     try {
       const data = await getProblemTestcaseFileTree({
-        question_number: parseInt(problem_number),
+        question_number: parseInt(problemNumber),
         recursive: false,
       });
       setTree(data);
@@ -164,8 +185,10 @@ export default function ManageTestCasePage() {
   };
 
   useEffect(() => {
-    refreshTree();
-  }, [problem_number, refreshKey]);
+    if (problemNumber) {
+      refreshTree();
+    }
+  }, [problemNumber, refreshKey]);
 
   const objects = useMemo(() => {
     const list = tree?.objects ?? [];
@@ -218,7 +241,9 @@ export default function ManageTestCasePage() {
                 <Col md={6}>
                   <div className="p-3 bg-light rounded border">
                     <strong className="text-muted">当前题目：</strong>
-                    <span className="text-dark">{problem_number}</span>
+                    <span className="text-dark">
+                      {problemNumber || '加载中...'}
+                    </span>
                   </div>
                 </Col>
                 <Col md={6}>
@@ -286,7 +311,7 @@ export default function ManageTestCasePage() {
       </Row>
 
       <AddTestPage
-        problem_number={problem_number}
+        problem_number={problemNumber}
         setIsAdd={setIsAdd}
         show={isadd}
         onUploaded={() => setRefreshKey((k) => k + 1)}
