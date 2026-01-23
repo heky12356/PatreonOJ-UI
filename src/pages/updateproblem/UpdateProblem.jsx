@@ -4,6 +4,7 @@ import styles from './UpdateProblem.module.css';
 import { Row, Col, Modal, Button } from 'react-bootstrap';
 import { updateProblem } from '../../api/updateProblem';
 import { getProblemById, getProblemByNumber } from '../../api/getproblem';
+import { getCategories } from '../../api/getcategories';
 import MDEditor from '@uiw/react-md-editor';
 
 export default function UpdateProblem() {
@@ -244,7 +245,7 @@ export default function UpdateProblem() {
             <div className={styles.right}>
               <p>分类</p>
               {categories.map((category) => (
-                <div key={category.Id}>
+                <div key={category.id}>
                   <label className={styles.formLabel}>
                     <input
                       type="radio"
