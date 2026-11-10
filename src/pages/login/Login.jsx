@@ -1,6 +1,6 @@
 //pages/Login.jsx
-import React, { useState, useEffect } from 'react';
-import { login, saveUserInfo, mockLogin } from '../../api/user';
+import React, { useState } from 'react';
+import { login, saveUserInfo } from '../../api/user';
 import { Form, Button, Container, Col, Row } from 'react-bootstrap';
 
 const Login = () => {
@@ -22,6 +22,7 @@ const Login = () => {
   //处理表单提交
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
 
     if (!username || !password) {
       setError('请输入用户名和密码');
@@ -45,7 +46,7 @@ const Login = () => {
       window.location.href = '/';
     } catch (err) {
       // console.error("登录失败:", err);
-      setError(err.response?.data?.error || '登录失败，请检查用户名和密码');
+      setError(err.response?.data?.msg || err.response?.data?.error || '登录失败，请检查用户名和密码');
     } finally {
       setLoading(false);
     }
@@ -74,8 +75,8 @@ const Login = () => {
                 />
               </Form.Group>
               {error && <p style={{ color: 'red' }}>{error}</p>}
-              <Button variant="primary" type="submit">
-                登录
+              <Button variant="primary" type="submit" disabled={loading}>
+                {loading ? '正在登录…' : '登录'}
               </Button>
             </Form>
           </div>

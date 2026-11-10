@@ -1,87 +1,84 @@
-const baseUrl = '/api';
+﻿const baseUrl = '/api';
 
-/**
- * 获取首页展示文本
- * @returns 首页展示文本
- */
+const parseJson = async (response) => {
+  const text = await response.text();
+  let data = null;
+
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = null;
+    }
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      data?.msg || data?.message || text || `HTTP ${response.status}`
+    );
+  }
+
+  return data || {};
+};
+
 export async function getHomeShowText() {
   try {
-    const response = await fetch(baseUrl + '/overview/getHomeText');
-    if (!response.ok) {
-      throw new Error('获取首页展示文本失败');
-    }
-    const data = await response.json();
-    return data.home_text;
+    const response = await fetch(`${baseUrl}/overview/getHomeText`);
+    const data = await parseJson(response);
+    return data.home_text ?? data?.data?.home_text ?? '';
   } catch (err) {
     console.error('获取首页展示文本失败:', err);
-    return err;
+    return '';
   }
 }
 
-/**
- * 设置首页展示文本
- * @param {*} text 首页展示文本
- * @returns 设置结果
- */
 export async function updateHomeText(text) {
   try {
-    const response = await fetch(baseUrl + '/overview/updateHomeText', {
-      method: 'post',
+    const response = await fetch(`${baseUrl}/overview/updateHomeText`, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ home_text: text }),
     });
-    if (!response.ok) {
-      throw new Error('设置首页展示文本失败');
-    }
-    const result = await response.json();
-    return result;
+
+    return await parseJson(response);
   } catch (err) {
-    console.error('设置首页展示文本失败:', err);
-    return err;
+    console.error('更新首页展示文本失败:', err);
+    return {
+      code: 500,
+      msg: err?.message || '更新首页展示文本失败',
+    };
   }
 }
 
-/**
- * 获取公告
- * @returns 公告内容
- */
 export async function getAnnouncement() {
   try {
-    const response = await fetch(baseUrl + '/overview/getAnnouncement');
-    if (!response.ok) {
-      throw new Error('获取公告失败');
-    }
-    const data = await response.json();
-    return data.announcement;
+    const response = await fetch(`${baseUrl}/overview/getAnnouncement`);
+    const data = await parseJson(response);
+    return data.announcement ?? data?.data?.announcement ?? '';
   } catch (err) {
     console.error('获取公告失败:', err);
-    return err;
+    return '';
   }
 }
 
-/**
- * 更新公告
- * @param {*} announcement 公告内容
- * @returns 更新结果
- */
 export async function updateAnnouncement(announcement) {
   try {
-    const response = await fetch(baseUrl + '/overview/updateAnnouncement', {
-      method: 'post',
+    const response = await fetch(`${baseUrl}/overview/updateAnnouncement`, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ announcement }),
     });
-    if (!response.ok) {
-      throw new Error('更新公告失败');
-    }
-    const result = await response.json();
-    return result;
+
+    return await parseJson(response);
   } catch (err) {
     console.error('更新公告失败:', err);
-    return err;
+    return {
+      code: 500,
+      msg: err?.message || '更新公告失败',
+    };
   }
 }

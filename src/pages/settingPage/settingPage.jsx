@@ -1,4 +1,4 @@
-import { Container, Row, Col, Button } from 'react-bootstrap';
+﻿import { Container, Row, Col, Button } from 'react-bootstrap';
 import styles from './settingPage.module.css';
 import {
   getAnnouncement,
@@ -11,10 +11,10 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 export default function SettingPage() {
-  const [homeShowText, setHomeShowText] = useState(''); // OJ首页展示文本
-  const [homeSTEditStatus, setHomeSTEditStatus] = useState(false); // 状态
+  const [homeShowText, setHomeShowText] = useState('');
+  const [homeSTEditStatus, setHomeSTEditStatus] = useState(false);
 
-  const [announcement, setAnnouncement] = useState(''); // 公告
+  const [announcement, setAnnouncement] = useState('');
   const [announcementEditStatus, setAnnouncementEditStatus] = useState(false);
 
   const handleHomeTextChange = (e) => {
@@ -28,16 +28,15 @@ export default function SettingPage() {
   };
 
   const saveHomeShowText = async () => {
-    console.log(homeShowText);
     const result = await updateHomeText(homeShowText);
-    if (result.code === 200) {
+    if (result?.code === 200) {
       setHomeSTEditStatus(false);
     }
   };
 
   const saveAnnouncement = async () => {
     const result = await updateAnnouncement(announcement);
-    if (result.code === 200) {
+    if (result?.code === 200) {
       setAnnouncementEditStatus(false);
     }
   };
@@ -63,6 +62,7 @@ export default function SettingPage() {
         <Col md={10}>
           <div className={styles.settingPage}>
             <h1>设置</h1>
+
             <h2>首页内容</h2>
             <h3>显示效果</h3>
             <div className={styles.markdownPreview}>
@@ -79,9 +79,7 @@ export default function SettingPage() {
               disabled={!homeSTEditStatus}
             ></textarea>
             <div className={styles.buttonGroup}>
-              {homeSTEditStatus && (
-                <Button onClick={saveHomeShowText}>保存</Button>
-              )}
+              {homeSTEditStatus && <Button onClick={saveHomeShowText}>保存</Button>}
               {!homeSTEditStatus && (
                 <Button onClick={() => setHomeSTEditStatus(true)}>编辑</Button>
               )}

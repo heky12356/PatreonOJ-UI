@@ -128,7 +128,42 @@
   text-align: center;
 }
 
+.solveStatus {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  display: inline-block;
+  min-width: 72px;
+  text-align: center;
+}
+
+.statusSolved {
+  background-color: #e8f7ee;
+  color: #1f7a45;
+}
+
+.statusAttempted {
+  background-color: #fff4e5;
+  color: #b65d00;
+}
+
+.statusUnsolved {
+  background-color: #f3f4f6;
+  color: #4b5563;
+}
+
+.statusLoginHint {
+  background-color: #eef2f7;
+  color: #6b7280;
+}
+
 .简单 {
+  background-color: #e6f4ea;
+  color: #1e7e34;
+}
+
+.easy {
   background-color: #e6f4ea;
   color: #1e7e34;
 }
@@ -138,7 +173,17 @@
   color: #f57f17;
 }
 
+.medium {
+  background-color: #fff8e1;
+  color: #f57f17;
+}
+
 .困难 {
+  background-color: #fce4ec;
+  color: #c2185b;
+}
+
+.hard {
   background-color: #fce4ec;
   color: #c2185b;
 }

@@ -1,107 +1,162 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Tabs, message } from 'antd';
 import {
+  ApartmentOutlined,
   ArrowLeftOutlined,
   CodeOutlined,
-  FileTextOutlined,
   CopyOutlined,
+  FileTextOutlined,
   HistoryOutlined,
 } from '@ant-design/icons';
-import CodeEditor from '../../components/codeEditor/CodeEditor';
-import {
-  getProblemById,
-  getProblemRecommendations,
-} from '../../api/getproblem';
-import styles from './ProblemPage.module.css';
 import remarkGfm from 'remark-gfm';
 import MDEditor from '@uiw/react-md-editor';
-import { FaTags, FaLightbulb } from 'react-icons/fa';
+import { FaLightbulb, FaTags } from 'react-icons/fa';
+import CodeEditor from '../../components/codeEditor/CodeEditor';
+import { EmptyState, ErrorState, LoadingState } from '../../components/feedback/AsyncState.jsx';
+import { getProblemById } from '../../api/getproblem';
+import { getProblemRecommendations } from '../../api/learning.js';
+import { getUserSubmissions } from '../../api/judge.js';
+import { getUserId, isLoggedIn } from '../../api/user';
+import { getUserQuestionSolved } from '../../api/userSolve.js';
+import { getRequestErrorMessage } from '../../utils/request.js';
+import styles from './ProblemPage.module.css';
 
 function ProblemPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [question, setQuestion] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('description');
   const [recommendations, setRecommendations] = useState([]);
+  const [solveStatus, setSolveStatus] = useState('unknown');
 
-  // 获取题目详情
+  const fetchQuestion = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const data = await getProblemById(id);
+      setQuestion(data?.data || null);
+    } catch (err) {
+      setError(getRequestErrorMessage(err, '加载题目失败'));
+      setQuestion(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchQuestion = async () => {
-      try {
-        setLoading(true);
-        const data = await getProblemById(id);
-        setQuestion(data.data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (id) {
-      fetchQuestion();
+      void fetchQuestion();
     }
   }, [id]);
 
-  // 获取推荐题目
   useEffect(() => {
-    if (question && question.question_number) {
-      getProblemRecommendations(question.question_number)
-        .then((data) => {
-          if (data && data.recommendations) {
-            setRecommendations(data.recommendations);
-          }
-        })
-        .catch((err) => console.error('获取推荐题目失败:', err));
-    }
+    const fetchRecommendations = async () => {
+      if (!question?.id || !isLoggedIn()) {
+        setRecommendations([]);
+        return;
+      }
+
+      try {
+        const resp = await getProblemRecommendations({
+          uuid: getUserId(),
+          id: question.id,
+          questionId: question.question_id,
+          limit: 5,
+        });
+        setRecommendations(resp?.data?.recommendations ?? []);
+      } catch {
+        setRecommendations([]);
+      }
+    };
+
+    void fetchRecommendations();
+  }, [question]);
+
+  useEffect(() => {
+    const fetchSolveStatus = async () => {
+      if (!question?.id || !isLoggedIn()) {
+        setSolveStatus('unknown');
+        return;
+      }
+
+      const uuid = getUserId();
+      if (!uuid) {
+        setSolveStatus('unknown');
+        return;
+      }
+
+      try {
+        const solvedResp = await getUserQuestionSolved({
+          uuid,
+          id: question.id,
+        });
+
+        if (solvedResp?.solved) {
+          setSolveStatus('solved');
+          return;
+        }
+
+        const submissionResp = await getUserSubmissions(uuid, {
+          problem_id: question.id,
+          page: 1,
+          size: 1,
+          operator_uuid: uuid,
+          user_uuid: uuid,
+        });
+
+        setSolveStatus(
+          Number(submissionResp?.total ?? 0) > 0 ? 'attempted' : 'unsolved'
+        );
+      } catch {
+        setSolveStatus('unknown');
+      }
+    };
+
+    void fetchSolveStatus();
   }, [question]);
 
   const handleCopyProblem = async () => {
     if (!question) return;
-    const textToCopy = `${question.question_id} ${question.title}\n\n${question.content}`;
+
+    const textToCopy = `${question.question_id || question.id} ${question.title}\n\n${question.content || ''}`;
     try {
       await navigator.clipboard.writeText(textToCopy);
-      message.success('题目信息已复制到剪贴板！');
-    } catch (err) {
-      console.error('复制失败:', err);
+      message.success('题目信息已复制到剪贴板');
+    } catch {
       message.error('复制失败，请手动复制');
     }
   };
 
-  /**
-   * 处理代码提交
-   * @param {Object} submitData - 提交的数据
-   */
-  const handleCodeSubmit = (submitData) => {
-    console.log('代码提交:', submitData);
-    message.success('代码提交成功！');
-    // 这里可以添加实际的提交逻辑
+  const handleCodeSubmit = () => {
+    message.success('代码提交成功');
   };
 
-  /**
-   * 切换到IDE标签页
-   */
   const switchToIdeTab = () => {
     setActiveTab('ide');
     message.info('已切换到代码编辑器');
   };
 
-  // 退出到题库页面
   const handleExit = () => {
     navigate('/problem');
   };
 
   const handleViewSubmissions = () => {
-    navigate(`/problem/${question.question_number}/submissions`);
+    navigate(`/problem/${question.id}/submissions`);
   };
 
-  // 解析标签字符串为数组
+  const handleViewGraph = () => {
+    navigate(`/problem/${question.id}/graph`);
+  };
+
   const parseTags = (tagsString) => {
     if (!tagsString) return [];
-    return tagsString.split(',').map((tag) => tag.trim());
+    return String(tagsString)
+      .split(',')
+      .map((tag) => tag.trim())
+      .filter(Boolean);
   };
 
   const getDifficultyClass = (diff) => {
@@ -111,10 +166,45 @@ function ProblemPage() {
     return '';
   };
 
+  const getSolveStatusMeta = () => {
+    if (!isLoggedIn()) {
+      return {
+        text: '登录后可查看完成状态',
+        className: styles.statusLoginHint,
+      };
+    }
+
+    if (solveStatus === 'solved') {
+      return {
+        text: '当前状态：已通过',
+        className: styles.statusSolved,
+      };
+    }
+
+    if (solveStatus === 'attempted') {
+      return {
+        text: '当前状态：未通过',
+        className: styles.statusAttempted,
+      };
+    }
+
+    if (solveStatus === 'unsolved') {
+      return {
+        text: '当前状态：未做',
+        className: styles.statusUnsolved,
+      };
+    }
+
+    return {
+      text: '当前状态：暂不可用',
+      className: styles.statusUnknown,
+    };
+  };
+
   if (loading) {
     return (
       <div className={styles.content}>
-        <div className={styles.loading}>加载题目中...</div>
+        <LoadingState text="正在加载题目..." />
       </div>
     );
   }
@@ -122,7 +212,7 @@ function ProblemPage() {
   if (error) {
     return (
       <div className={styles.content}>
-        <div className={styles.error}>错误: {error}</div>
+        <ErrorState title="题目加载失败" message={error} onRetry={() => void fetchQuestion()} />
       </div>
     );
   }
@@ -130,23 +220,45 @@ function ProblemPage() {
   if (!question) {
     return (
       <div className={styles.content}>
-        <div className={styles.error}>题目不存在</div>
+        <EmptyState
+          title="题目不存在"
+          description="没有找到对应题目，可能已被删除或暂未发布。"
+          action={
+            <button
+              type="button"
+              className={`${styles.btn} ${styles['btn-outline']}`}
+              onClick={handleExit}
+            >
+              返回题库
+            </button>
+          }
+        />
       </div>
     );
   }
 
+  const solveStatusMeta = getSolveStatusMeta();
+
   return (
     <div className={styles.content}>
+      <div
+        className={`${styles.problemStatusBanner} ${solveStatusMeta.className}`}
+      >
+        {solveStatusMeta.text}
+      </div>
+
       <div className={styles['problem-header']}>
         <h1>
-          {question.question_id}. {question.title}
+          {question.question_id || question.id}. {question.title}
         </h1>
         <div className={styles['problem-meta']}>
           <div className={styles['problem-info']}>
             <div className={styles['info-item']}>
               <strong>难度:</strong>
               <span
-                className={`${styles['difficulty-badge']} ${getDifficultyClass(question.difficulty)}`}
+                className={`${styles['difficulty-badge']} ${getDifficultyClass(
+                  question.difficulty
+                )}`}
               >
                 {question.difficulty}
               </span>
@@ -158,12 +270,13 @@ function ProblemPage() {
               <strong>内存限制:</strong> {question.memory_limit}MB
             </div>
           </div>
+
           <div className={styles['problem-actions']}>
             <button
               className={`${styles.btn} ${styles['btn-danger']}`}
               onClick={handleExit}
             >
-              <ArrowLeftOutlined /> 退出
+              <ArrowLeftOutlined /> 返回
             </button>
 
             <button
@@ -177,6 +290,12 @@ function ProblemPage() {
               onClick={handleViewSubmissions}
             >
               <HistoryOutlined /> 提交记录
+            </button>
+            <button
+              className={`${styles.btn} ${styles['btn-outline']}`}
+              onClick={handleViewGraph}
+            >
+              <ApartmentOutlined /> 学习图谱
             </button>
             <button
               className={`${styles.btn} ${styles['btn-primary']}`}
@@ -219,17 +338,22 @@ function ProblemPage() {
                     />
                   </div>
                 </div>
+
                 <div className={styles['problem-sidebar']}>
                   <div className={styles['sidebar-card']}>
                     <div className={styles['sidebar-title']}>
                       <FaTags color="#51624f" /> 标签
                     </div>
                     <div className={styles['tag-list']}>
-                      {parseTags(question.tags).map((tag, index) => (
-                        <span key={index} className={styles.tag}>
-                          {tag}
-                        </span>
-                      ))}
+                      {parseTags(question.tags).length > 0 ? (
+                        parseTags(question.tags).map((tag, index) => (
+                          <span key={index} className={styles.tag}>
+                            {tag}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-secondary small">暂无标签</span>
+                      )}
                     </div>
                   </div>
 
@@ -239,44 +363,48 @@ function ProblemPage() {
                     </div>
                     {recommendations.length > 0 ? (
                       <ul className={styles['recommendation-list']}>
-                        {recommendations.map((rec) => (
-                          <li
-                            key={rec.question_id}
-                            className={styles['recommendation-item']}
-                          >
-                            <a
-                              href={`/problem/${rec.question_id}`}
-                              className={styles['rec-link']}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                navigate(`/problem/${rec.question_id}`);
-                              }}
+                        {recommendations.map((rec) => {
+                          const recId =
+                            rec?.question_pk ?? rec?.id ?? rec?.question_id;
+                          if (!recId) return null;
+
+                          return (
+                            <li
+                              key={String(recId)}
+                              className={styles['recommendation-item']}
                             >
-                              <span>
-                                {rec.question_id}. {rec.title}
-                              </span>
-                              <span
-                                className={`${styles['difficulty-badge']} ${getDifficultyClass(rec.difficulty)}`}
+                              <a
+                                href={`/problem/${recId}`}
+                                className={styles['rec-link']}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  navigate(`/problem/${recId}`);
+                                }}
                               >
-                                {rec.difficulty}
-                              </span>
-                            </a>
-                            <div className={styles['rec-reason']}>
-                              {rec.reason}
-                            </div>
-                          </li>
-                        ))}
+                                <span>
+                                  {rec?.question_id || recId}.{' '}
+                                  {rec?.title || '-'}
+                                </span>
+                                <span
+                                  className={`${styles['difficulty-badge']} ${getDifficultyClass(
+                                    rec?.difficulty
+                                  )}`}
+                                >
+                                  {rec?.difficulty || '-'}
+                                </span>
+                              </a>
+                              <div className={styles['rec-reason']}>
+                                {rec?.reason || '暂无推荐说明'}
+                              </div>
+                            </li>
+                          );
+                        })}
                       </ul>
                     ) : (
-                      <div
-                        style={{
-                          color: '#999',
-                          fontSize: '0.9rem',
-                          textAlign: 'center',
-                        }}
-                      >
-                        暂无推荐
-                      </div>
+                      <EmptyState
+                        title="暂无推荐"
+                        description="继续做题后，这里会出现更贴近你的推荐内容。"
+                      />
                     )}
                   </div>
                 </div>
@@ -294,7 +422,9 @@ function ProblemPage() {
               </span>
             ),
             children: (
-              <div className={`${styles['tab-content']} ${styles.codeEditor}`}>
+              <div
+                className={`${styles['tab-content']} ${styles.codeEditor}`}
+              >
                 <CodeEditor problem={question} onSubmit={handleCodeSubmit} />
               </div>
             ),

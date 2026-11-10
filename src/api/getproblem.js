@@ -1,126 +1,130 @@
-// const mod = "pro";
-import { isLoggedIn, getUserId } from './user.js';
+﻿import { getUserId, isLoggedIn } from './user.js';
 
-const baseUrl = '/api';
-// const baseUrl = "http://localhost:8080"
+const API_BASE_URL = '/api';
 
-/**
- *
- * @param {*} 搜索内容，页数索引，每页题目数量，难度
- * @returns 全部题目数据
- */
+const cleanParams = (params = {}) =>
+  Object.fromEntries(
+    Object.entries(params).filter(
+      ([, value]) => value !== undefined && value !== null && value !== ''
+    )
+  );
+
+const toQueryString = (params = {}) => {
+  const qs = new URLSearchParams(cleanParams(params)).toString();
+  return qs ? `?${qs}` : '';
+};
+
+const parseJson = async (response) => {
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || `HTTP ${response.status}`);
+  }
+  return response.json();
+};
+
+const requestJson = async (url) => {
+  try {
+    const response = await fetch(url);
+    const data = await parseJson(response);
+    return { ok: true, data };
+  } catch (error) {
+    return { ok: false, error };
+  }
+};
+
+const unwrapApiData = (payload) => {
+  if (!payload || typeof payload !== 'object') return payload;
+  if (payload.data !== undefined) return payload.data;
+  if (payload.result !== undefined) return payload.result;
+  return payload;
+};
+
+const normalizeListResp = (
+  payload,
+  fallbackPageIdx = 1,
+  fallbackPageSize = 20
+) => {
+  const body = payload && typeof payload === 'object' ? payload : {};
+  const data = unwrapApiData(body);
+
+  const result = Array.isArray(body.result)
+    ? body.result
+    : Array.isArray(data?.items)
+      ? data.items
+      : Array.isArray(data?.list)
+        ? data.list
+        : Array.isArray(data)
+          ? data
+          : [];
+
+  const pageIdx = Number(
+    body.pageIdx ?? data?.pageIdx ?? data?.page ?? fallbackPageIdx
+  );
+  const pageSize = Number(
+    body.pageSize ?? data?.pageSize ?? data?.size ?? fallbackPageSize
+  );
+  const totalCnt = Number(
+    body.totalCnt ?? data?.totalCnt ?? data?.total ?? data?.count ?? result.length
+  );
+
+  return {
+    ...body,
+    result,
+    pageIdx: Number.isFinite(pageIdx) && pageIdx > 0 ? pageIdx : fallbackPageIdx,
+    pageSize:
+      Number.isFinite(pageSize) && pageSize > 0 ? pageSize : fallbackPageSize,
+    totalCnt: Number.isFinite(totalCnt) && totalCnt >= 0 ? totalCnt : result.length,
+  };
+};
+
+const normalizeDetailResp = (payload) => {
+  const body = payload && typeof payload === 'object' ? payload : {};
+  if (body.data !== undefined) return body;
+  if (body.result !== undefined) return { ...body, data: body.result };
+  return { ...body, data: body };
+};
+
 export async function getProblem({ q, pageIdx, pageSize, difficult } = {}) {
-  // console.log('q:', q);
-  // console.log('pageIdx:', pageIdx);
-  // console.log('pageSize:', pageSize);
-  // console.log('difficult:', difficult);
-  try {
-    let args = '?';
-    if (q != undefined) {
-      args += 'q=' + q;
-    }
-    if (pageIdx != undefined) {
-      if (args != '?') args += '&';
-      args += 'pageIdx=' + pageIdx;
-    }
-    if (pageSize != undefined) {
-      if (args != '?') args += '&';
-      args += 'pageSize=' + pageSize;
-    }
-    if (difficult != undefined) {
-      if (args != '?') args += '&';
-      args += 'difficult=' + difficult;
-    }
+  const params = {
+    q,
+    pageIdx,
+    pageSize,
+    difficult,
+  };
 
-    // 看是否登录，如果登录将uuid附到后面
-    if (isLoggedIn()) {
-      let uuid = getUserId();
-
-      if (args != '?') args += '&';
-      args += 'uuid=' + uuid;
-    }
-
-    const response = await fetch(baseUrl + '/question/' + args);
-    if (!response.ok) {
-      throw new Error('获取题目列表失败');
-    }
-    const data = await response.json();
-    // console.log(data);
-    return data;
-  } catch (err) {
-    console.error('获取题目列表失败:', err);
-    return err;
+  if (isLoggedIn()) {
+    params.uuid = getUserId();
   }
+
+  const response = await fetch(
+    `${API_BASE_URL}/question/${toQueryString(params)}`
+  );
+  const data = await parseJson(response);
+  return normalizeListResp(data, Number(pageIdx) || 1, Number(pageSize) || 20);
 }
 
-/**
- *
- * @param {*} question_number 题目编号
- * @returns 根据题目编号对应的题目数据
- */
-export async function getProblemByNumber(question_number) {
-  try {
-    const response = await fetch(baseUrl + `/question/${question_number}`);
-    if (!response.ok) {
-      throw new Error('获取题目详情失败');
-    }
-    const data = await response.json();
-    return data;
-  } catch (err) {
-    throw err;
-  }
-}
-
-/**
- *
- * @param {*} id 题目ID
- * @returns 根据题目ID对应的题目数据
- */
 export async function getProblemById(id) {
-  try {
-    const response = await fetch(baseUrl + `/question/id/${id}`);
-    if (!response.ok) {
-      throw new Error('获取题目详情失败');
-    }
-    const data = await response.json();
-    return data;
-  } catch (err) {
-    throw err;
+  const primary = await requestJson(`${API_BASE_URL}/question/${id}`);
+  if (primary.ok) {
+    return normalizeDetailResp(primary.data);
   }
+
+  const compat = await requestJson(`${API_BASE_URL}/question/id/${id}`);
+  if (compat.ok) {
+    return normalizeDetailResp(compat.data);
+  }
+
+  throw primary.error || compat.error || new Error('获取题目详情失败');
 }
 
-export async function getNewProblems() {
-  try {
-    const response = await fetch(baseUrl + '/question/new');
-    if (!response.ok) {
-      throw new Error('获取最新题目失败');
-    }
-    const data = await response.json();
-    return data;
-  } catch (err) {
-    console.error('获取最新题目失败:', err);
-    return err;
-  }
+export async function getProblemByNumber(id) {
+  return getProblemById(id);
 }
 
-/**
- * 获取题目推荐
- * @param {string|number} questionNumber 题目编号
- * @param {number} limit 限制数量
- * @returns 推荐题目列表
- */
-export async function getProblemRecommendations(questionNumber, limit = 5) {
-  try {
-    const response = await fetch(
-      `${baseUrl}/graph/questions/${questionNumber}/recommendations?limit=${limit}`
-    );
-    if (!response.ok) {
-      throw new Error('获取推荐题目失败');
-    }
-    const data = await response.json();
-    return data;
-  } catch (err) {
-    console.error('获取推荐题目失败:', err);
-    throw err;
-  }
+export async function getNewProblems({ pageIdx = 1, pageSize = 3 } = {}) {
+  const response = await fetch(
+    `${API_BASE_URL}/question/new${toQueryString({ pageIdx, pageSize })}`
+  );
+  const data = await parseJson(response);
+  return normalizeListResp(data, pageIdx, pageSize);
 }

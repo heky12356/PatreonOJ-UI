@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Badge,
@@ -13,15 +13,20 @@ import {
   Table,
 } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
+import {
+  ErrorState,
+  TableEmptyRow,
+} from '../../components/feedback/AsyncState.jsx';
 import { getUserId, isLoggedIn } from '../../api/user.js';
 import { getUserSubmissions } from '../../api/judge.js';
+import { getRequestErrorMessage } from '../../utils/request.js';
 
 const statusVariant = (status) => {
   const s = String(status || '').toLowerCase();
-  if (s === 'completed') return 'success';
-  if (s === 'processing') return 'info';
+  if (s === 'completed' || s === 'accepted') return 'success';
+  if (s === 'processing' || s === 'judging') return 'info';
   if (s === 'pending') return 'secondary';
-  if (s === 'error') return 'danger';
+  if (s.includes('error') || s.includes('wrong')) return 'danger';
   return 'light';
 };
 
@@ -90,7 +95,7 @@ export default function UserSubmissionsPage() {
       });
     } catch (e) {
       setResp({ total: 0, page, size, pages: 1, items: [] });
-      setError(String(e?.message || '获取个人提交记录失败'));
+      setError(getRequestErrorMessage(e, '获取个人提交记录失败'));
     } finally {
       setLoading(false);
     }
@@ -121,11 +126,7 @@ export default function UserSubmissionsPage() {
           <Button variant="outline-secondary" onClick={() => navigate(-1)}>
             返回
           </Button>
-          <Button
-            variant="outline-primary"
-            onClick={fetchList}
-            disabled={loading}
-          >
+          <Button variant="outline-primary" onClick={fetchList} disabled={loading}>
             {loading ? (
               <>
                 <Spinner size="sm" className="me-2" />
@@ -143,10 +144,10 @@ export default function UserSubmissionsPage() {
           <Row className="g-2">
             <Col xs={12} md={3}>
               <Form.Group>
-                <Form.Label className="mb-1">题目筛选 (problem_id)</Form.Label>
+                <Form.Label className="mb-1">题目筛选(problem_id)</Form.Label>
                 <Form.Control
                   value={problemId}
-                  placeholder="题号(1001)或内部ID"
+                  placeholder="题目主键ID"
                   onChange={(e) => {
                     setPage(1);
                     setProblemId(e.target.value);
@@ -169,6 +170,7 @@ export default function UserSubmissionsPage() {
                   <option value="processing">processing</option>
                   <option value="pending">pending</option>
                   <option value="error">error</option>
+                  <option value="accepted">accepted</option>
                 </Form.Select>
               </Form.Group>
             </Col>
@@ -210,7 +212,13 @@ export default function UserSubmissionsPage() {
         </Card.Body>
       </Card>
 
-      {error ? <Alert variant="danger">{error}</Alert> : null}
+      {error ? (
+        <ErrorState
+          title="提交记录加载失败"
+          message={error}
+          onRetry={() => void fetchList()}
+        />
+      ) : null}
 
       <Card>
         <Card.Header className="d-flex align-items-center justify-content-between">
@@ -222,7 +230,7 @@ export default function UserSubmissionsPage() {
             <thead>
               <tr>
                 <th style={{ width: 220 }}>提交ID</th>
-                <th style={{ width: 140 }}>题号</th>
+                <th style={{ width: 140 }}>题目ID</th>
                 <th style={{ width: 170 }}>提交时间</th>
                 <th style={{ width: 130 }}>状态</th>
                 <th style={{ width: 120 }}>运行(ms)</th>
@@ -234,47 +242,35 @@ export default function UserSubmissionsPage() {
             </thead>
             <tbody>
               {resp.items.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="text-center text-secondary py-4">
-                    {loading ? '加载中…' : '暂无数据'}
-                  </td>
-                </tr>
+                <TableEmptyRow
+                  colSpan={9}
+                  loading={loading}
+                  loadingText="正在加载提交记录..."
+                  emptyText="暂无提交记录"
+                />
               ) : (
                 resp.items.map((it) => {
-                  const qn = it?.question_number;
+                  const questionPk = it?.question_pk ?? it?.problem_id ?? it?.question_number;
                   return (
                     <tr key={String(it?.submission_id)}>
-                      <td className="font-monospace small">
-                        {String(it?.submission_id || '')}
-                      </td>
+                      <td className="font-monospace small">{String(it?.submission_id || '')}</td>
                       <td>
-                        {qn != null ? (
-                          <Link
-                            to={`/problem/${qn}`}
-                            className="text-decoration-none"
-                          >
-                            {qn}
+                        {questionPk != null ? (
+                          <Link to={`/problem/${questionPk}`} className="text-decoration-none">
+                            {questionPk}
                           </Link>
                         ) : (
                           <span className="text-secondary">-</span>
                         )}
                       </td>
-                      <td className="text-secondary">
-                        {it?.submitted_at ? String(it.submitted_at) : '-'}
-                      </td>
+                      <td className="text-secondary">{it?.submitted_at ? String(it.submitted_at) : '-'}</td>
                       <td>
-                        <Badge bg={statusVariant(it?.status)}>
-                          {String(it?.status || '-')}
-                        </Badge>
+                        <Badge bg={statusVariant(it?.status)}>{String(it?.status || '-')}</Badge>
                       </td>
-                      <td className="font-monospace">
-                        {it?.runtime_ms ?? '-'}
-                      </td>
+                      <td className="font-monospace">{it?.runtime_ms ?? '-'}</td>
                       <td className="font-monospace">{it?.memory_kb ?? '-'}</td>
                       <td className="font-monospace">{it?.language ?? '-'}</td>
-                      <td className="font-monospace">
-                        {it?.code_length ?? '-'}
-                      </td>
+                      <td className="font-monospace">{it?.code_length ?? '-'}</td>
                       <td>
                         {it?.submission_id ? (
                           <Button
@@ -286,11 +282,7 @@ export default function UserSubmissionsPage() {
                             详情
                           </Button>
                         ) : (
-                          <Button
-                            size="sm"
-                            variant="outline-secondary"
-                            disabled
-                          >
+                          <Button size="sm" variant="outline-secondary" disabled>
                             详情
                           </Button>
                         )}
@@ -310,9 +302,7 @@ export default function UserSubmissionsPage() {
               />
               {page > 3 ? (
                 <>
-                  <Pagination.Item onClick={() => setPage(1)}>
-                    1
-                  </Pagination.Item>
+                  <Pagination.Item onClick={() => setPage(1)}>1</Pagination.Item>
                   <Pagination.Ellipsis disabled />
                 </>
               ) : null}

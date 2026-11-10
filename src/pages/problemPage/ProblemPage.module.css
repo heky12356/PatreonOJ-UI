@@ -13,6 +13,40 @@
   margin: 0 auto;
 }
 
+.problemStatusBanner {
+  border-radius: 12px;
+  padding: 0.9rem 1.2rem;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.statusSolved {
+  background-color: #e8f7ee;
+  color: #1f7a45;
+  border-color: #ccebd7;
+}
+
+.statusAttempted {
+  background-color: #fff4e5;
+  color: #b65d00;
+  border-color: #ffd7a8;
+}
+
+.statusUnsolved {
+  background-color: #f3f4f6;
+  color: #4b5563;
+  border-color: #e5e7eb;
+}
+
+.statusLoginHint,
+.statusUnknown {
+  background-color: #eef2f7;
+  color: #64748b;
+  border-color: #dbe4ee;
+}
+
 /* Header */
 .problem-header {
   background: #ffffff;
@@ -61,6 +95,7 @@
 .problem-actions {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .btn {

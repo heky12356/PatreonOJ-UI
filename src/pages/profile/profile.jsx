@@ -1,43 +1,44 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, Col, Container, Image, Row, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import {
-  getUserByUuid,
-  getUserId,
-  getUserMasteryQuestions,
-  isLoggedIn,
-} from '../../api/user.js';
+import { FaCog, FaList, FaSync, FaUser } from 'react-icons/fa';
+import { getUserByUuid, getUserId, isLoggedIn } from '../../api/user.js';
+import { getUserLearningFeedback } from '../../api/learning.js';
+import { EmptyState, ErrorState, LoadingState } from '../../components/feedback/AsyncState.jsx';
+import { getRequestErrorMessage } from '../../utils/request.js';
 import styles from './profile.module.css';
-import {
-  FaUser,
-  FaCog,
-  FaList,
-  FaSync,
-  FaChevronLeft,
-  FaChevronRight,
-} from 'react-icons/fa';
 
-/**
- * @typedef {Object} UserProfile
- * @property {string} [uuid]
- * @property {string} [username]
- * @property {string} [nickname]
- * @property {string} [email]
- * @property {string} [avatar_url]
- * @property {string[]} [permissions]
- */
+const normalizePermissions = (permissions) => {
+  if (Array.isArray(permissions)) {
+    return permissions.filter(Boolean);
+  }
 
-/**
- * @typedef {Object} MasteryQuestion
- * @property {number} [question_number]
- * @property {number} [mastery]
- * @property {boolean} [accepted]
- * @property {string} [updated_at]
- */
+  return String(permissions || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+};
 
-/**
- * @param {{ uuid?: string }} props
- */
+const getStatusMeta = (status) => {
+  const normalized = String(status || '').trim().toLowerCase();
+  if (normalized === 'active') {
+    return {
+      text: '正常',
+      className: styles.badgeSuccess,
+    };
+  }
+  if (normalized === 'disabled') {
+    return {
+      text: '已禁用',
+      className: styles.badgeDanger,
+    };
+  }
+  return {
+    text: status || '未知',
+    className: styles.badge,
+  };
+};
+
 export default function Profile({ uuid } = {}) {
   const operatorUuid = getUserId();
   const targetUuid = uuid || operatorUuid;
@@ -46,127 +47,9 @@ export default function Profile({ uuid } = {}) {
   const [userError, setUserError] = useState('');
   const [userProfile, setUserProfile] = useState(null);
 
-  const [masteryLoading, setMasteryLoading] = useState(false);
-  const [masteryError, setMasteryError] = useState('');
-  const [masteryRows, setMasteryRows] = useState([]);
-  const [masteryTotal, setMasteryTotal] = useState(0);
-
-  const [pageIdx, setPageIdx] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
-  const [minMastery, setMinMastery] = useState('');
-  const [sort, setSort] = useState('mastery');
-  const [order, setOrder] = useState('desc');
-
-  const [feedback, setFeedback] = useState(null);
-
-  const parseAxiosError = (error, fallback = '请求失败') => {
-    const msg =
-      error?.response?.data?.message ||
-      error?.response?.data?.error ||
-      error?.message ||
-      fallback;
-    return String(msg);
-  };
-
-  const normalizeMasteryQuestions = (payload) => {
-    const root =
-      payload?.data && typeof payload.data === 'object'
-        ? payload.data
-        : payload;
-
-    const rows = Array.isArray(root?.items)
-      ? root.items
-      : Array.isArray(root?.questions)
-        ? root.questions
-        : Array.isArray(root?.result)
-          ? root.result
-          : [];
-
-    const total =
-      typeof root?.count === 'number'
-        ? root.count
-        : typeof root?.total === 'number'
-          ? root.total
-          : rows.length;
-
-    return { rows, total };
-  };
-
-  const totalPages = useMemo(() => {
-    const n = Math.ceil((masteryTotal || 0) / (pageSize || 1));
-    return Number.isFinite(n) && n > 0 ? n : 1;
-  }, [masteryTotal, pageSize]);
-
-  // Custom Pagination Component
-  const Pagination = () => {
-    if (totalPages <= 1) return null;
-
-    const getPageNumbers = () => {
-      const pages = [];
-      const maxVisible = 5;
-
-      if (totalPages <= 7) {
-        for (let i = 1; i <= totalPages; i++) pages.push(i);
-      } else {
-        pages.push(1);
-        if (pageIdx > 4) pages.push('...');
-
-        let start = Math.max(2, pageIdx - 1);
-        let end = Math.min(totalPages - 1, pageIdx + 1);
-
-        if (pageIdx <= 4) end = 5;
-        else if (pageIdx >= totalPages - 3) start = totalPages - 4;
-
-        for (let i = start; i <= end; i++) pages.push(i);
-
-        if (pageIdx < totalPages - 3) pages.push('...');
-        pages.push(totalPages);
-      }
-      return pages;
-    };
-
-    return (
-      <div className="d-flex justify-content-end mt-3">
-        <ul className={styles.pagination}>
-          <li
-            className={`${styles.pageItem} ${pageIdx <= 1 ? styles.disabled : ''}`}
-          >
-            <div
-              className={styles.pageLink}
-              onClick={() => setPageIdx((p) => Math.max(1, p - 1))}
-            >
-              <FaChevronLeft size={10} />
-            </div>
-          </li>
-
-          {getPageNumbers().map((page, index) => (
-            <li
-              key={index}
-              className={`${styles.pageItem} ${page === pageIdx ? styles.active : ''} ${page === '...' ? styles.disabled : ''}`}
-            >
-              <div
-                className={styles.pageLink}
-                onClick={() => typeof page === 'number' && setPageIdx(page)}
-              >
-                {page}
-              </div>
-            </li>
-          ))}
-
-          <li
-            className={`${styles.pageItem} ${pageIdx >= totalPages ? styles.disabled : ''}`}
-          >
-            <div
-              className={styles.pageLink}
-              onClick={() => setPageIdx((p) => Math.min(totalPages, p + 1))}
-            >
-              <FaChevronRight size={10} />
-            </div>
-          </li>
-        </ul>
-      </div>
-    );
-  };
+  const [learningLoading, setLearningLoading] = useState(false);
+  const [learningError, setLearningError] = useState('');
+  const [learningFeedback, setLearningFeedback] = useState(null);
 
   const fetchUser = async () => {
     if (!targetUuid) return;
@@ -176,59 +59,58 @@ export default function Profile({ uuid } = {}) {
       const data = await getUserByUuid(targetUuid, {
         operator_uuid: operatorUuid,
       });
-      // console.log(data.result);
-      setUserProfile(data.result);
-    } catch (e) {
-      setUserError(parseAxiosError(e, '获取用户信息失败'));
+      setUserProfile(data?.result ?? null);
+    } catch (error) {
+      setUserError(getRequestErrorMessage(error, '获取用户资料失败'));
       setUserProfile(null);
     } finally {
       setUserLoading(false);
     }
   };
 
-  const fetchMastery = async () => {
+  const fetchLearningFeedback = async () => {
     if (!targetUuid) return;
-    setMasteryLoading(true);
-    setMasteryError('');
+    setLearningLoading(true);
+    setLearningError('');
     try {
-      const min = minMastery === '' ? undefined : Number(minMastery);
-      const data = await getUserMasteryQuestions(targetUuid, {
-        operator_uuid: operatorUuid,
-        pageIdx,
-        pageSize,
-        min_mastery: Number.isFinite(min) ? min : undefined,
-        sort,
-        order,
+      const response = await getUserLearningFeedback({
+        uuid: targetUuid,
+        limit: 5,
       });
-
-      // console.log(data);
-
-      const { rows, total } = normalizeMasteryQuestions(data);
-      // console.log(rows, total);
-      setMasteryRows(Array.isArray(rows) ? rows : []);
-      setMasteryTotal(typeof total === 'number' ? total : 0);
-    } catch (e) {
-      setMasteryError(parseAxiosError(e, '获取题目掌握度失败'));
-      setMasteryRows([]);
-      setMasteryTotal(0);
+      setLearningFeedback(response?.data ?? null);
+    } catch (error) {
+      setLearningError(getRequestErrorMessage(error, '获取学习反馈失败'));
+      setLearningFeedback(null);
     } finally {
-      setMasteryLoading(false);
+      setLearningLoading(false);
     }
   };
 
   const reloadAll = async () => {
-    await Promise.all([fetchUser(), fetchMastery()]);
+    await Promise.all([fetchUser(), fetchLearningFeedback()]);
   };
 
   useEffect(() => {
     if (!targetUuid) return;
-    reloadAll();
+    void reloadAll();
   }, [targetUuid]);
 
-  useEffect(() => {
-    if (!targetUuid) return;
-    fetchMastery();
-  }, [pageIdx, pageSize, minMastery, sort, order]);
+  const weakSkills = learningFeedback?.weak_skills ?? [];
+  const masteredSkills = learningFeedback?.mastered_skills ?? [];
+  const nextQuestions = learningFeedback?.next_questions ?? [];
+  const recommendedDirections =
+    weakSkills.length > 0
+      ? weakSkills
+      : masteredSkills.length > 0
+        ? masteredSkills
+        : [];
+  const hasFeedbackContent = Boolean(
+    learningFeedback?.stage ||
+      learningFeedback?.positive_feedback ||
+      weakSkills.length > 0 ||
+      masteredSkills.length > 0 ||
+      nextQuestions.length > 0
+  );
 
   if (!isLoggedIn()) {
     return (
@@ -242,13 +124,19 @@ export default function Profile({ uuid } = {}) {
     );
   }
 
+  const permissions = normalizePermissions(userProfile?.permissions);
+  const currentAvatar =
+    userProfile?.avatar_url ||
+    'https://api.dicebear.com/7.x/miniavs/svg?seed=user';
+  const statusMeta = getStatusMeta(userProfile?.status);
+
   return (
     <div className={styles.container}>
       <Container>
         <div className={styles.pageHeader}>
           <div>
             <h2 className={styles.pageTitle}>个人中心</h2>
-            <div className={styles.pageSubtitle}>用户信息与学习掌握度</div>
+            <div className={styles.pageSubtitle}>用户资料与学习反馈</div>
           </div>
           <div className="d-flex gap-2">
             <Link
@@ -265,50 +153,43 @@ export default function Profile({ uuid } = {}) {
             </Link>
             <button
               className={`${styles.btn} ${styles.btnOutline}`}
-              onClick={reloadAll}
-              disabled={userLoading || masteryLoading}
+              onClick={() => void reloadAll()}
+              disabled={userLoading || learningLoading}
             >
               <FaSync
-                className={`me-2 ${userLoading || masteryLoading ? 'fa-spin' : ''}`}
+                className={`me-2 ${userLoading || learningLoading ? 'fa-spin' : ''}`}
               />
-              {userLoading || masteryLoading ? '刷新中' : '刷新'}
+              {userLoading || learningLoading ? '刷新中' : '刷新'}
             </button>
           </div>
         </div>
-
-        {feedback ? (
-          <Alert
-            variant={feedback.type}
-            dismissible
-            onClose={() => setFeedback(null)}
-          >
-            {feedback.text}
-          </Alert>
-        ) : null}
 
         <Row className="g-4">
           <Col xs={12} lg={4}>
             <div className={styles.card}>
               <div className={styles.cardHeader}>
                 <span className="d-flex align-items-center gap-2">
-                  <FaUser className="text-muted" /> 用户信息
+                  <FaUser className="text-muted" /> 用户资料
                 </span>
                 {userLoading ? <Spinner size="sm" /> : null}
               </div>
               <div className={styles.cardBody}>
-                {userError ? <Alert variant="danger">{userError}</Alert> : null}
-
-                {userProfile ? (
+                {userError ? (
+                  <ErrorState
+                    title="资料加载失败"
+                    message={userError}
+                    onRetry={() => void fetchUser()}
+                  />
+                ) : userLoading && !userProfile ? (
+                  <LoadingState text="正在加载用户资料..." />
+                ) : userProfile ? (
                   <div className="d-flex flex-column gap-4">
                     <div className="d-flex align-items-center gap-3 pb-3 border-bottom">
                       <Image
-                        src={
-                          userProfile.avatar_url ||
-                          'https://api.dicebear.com/7.x/miniavs/svg?seed=user'
-                        }
+                        src={currentAvatar}
                         roundedCircle
-                        width={80}
-                        height={80}
+                        width={88}
+                        height={88}
                         className={styles.avatar}
                         alt="avatar"
                       />
@@ -319,36 +200,69 @@ export default function Profile({ uuid } = {}) {
                             userProfile.uuid ||
                             targetUuid}
                         </div>
-                        {userProfile.email && (
-                          <div className="text-muted small">
-                            {userProfile.email}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className={styles.userInfoLabel}>UUID</div>
-                      <div className={`${styles.userInfoValue} font-monospace`}>
-                        {userProfile.uuid || targetUuid}
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className={styles.userInfoLabel}>权限</div>
-                      <div className="d-flex flex-wrap gap-2 mt-1">
-                        {userProfile.permissions.split(',').map((p) => (
-                          <span className={styles.badge} key={p}>
-                            {p}
+                        <div className="text-muted small">
+                          @{userProfile.username || '未设置用户名'}
+                        </div>
+                        <div className="mt-2">
+                          <span className={statusMeta.className}>
+                            状态：{statusMeta.text}
                           </span>
-                        ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className={styles.infoGrid}>
+                      <div className={styles.infoItem}>
+                        <div className={styles.userInfoLabel}>昵称</div>
+                        <div className={styles.userInfoValue}>
+                          {userProfile.nickname || '未设置'}
+                        </div>
+                      </div>
+
+                      <div className={styles.infoItem}>
+                        <div className={styles.userInfoLabel}>用户名</div>
+                        <div className={styles.userInfoValue}>
+                          {userProfile.username || '未设置'}
+                        </div>
+                      </div>
+
+                      <div className={styles.infoItem}>
+                        <div className={styles.userInfoLabel}>邮箱</div>
+                        <div className={styles.userInfoValue}>
+                          {userProfile.email || '未设置'}
+                        </div>
+                      </div>
+
+                      <div className={styles.infoItem}>
+                        <div className={styles.userInfoLabel}>UUID</div>
+                        <div
+                          className={`${styles.userInfoValue} ${styles.monospaceText}`}
+                        >
+                          {userProfile.uuid || targetUuid}
+                        </div>
+                      </div>
+
+                      <div className={styles.infoItem}>
+                        <div className={styles.userInfoLabel}>权限</div>
+                        <div className={styles.tagWrap}>
+                          {permissions.length > 0 ? (
+                            permissions.map((permission) => (
+                              <span className={styles.badge} key={permission}>
+                                {permission}
+                              </span>
+                            ))
+                          ) : (
+                            <span className={styles.emptyText}>暂无权限信息</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="text-secondary text-center py-4">
-                    暂无用户数据
-                  </div>
+                  <EmptyState
+                    title="暂无用户资料"
+                    description="当前没有可展示的用户资料。"
+                  />
                 )}
               </div>
             </div>
@@ -357,148 +271,137 @@ export default function Profile({ uuid } = {}) {
           <Col xs={12} lg={8}>
             <div className={styles.card}>
               <div className={styles.cardHeader}>
-                <span>题目掌握度</span>
-                <div className="d-flex flex-wrap gap-2 align-items-center">
-                  <span className={styles.filterLabel}>排序:</span>
-                  <select
-                    className={styles.filterSelect}
-                    value={sort}
-                    onChange={(e) => {
-                      setPageIdx(1);
-                      setSort(e.target.value);
-                    }}
-                  >
-                    <option value="mastery">掌握度</option>
-                    <option value="question_number">题目编号</option>
-                    <option value="updated_at">更新时间</option>
-                  </select>
-                  <select
-                    className={styles.filterSelect}
-                    value={order}
-                    onChange={(e) => {
-                      setPageIdx(1);
-                      setOrder(e.target.value);
-                    }}
-                  >
-                    <option value="desc">降序</option>
-                    <option value="asc">升序</option>
-                  </select>
-                  <select
-                    className={styles.filterSelect}
-                    value={pageSize}
-                    onChange={(e) => {
-                      setPageIdx(1);
-                      setPageSize(Number(e.target.value));
-                    }}
-                  >
-                    <option value={10}>10条/页</option>
-                    <option value={20}>20条/页</option>
-                    <option value={50}>50条/页</option>
-                  </select>
-                </div>
+                <span>学习反馈</span>
+                {learningLoading ? <Spinner size="sm" /> : null}
               </div>
               <div className={styles.cardBody}>
-                {masteryError ? (
-                  <Alert variant="danger">{masteryError}</Alert>
-                ) : null}
+                {learningError ? (
+                  <ErrorState
+                    title="学习反馈加载失败"
+                    message={learningError}
+                    onRetry={() => void fetchLearningFeedback()}
+                  />
+                ) : learningLoading && !learningFeedback ? (
+                  <LoadingState text="正在加载学习反馈..." />
+                ) : !hasFeedbackContent ? (
+                  <EmptyState
+                    title="暂无学习反馈"
+                    description="完成一些题目后，这里会展示你的薄弱点、推荐方向和推荐题目。"
+                  />
+                ) : (
+                  <div className="d-flex flex-column gap-4">
+                    <div>
+                      <div className={styles.sectionTitle}>反馈摘要</div>
+                      <div className={styles.summaryCard}>
+                        <div className={styles.summaryStage}>
+                          当前阶段：{learningFeedback?.stage || '待生成'}
+                        </div>
+                        <div className={styles.summaryText}>
+                          {learningFeedback?.positive_feedback ||
+                            '继续做题，系统会逐步形成更准确的反馈。'}
+                        </div>
+                      </div>
+                    </div>
 
-                <div className="d-flex align-items-center justify-content-between mb-3">
-                  <div className="text-secondary small">
-                    共 <span className="fw-bold text-dark">{masteryTotal}</span>{' '}
-                    条记录
-                  </div>
-                  {masteryLoading ? <Spinner size="sm" /> : null}
-                </div>
+                    <Row className="g-3">
+                      <Col xs={12} md={6}>
+                        <div className={styles.infoBlock}>
+                          <div className={styles.sectionTitle}>近期薄弱点</div>
+                          {weakSkills.length > 0 ? (
+                            <div className={styles.tagWrap}>
+                              {weakSkills.map((skill) => (
+                                <span key={skill} className={styles.badgeDanger}>
+                                  {skill}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className={styles.emptyText}>
+                              当前没有识别到明显薄弱点。
+                            </div>
+                          )}
+                        </div>
+                      </Col>
 
-                <div className={styles.tableContainer}>
-                  <table className={styles.table}>
-                    <thead>
-                      <tr>
-                        <th style={{ width: 140 }}>题目编号</th>
-                        <th style={{ width: 140 }}>掌握度</th>
-                        <th style={{ width: 120 }}>状态</th>
-                        <th>更新时间</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {masteryRows.length === 0 ? (
-                        <tr>
-                          <td
-                            colSpan={4}
-                            className="text-center text-secondary py-5"
-                          >
-                            {masteryLoading ? '加载中…' : '暂无数据'}
-                          </td>
-                        </tr>
+                      <Col xs={12} md={6}>
+                        <div className={styles.infoBlock}>
+                          <div className={styles.sectionTitle}>推荐方向</div>
+                          {recommendedDirections.length > 0 ? (
+                            <div className={styles.tagWrap}>
+                              {recommendedDirections.map((skill) => (
+                                <span key={skill} className={styles.badgePrimary}>
+                                  {skill}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className={styles.emptyText}>
+                              暂无明确方向，建议先完成推荐题目积累数据。
+                            </div>
+                          )}
+                        </div>
+                      </Col>
+                    </Row>
+
+                    <div>
+                      <div className={styles.sectionTitle}>推荐题目</div>
+                      {nextQuestions.length > 0 ? (
+                        <div className={styles.questionList}>
+                          {nextQuestions.map((question) => {
+                            const routeId =
+                              question?.question_pk ??
+                              question?.id ??
+                              question?.question_id;
+
+                            return (
+                              <Link
+                                key={`${question?.question_id}-${routeId}`}
+                                to={routeId ? `/problem/${routeId}` : '/problem'}
+                                className={styles.questionItem}
+                              >
+                                <div className={styles.questionHeader}>
+                                  <span className={styles.questionTitle}>
+                                    {question?.question_id || routeId}.{' '}
+                                    {question?.title || '未命名题目'}
+                                  </span>
+                                  <span className={styles.badge}>
+                                    {question?.difficulty || '未知难度'}
+                                  </span>
+                                </div>
+                                <div className={styles.questionReason}>
+                                  {question?.reason || '适合作为下一步练习题。'}
+                                </div>
+                                {question?.tags ? (
+                                  <div className={styles.questionMeta}>
+                                    标签：{question.tags}
+                                  </div>
+                                ) : null}
+                              </Link>
+                            );
+                          })}
+                        </div>
                       ) : (
-                        masteryRows.map((row, idx) => {
-                          const qn = row?.question_id;
-                          const mastery = row?.mastery;
-                          const accepted_count = row?.accepted_count;
-                          const updatedAt = row?.updated_at;
-
-                          return (
-                            <tr
-                              key={String(qn ?? idx)}
-                              className={styles.tableRow}
-                            >
-                              <td>
-                                {qn != null ? (
-                                  <Link
-                                    to={`/problem/${qn}`}
-                                    className="text-decoration-none fw-medium text-dark"
-                                  >
-                                    {qn}
-                                  </Link>
-                                ) : (
-                                  <span className="text-secondary">-</span>
-                                )}
-                              </td>
-                              <td>
-                                {typeof mastery === 'number' ? (
-                                  <span
-                                    className="font-monospace fw-bold"
-                                    style={{ color: '#51624f' }}
-                                  >
-                                    {mastery.toFixed(3)}
-                                  </span>
-                                ) : (
-                                  <span className="text-secondary">-</span>
-                                )}
-                              </td>
-                              <td>
-                                {accepted_count > 0 ? (
-                                  <span
-                                    className={`${styles.statusBadge} ${styles.statusSuccess}`}
-                                  >
-                                    Accepted
-                                  </span>
-                                ) : accepted_count <= 0 ? (
-                                  <span
-                                    className={`${styles.statusBadge} ${styles.statusFail}`}
-                                  >
-                                    未通过
-                                  </span>
-                                ) : (
-                                  <span
-                                    className={`${styles.statusBadge} ${styles.statusUnknown}`}
-                                  >
-                                    未知
-                                  </span>
-                                )}
-                              </td>
-                              <td className="text-secondary">
-                                {updatedAt ? String(updatedAt) : '-'}
-                              </td>
-                            </tr>
-                          );
-                        })
+                        <EmptyState
+                          title="暂无推荐题目"
+                          description="系统暂时没有可推荐的题目。"
+                        />
                       )}
-                    </tbody>
-                  </table>
-                </div>
+                    </div>
 
-                <Pagination />
+                    {masteredSkills.length > 0 ? (
+                      <div>
+                        <div className={styles.sectionTitle}>已掌握方向</div>
+                        <div className={styles.tagWrap}>
+                          {masteredSkills.map((skill) => (
+                            <span key={skill} className={styles.badgeSuccess}>
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                )}
               </div>
             </div>
           </Col>

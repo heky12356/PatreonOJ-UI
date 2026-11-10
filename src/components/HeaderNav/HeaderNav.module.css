@@ -2,7 +2,7 @@
   background-color: #ffffff !important;
   box-shadow: 0 2px 15px rgba(0, 0, 0, 0.04);
   padding: 0.8rem 0;
-  border-bottom: 1px solid rgba(0,0,0,0.02);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.02);
   margin-bottom: 0 !important; /* Override bootstrap mb-4 if needed, or keep it layout dependent */
 }
 
@@ -35,7 +35,8 @@
   transition: all 0.2s ease;
 }
 
-.navLink:hover, .navLinkActive {
+.navLink:hover,
+.navLinkActive {
   color: #51624f !important;
   background-color: rgba(81, 98, 79, 0.08);
 }
@@ -96,7 +97,7 @@
 
 .authLinkPrimary {
   background-color: #51624f;
-  color: #fff !important;
+  /* color: #fff !important; */
   margin-left: 0.5rem;
 }
 

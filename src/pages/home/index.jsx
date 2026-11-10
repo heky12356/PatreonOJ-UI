@@ -1,4 +1,4 @@
-import { Container, Row, Col } from 'react-bootstrap';
+﻿import { Container, Row, Col } from 'react-bootstrap';
 import styles from './index.module.css';
 import { useState, useEffect } from 'react';
 import { getProblem, getNewProblems } from '../../api/getproblem';
@@ -21,26 +21,23 @@ export default function Home() {
   // 获取总题目数和最新题目
   const fetchProblemsNum = async () => {
     let res = await getProblem();
-    setTotalProblemsNum(res.totalCnt);
+    setTotalProblemsNum(res?.totalCnt || 0);
+
     res = await getNewProblems();
-    setNewProblems(res.result);
+    setNewProblems(Array.isArray(res?.result) ? res.result : []);
   };
 
   // 获取一言
   const fetchMotto = async () => {
     const res = await getMotto();
-    //   console.log(res);
     setMotto(res);
   };
 
-  // 获取OJ首页文本
   const fetchHomeShowText = async () => {
     const res = await getHomeShowText();
-    // console.log(res);
-    setHomeShowText(res);
+    setHomeShowText(res || '');
   };
 
-  // 获取公告
   const fetchAnnouncement = async () => {
     const res = await getAnnouncement();
     setAnnouncement(res || '');
@@ -102,10 +99,7 @@ export default function Home() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && searchProblem()}
                 />
-                <div
-                  onClick={() => searchProblem(searchTerm)}
-                  className={styles.searchButton}
-                >
+                <div onClick={searchProblem} className={styles.searchButton}>
                   <FaSearch />
                 </div>
               </div>
@@ -117,7 +111,7 @@ export default function Home() {
                 {newProblems.map((problem) => (
                   <Link
                     key={problem.id}
-                    to={`/problem/${problem.question_id}`}
+                    to={`/problem/${problem.id}`}
                     className={styles.problemLink}
                   >
                     {problem.title}

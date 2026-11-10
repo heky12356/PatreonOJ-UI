@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+﻿import { Link } from 'react-router-dom';
 
 export default function AdminNav() {
   return (
@@ -11,11 +11,7 @@ export default function AdminNav() {
           <div className="collapse navbar-collapse" id="navbarSupportedContent">
             <ul className="navbar-nav me-auto mb-2 mb-lg-0">
               <li className="nav-item">
-                <Link
-                  className="nav-link active"
-                  aria-current="page"
-                  to="/admin"
-                >
+                <Link className="nav-link active" aria-current="page" to="/admin">
                   首页
                 </Link>
               </li>
@@ -41,9 +37,9 @@ export default function AdminNav() {
                 <Link
                   className="nav-link active"
                   aria-current="page"
-                  to="/admin/category"
+                  to="/admin/users"
                 >
-                  分类管理
+                  用户管理
                 </Link>
               </li>
               <li className="nav-item">

@@ -1,8 +1,6 @@
-import { syncQuestionToNeo4j } from './graph.js';
-
-export async function updateProblem(data, id) {
-  const response = await fetch('/api/question/' + id, {
-    method: 'post',
+﻿export async function updateProblem(data, id) {
+  const response = await fetch(`/api/question/${id}`, {
+    method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
@@ -10,23 +8,9 @@ export async function updateProblem(data, id) {
   });
 
   if (!response.ok) {
-    const result = await response.json();
-    console.log(result);
-    throw new Error('创建题目失败');
-  }
-  const result = await response.json();
-
-  // console.log(result);
-
-  const questionNumber = result?.data?.question_number;
-
-  if (
-    questionNumber !== undefined &&
-    questionNumber !== null &&
-    String(questionNumber).trim() !== ''
-  ) {
-    syncQuestionToNeo4j(questionNumber).catch(() => { });
+    const text = await response.text();
+    throw new Error(text || '更新题目失败');
   }
 
-  return result;
+  return response.json();
 }

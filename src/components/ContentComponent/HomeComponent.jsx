@@ -1,49 +1,7 @@
 
 import { Card } from "antd";
 // import { Carousel } from 'antd';
-import React, { useState, useEffect } from "react";
-import Frame from "../../atlasComponent/frame";
 const HomeComponent = () => {
-    const [currentDate, setCurrentDate] = useState('');
-    const [currentDay, setCurrentDay] = useState('');
-    const [currentMonth, setCurrentMonth] = useState('');
-    const [daysUntilFirst, setDaysUntilFirst] = useState(0);
-    const [daysUntilSecond, setDaysUntilSecond] = useState(0);
-
-
-    // 比赛日期
-    const firstRoundDate = new Date('2025-09-28');
-    const secondRoundDate = new Date('2025-10-26');
-    const dayMap = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
-
-    // 初始化和更新所有动态数据
-    useEffect(() => {
-        const updateAllData = () => {
-            const now = new Date();
-
-            // 更新日期和星期
-            setCurrentDate(now.getDate());
-
-            setCurrentDay(dayMap[now.getDay()]);
-            // 添加月份，返回0-11，因此要＋1才是真实月份
-            const month = now.getMonth() + 1;
-            const formattedMonth = month.toString().padStart(2, '0');
-            setCurrentMonth(formattedMonth);
-
-
-            // 更新比赛剩余天数
-            const diffFirst = firstRoundDate - now;
-            setDaysUntilFirst(diffFirst > 0 ? Math.ceil(diffFirst / (1000 * 60 * 60 * 24)) : 0);
-
-            const diffSecond = secondRoundDate - now;
-            setDaysUntilSecond(diffSecond > 0 ? Math.ceil(diffSecond / (1000 * 60 * 60 * 24)) : 0);
-        }
-
-        updateAllData();
-        const timer = setInterval(updateAllData, 1000);
-        return () => clearInterval(timer);
-    }, []);
-
     return (<Card style={{ marginBottom: 24 }}>
         {/* 轮播图区域 这块回来要删掉的*/}
         {/* <Carousel
@@ -83,7 +41,7 @@ const HomeComponent = () => {
 
         <br />  */}
         {/* 分隔轮播和下面内容 */}
-        <div><Frame /></div>
+        <div />
 
         {/* <div style={{ display: "flex", gap: "24px"}}> */}
             {/* 今日 coding 统计 */}

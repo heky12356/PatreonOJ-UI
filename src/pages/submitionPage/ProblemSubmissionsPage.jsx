@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import {
-  Alert,
   Badge,
   Button,
   Card,
@@ -13,19 +12,24 @@ import {
   Table,
 } from 'react-bootstrap';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import {
+  ErrorState,
+  TableEmptyRow,
+} from '../../components/feedback/AsyncState.jsx';
 import { getProblemSubmissions } from '../../api/judge.js';
+import { getRequestErrorMessage } from '../../utils/request.js';
 
 const statusVariant = (status) => {
   const s = String(status || '').toLowerCase();
-  if (s === 'completed') return 'success';
-  if (s === 'processing') return 'info';
+  if (s === 'completed' || s === 'accepted') return 'success';
+  if (s === 'processing' || s === 'judging') return 'info';
   if (s === 'pending') return 'secondary';
-  if (s === 'error') return 'danger';
+  if (s.includes('error') || s.includes('wrong')) return 'danger';
   return 'light';
 };
 
 export default function ProblemSubmissionsPage() {
-  const { question_number } = useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
@@ -65,11 +69,11 @@ export default function ProblemSubmissionsPage() {
   }, [page, totalPages]);
 
   const fetchList = async () => {
-    if (!question_number) return;
+    if (!id) return;
     setLoading(true);
     setError('');
     try {
-      const data = await getProblemSubmissions(question_number, {
+      const data = await getProblemSubmissions(id, {
         page,
         size,
         status: status || undefined,
@@ -84,7 +88,7 @@ export default function ProblemSubmissionsPage() {
       });
     } catch (e) {
       setResp({ total: 0, page, size, pages: 1, items: [] });
-      setError(String(e?.message || '获取题目提交记录失败'));
+      setError(getRequestErrorMessage(e, '获取题目提交记录失败'));
     } finally {
       setLoading(false);
     }
@@ -92,24 +96,20 @@ export default function ProblemSubmissionsPage() {
 
   useEffect(() => {
     fetchList();
-  }, [question_number, page, size, status, language]);
+  }, [id, page, size, status, language]);
 
   return (
     <Container className="py-4">
       <Row className="align-items-center g-2 mb-3">
         <Col xs={12} md>
           <h2 className="mb-0">题目提交记录</h2>
-          <div className="text-secondary small">题号：{question_number}</div>
+          <div className="text-secondary small">题目主键: {id}</div>
         </Col>
         <Col xs={12} md="auto" className="d-flex gap-2">
           <Button variant="outline-secondary" onClick={() => navigate(-1)}>
             返回
           </Button>
-          <Button
-            variant="outline-primary"
-            onClick={fetchList}
-            disabled={loading}
-          >
+          <Button variant="outline-primary" onClick={fetchList} disabled={loading}>
             {loading ? (
               <>
                 <Spinner size="sm" className="me-2" />
@@ -140,6 +140,7 @@ export default function ProblemSubmissionsPage() {
                   <option value="processing">processing</option>
                   <option value="pending">pending</option>
                   <option value="error">error</option>
+                  <option value="accepted">accepted</option>
                 </Form.Select>
               </Form.Group>
             </Col>
@@ -182,7 +183,13 @@ export default function ProblemSubmissionsPage() {
         </Card.Body>
       </Card>
 
-      {error ? <Alert variant="danger">{error}</Alert> : null}
+      {error ? (
+        <ErrorState
+          title="提交记录加载失败"
+          message={error}
+          onRetry={() => void fetchList()}
+        />
+      ) : null}
 
       <Card>
         <Card.Header className="d-flex align-items-center justify-content-between">
@@ -206,27 +213,20 @@ export default function ProblemSubmissionsPage() {
             </thead>
             <tbody>
               {resp.items.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="text-center text-secondary py-4">
-                    {loading ? '加载中…' : '暂无数据'}
-                  </td>
-                </tr>
+                <TableEmptyRow
+                  colSpan={9}
+                  loading={loading}
+                  loadingText="正在加载提交记录..."
+                  emptyText="暂无提交记录"
+                />
               ) : (
                 resp.items.map((it) => (
                   <tr key={String(it?.submission_id)}>
-                    <td className="font-monospace small">
-                      {String(it?.submission_id || '')}
-                    </td>
-                    <td className="font-monospace small">
-                      {String(it?.user_id || '')}
-                    </td>
-                    <td className="text-secondary">
-                      {it?.submitted_at ? String(it.submitted_at) : '-'}
-                    </td>
+                    <td className="font-monospace small">{String(it?.submission_id || '')}</td>
+                    <td className="font-monospace small">{String(it?.user_id || '')}</td>
+                    <td className="text-secondary">{it?.submitted_at ? String(it.submitted_at) : '-'}</td>
                     <td>
-                      <Badge bg={statusVariant(it?.status)}>
-                        {String(it?.status || '-')}
-                      </Badge>
+                      <Badge bg={statusVariant(it?.status)}>{String(it?.status || '-')}</Badge>
                     </td>
                     <td className="font-monospace">{it?.runtime_ms ?? '-'}</td>
                     <td className="font-monospace">{it?.memory_kb ?? '-'}</td>
@@ -262,9 +262,7 @@ export default function ProblemSubmissionsPage() {
               />
               {page > 3 ? (
                 <>
-                  <Pagination.Item onClick={() => setPage(1)}>
-                    1
-                  </Pagination.Item>
+                  <Pagination.Item onClick={() => setPage(1)}>1</Pagination.Item>
                   <Pagination.Ellipsis disabled />
                 </>
               ) : null}

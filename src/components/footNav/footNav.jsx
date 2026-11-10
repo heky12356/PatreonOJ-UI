@@ -5,7 +5,6 @@ export default function FootNav({ pageCnt, pageIdx, setIdx }) {
   // 智能分页逻辑：显示当前页附近的页码
   const getPageNumbers = () => {
     const pages = [];
-    const maxVisible = 5; // 最多显示5个页码按钮（不含首尾）
 
     if (pageCnt <= 7) {
       // 页数较少时全部显示

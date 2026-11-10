@@ -15,6 +15,8 @@ import {
   getUserByUuid,
   getUserId,
   isLoggedIn,
+  syncCurrentUserInfo,
+  updateUserByUuid,
   uploadUserAvatarAndUpdateUserByUuid,
 } from '../../api/user.js';
 
@@ -26,6 +28,10 @@ export default function UserSettingPage() {
   const [userError, setUserError] = useState('');
   const [userProfile, setUserProfile] = useState(null);
 
+  const [nickname, setNickname] = useState('');
+  const [email, setEmail] = useState('');
+  const [savingProfile, setSavingProfile] = useState(false);
+
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -34,6 +40,7 @@ export default function UserSettingPage() {
 
   const parseAxiosError = (error, fallback = '请求失败') => {
     const msg =
+      error?.response?.data?.msg ||
       error?.response?.data?.message ||
       error?.response?.data?.error ||
       error?.message ||
@@ -41,25 +48,34 @@ export default function UserSettingPage() {
     return String(msg);
   };
 
+  const hydrateProfileForm = (profile) => {
+    setNickname(profile?.nickname ?? '');
+    setEmail(profile?.email ?? '');
+  };
+
   const fetchUser = async () => {
-    if (!targetUuid) return;
+    if (!targetUuid) return null;
     setUserLoading(true);
     setUserError('');
     try {
       const data = await getUserByUuid(targetUuid, {
         operator_uuid: operatorUuid,
       });
-      setUserProfile(data?.result ?? null);
-    } catch (e) {
-      setUserError(parseAxiosError(e, '获取用户信息失败'));
+      const profile = data?.result ?? null;
+      setUserProfile(profile);
+      hydrateProfileForm(profile);
+      return profile;
+    } catch (error) {
+      setUserError(parseAxiosError(error, '获取用户信息失败'));
       setUserProfile(null);
+      return null;
     } finally {
       setUserLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUser();
+    void fetchUser();
   }, [targetUuid]);
 
   useEffect(() => {
@@ -74,6 +90,49 @@ export default function UserSettingPage() {
     };
   }, [selectedFile]);
 
+  const handleProfileSave = async (event) => {
+    event.preventDefault();
+    if (!targetUuid) return;
+
+    setSavingProfile(true);
+    setFeedback(null);
+    try {
+      const response = await updateUserByUuid(
+        targetUuid,
+        {
+          nickname: nickname.trim(),
+          email: email.trim(),
+        },
+        {
+          operator_uuid: operatorUuid,
+        }
+      );
+
+      const updatedProfile = response?.result ?? null;
+      if (updatedProfile) {
+        setUserProfile(updatedProfile);
+        hydrateProfileForm(updatedProfile);
+        if (operatorUuid === targetUuid) {
+          syncCurrentUserInfo(updatedProfile);
+        }
+      } else {
+        const latest = await fetchUser();
+        if (latest && operatorUuid === targetUuid) {
+          syncCurrentUserInfo(latest);
+        }
+      }
+
+      setFeedback({ type: 'success', text: '资料保存成功' });
+    } catch (error) {
+      setFeedback({
+        type: 'danger',
+        text: parseAxiosError(error, '资料保存失败'),
+      });
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
   const handleUpload = async () => {
     if (!targetUuid || !selectedFile) return;
     setUploading(true);
@@ -86,8 +145,11 @@ export default function UserSettingPage() {
       setSelectedFile(null);
       setFeedback({ type: 'success', text: '头像更新成功' });
       await fetchUser();
-    } catch (e) {
-      setFeedback({ type: 'danger', text: parseAxiosError(e, '头像更新失败') });
+    } catch (error) {
+      setFeedback({
+        type: 'danger',
+        text: parseAxiosError(error, '头像更新失败'),
+      });
     } finally {
       setUploading(false);
     }
@@ -112,7 +174,7 @@ export default function UserSettingPage() {
       <Row className="align-items-center g-2 mb-3">
         <Col xs={12} md>
           <h2 className="mb-0">用户设置</h2>
-          <div className="text-secondary small">头像设置</div>
+          <div className="text-secondary small">基础资料与头像设置</div>
         </Col>
         <Col xs={12} md="auto" className="d-flex gap-2">
           <Button as={Link} to="/profile" variant="outline-secondary">
@@ -120,8 +182,8 @@ export default function UserSettingPage() {
           </Button>
           <Button
             variant="outline-secondary"
-            onClick={fetchUser}
-            disabled={userLoading || uploading}
+            onClick={() => void fetchUser()}
+            disabled={userLoading || uploading || savingProfile}
           >
             {userLoading ? (
               <>
@@ -146,15 +208,15 @@ export default function UserSettingPage() {
       ) : null}
 
       <Row className="g-3">
-        <Col xs={12} lg={6}>
-          <Card>
+        <Col xs={12} lg={4}>
+          <Card className="h-100">
             <Card.Header className="d-flex align-items-center justify-content-between">
-              <span>当前头像</span>
+              <span>当前资料</span>
               {userLoading ? <Spinner size="sm" /> : null}
             </Card.Header>
             <Card.Body>
               {userError ? <Alert variant="danger">{userError}</Alert> : null}
-              <div className="d-flex align-items-center gap-3">
+              <div className="d-flex flex-column align-items-start gap-3">
                 <Image
                   src={currentAvatar}
                   roundedCircle
@@ -162,18 +224,81 @@ export default function UserSettingPage() {
                   height={96}
                   alt="avatar"
                 />
-                <div className="text-secondary small">
-                  {userProfile?.nickname ||
-                    userProfile?.username ||
-                    userProfile?.uuid ||
-                    targetUuid}
+                <div>
+                  <div className="fw-semibold">
+                    {userProfile?.nickname ||
+                      userProfile?.username ||
+                      userProfile?.uuid ||
+                      targetUuid}
+                  </div>
+                  <div className="text-secondary small">
+                    {userProfile?.email || '未设置邮箱'}
+                  </div>
+                  <div className="text-secondary small font-monospace mt-1">
+                    {userProfile?.uuid || targetUuid}
+                  </div>
                 </div>
               </div>
             </Card.Body>
           </Card>
         </Col>
 
-        <Col xs={12} lg={6}>
+        <Col xs={12} lg={8}>
+          <Card className="mb-3">
+            <Card.Header>编辑基础资料</Card.Header>
+            <Card.Body>
+              <Form onSubmit={handleProfileSave}>
+                <Row className="g-3">
+                  <Col xs={12} md={6}>
+                    <Form.Group>
+                      <Form.Label>昵称</Form.Label>
+                      <Form.Control
+                        value={nickname}
+                        onChange={(e) => setNickname(e.target.value)}
+                        placeholder="请输入昵称"
+                        disabled={savingProfile}
+                      />
+                    </Form.Group>
+                  </Col>
+
+                  <Col xs={12} md={6}>
+                    <Form.Group>
+                      <Form.Label>邮箱</Form.Label>
+                      <Form.Control
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="请输入邮箱"
+                        disabled={savingProfile}
+                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
+
+                <div className="d-flex gap-2 mt-3">
+                  <Button type="submit" disabled={savingProfile}>
+                    {savingProfile ? (
+                      <>
+                        <Spinner size="sm" className="me-2" />
+                        保存中
+                      </>
+                    ) : (
+                      '保存资料'
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline-secondary"
+                    onClick={() => hydrateProfileForm(userProfile)}
+                    disabled={savingProfile}
+                  >
+                    重置
+                  </Button>
+                </div>
+              </Form>
+            </Card.Body>
+          </Card>
+
           <Card>
             <Card.Header>上传新头像</Card.Header>
             <Card.Body>

@@ -26,6 +26,7 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
     // 表单验证
     if (!username || !password || !confirmPassword) {
       setError('用户名、密码和确认密码不能为空');
@@ -47,7 +48,7 @@ const Register = () => {
       window.location.href = '/login';
     } catch (err) {
       // console.error("注册失败:", err);
-      setError(err.response?.data?.error || '注册失败，请稍后再试');
+      setError(err.response?.data?.msg || err.response?.data?.error || '注册失败，请稍后再试');
     } finally {
       setLoading(false);
     }
@@ -88,8 +89,8 @@ const Register = () => {
               {error && (
                 <div style={{ color: 'red', margin: '2px' }}>{error}</div>
               )}
-              <Button variant="primary" type="submit">
-                注册
+              <Button variant="primary" type="submit" disabled={loading}>
+                {loading ? '正在注册…' : '注册'}
               </Button>
             </Form>
           </div>

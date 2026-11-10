@@ -1,5 +1,4 @@
-//app里只放路由和配置
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+﻿import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ConfigProvider } from 'antd';
 import MainLayout from './MainLayout.jsx';
 import Login from './pages/login/Login.jsx';
@@ -16,17 +15,13 @@ import ProtectedRoute from './components/ProtectedRoute.jsx';
 import ManageTestCasePage from './pages/manage_test_case_page/index.jsx';
 import Home from './pages/home/index.jsx';
 import Admin from './pages/admin/index.jsx';
+import UserManagementPage from './pages/admin/UserManagementPage.jsx';
 import SettingPage from './pages/settingPage/settingPage.jsx';
 import UserSettingPage from './pages/userSettingPage/UserSettingPage.jsx';
-import AddpPage1 from './pages/addpPage1/index.jsx';
-import CategoryAdminPage from './pages/CategoryAdminPage/CategoryAdminPage.jsx';
-import CreateCategoryPage from './pages/createCategoryPage/createCategoryPage.jsx';
-import UpdateCategoryPage from './pages/updateCategoryPage/updateCategoryPage.jsx';
-import Frame from './atlasComponent/frame.jsx';
 import ProblemSubmissionsPage from './pages/submitionPage/ProblemSubmissionsPage.jsx';
 import UserSubmissionsPage from './pages/submitionPage/UserSubmissionsPage.jsx';
+import QuestionGraphPage from './pages/questionGraph/QuestionGraphPage.jsx';
 
-// Ant Design 白色主题配置
 const whiteTheme = {
   token: {
     colorBgBase: '#ffffff',
@@ -41,36 +36,30 @@ function App() {
     <ConfigProvider theme={whiteTheme}>
       <Router>
         <Routes>
-          {/* 使用主布局的所有页面 */}
           <Route path="/" element={<MainLayout />}>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            {/* <Route index element={<HomeComponent />} /> */}
             <Route index element={<Home />} />
             <Route path="study" element={<StudyComponent />} />
-            <Route path="graph" element={<Frame />} />
-            {/* <Route path="problem" element={<ProblemComponent />} /> */}
             <Route path="problem" element={<QuestionBank />} />
-            {/* <Route path="rank" element={<Rank />} /> */}
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<UserSettingPage />} />
-            {/* 题目详情页，也使用主布局 */}
             <Route path="problem/:id" element={<ProblemPage />} />
+            <Route path="problem/:id/graph" element={<QuestionGraphPage />} />
             <Route
-              path="problem/:question_number/submissions"
+              path="problem/:id/submissions"
               element={<ProblemSubmissionsPage />}
             />
             <Route
               path="profile/submissions"
               element={<UserSubmissionsPage />}
             />
-            {/* 评测结果详情页 */}
             <Route
               path="submission/:submissionId"
               element={<SubmissionDetailPage />}
             />
           </Route>
-          {/** admin页面专门开一个页面  */}
+
           <Route
             path="/admin"
             element={
@@ -79,7 +68,6 @@ function App() {
               </ProtectedRoute>
             }
           >
-            {/* 添加题目页面 - 需要题目管理权限 */}
             <Route
               path="addproblem"
               element={
@@ -87,8 +75,7 @@ function App() {
                   <AddProblem />
                 </ProtectedRoute>
               }
-            ></Route>
-            {/* 更新题目页面 - 需要题目管理权限 */}
+            />
             <Route
               path="updateproblem/"
               element={
@@ -99,9 +86,8 @@ function App() {
             >
               <Route path=":id" element={<UpdateProblem />} />
             </Route>
-            {/* 管理测试用例页面 - 需要题目管理权限 */}
             <Route
-              path="manageTestCase/:problem_number"
+              path="manageTestCase/:problem_id"
               element={
                 <ProtectedRoute requiredPermissions={['admin', 'moderator']}>
                   <ManageTestCasePage />
@@ -116,30 +102,19 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            {/* 分类管理页面 - 需要管理员权限 */}
             <Route
-              path="category"
+              path="users"
               element={
                 <ProtectedRoute requiredPermissions={['admin']}>
-                  <CategoryAdminPage />
+                  <UserManagementPage />
                 </ProtectedRoute>
               }
             />
-            {/* 添加分类页面 - 需要管理员权限 */}
             <Route
-              path="createcategory"
+              path="users/:uuid"
               element={
                 <ProtectedRoute requiredPermissions={['admin']}>
-                  <CreateCategoryPage />
-                </ProtectedRoute>
-              }
-            />
-            {/* 编辑分类页面 - 需要管理员权限 */}
-            <Route
-              path="updatecategory/:id"
-              element={
-                <ProtectedRoute requiredPermissions={['admin']}>
-                  <UpdateCategoryPage />
+                  <UserManagementPage />
                 </ProtectedRoute>
               }
             />

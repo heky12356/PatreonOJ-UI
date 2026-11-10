@@ -32,7 +32,7 @@ PatreonOJ-UI 是一个基于 React 19.1.0 构建的前端项目，用于 Patreon
 ## 📦 安装和运行
 
 ### 环境要求
-- Node.js >= 16.0.0
+- Node.js `^20.19.0` 或 `>=22.12.0`（Vite 7 要求）
 - npm >= 8.0.0
 
 ### 安装依赖
@@ -42,7 +42,7 @@ git clone https://gitee.com/tju2025-grand-innovation/patreon-oj-ui.git
 cd patreon-oj-ui
 
 # 安装依赖
-npm install
+npm ci
 ```
 
 ### 开发环境运行
@@ -54,6 +54,13 @@ npm run dev
 ```
 
 ### 生产环境构建
+
+部署说明与 Caddy/systemd 模板见后端仓库的 [部署指南](../PatreonOJ/部署指南.md)。默认开发代理为后端 `127.0.0.1:8080`、对象存储 `127.0.0.1:9000`；沿用其他端口时，在 `.env.local` 中设置 `VITE_API_PROXY_TARGET`、`VITE_OSS_PROXY_TARGET`。生产使用同源 `/api`、`/oss` 代理，不运行 Vite 开发服务器。
+
+```bash
+npm test
+npm run lint
+```
 ```bash
 # 构建生产版本
 npm run build

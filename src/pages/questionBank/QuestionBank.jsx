@@ -1,117 +1,210 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import styles from './QuestionBank.module.css';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Col, Container, Row } from 'react-bootstrap';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { FaPlus, FaSearch } from 'react-icons/fa';
 import { getProblem } from '../../api/getproblem';
+import { getUserSubmissions } from '../../api/judge.js';
+import { getUserId, hasPermission, isLoggedIn } from '../../api/user.js';
+import { getUserSolvedQuestionIds } from '../../api/userSolve.js';
+import {
+  EmptyState,
+  ErrorState,
+  LoadingState,
+} from '../../components/feedback/AsyncState.jsx';
 import FootNav from '../../components/footNav/footNav.jsx';
-import { Container, Row, Col } from 'react-bootstrap';
-import { FaSearch, FaPlus } from 'react-icons/fa';
-import { hasPermission } from '../../api/user.js';
+import { getRequestErrorMessage } from '../../utils/request.js';
+import styles from './QuestionBank.module.css';
 
-const QuestionBank = ({ setCurrentKey }) => {
+const DIFFICULTY_TEXT = {
+  简单: '简单',
+  中等: '中等',
+  困难: '困难',
+};
+
+export default function QuestionBank() {
+  const userUuid = getUserId();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const params = useMemo(
+    () => new URLSearchParams(location.search),
+    [location.search]
+  );
+  const currentQuery = params.get('q') || '';
+
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [error, setError] = useState('');
+  const [searchTerm, setSearchTerm] = useState(currentQuery);
   const [pageIdx, setPageIdx] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
+  const [pageSize, setPageSize] = useState(10);
   const [totalCnt, setTotalCnt] = useState(0);
   const [difficult, setDifficult] = useState('');
-  const [isEdit, setIsEdit] = useState(false);
-  const [selectProm, setSelctProm] = useState(new Set());
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [solveStatusMap, setSolveStatusMap] = useState({});
 
-  const params = new URLSearchParams(location.search);
+  const fetchQuestions = async ({ q = currentQuery, page = pageIdx } = {}) => {
+    try {
+      setLoading(true);
+      setError('');
+      const data = await getProblem({
+        q,
+        pageSize,
+        pageIdx: page,
+        difficult,
+      });
+      setQuestions(Array.isArray(data?.result) ? data.result : []);
+      setPageIdx(data?.pageIdx || 1);
+      setPageSize(data?.pageSize || 10);
+      setTotalCnt(data?.totalCnt || 0);
+    } catch (err) {
+      setError(getRequestErrorMessage(err, '获取题库列表失败'));
+      setQuestions([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // 获取题目列表
-  // 监听pageIdx，如果pageIdx发生变化就调用搜索函数将data数组做一个变化
   useEffect(() => {
-    const fetchQuestions = async (searchTerm) => {
+    setSearchTerm(currentQuery);
+  }, [currentQuery]);
+
+  useEffect(() => {
+    void fetchQuestions();
+  }, [currentQuery, pageIdx, difficult]);
+
+  useEffect(() => {
+    const fetchSolveStatuses = async () => {
+      if (!isLoggedIn() || !userUuid || questions.length === 0) {
+        setSolveStatusMap({});
+        return;
+      }
+
       try {
-        // console.log('searchTerm:', searchTerm);
-        setLoading(true);
-        let data = await getProblem({
-          q: searchTerm,
-          pageSize: 10,
-          pageIdx,
-          difficult,
+        const solvedIds = await getUserSolvedQuestionIds(userUuid);
+        const solvedSet = new Set(
+          solvedIds
+            .map((item) => Number(item))
+            .filter((item) => Number.isFinite(item) && item > 0)
+        );
+
+        const nextStatusMap = Object.fromEntries(
+          questions.map((question) => {
+            const questionPk = Number(question?.id);
+            const solved =
+              Number.isFinite(questionPk) && solvedSet.has(questionPk);
+            return [questionPk, solved ? 'solved' : 'unsolved'];
+          })
+        );
+
+        const unresolvedQuestions = questions.filter((question) => {
+          const questionPk = Number(question?.id);
+          return Number.isFinite(questionPk) && !solvedSet.has(questionPk);
         });
-        setQuestions(data.result || []);
-        setPageIdx(data.pageIdx || 1);
-        setPageSize(data.pageSize || 50);
-        setTotalCnt(data.totalCnt || 0);
-      } catch (err) {
-        setError(err.message);
-        console.error('获取题目列表失败:', err);
-      } finally {
-        setLoading(false);
+
+        const attemptedResults = await Promise.all(
+          unresolvedQuestions.map(async (question) => {
+            const questionPk = Number(question?.id);
+            try {
+              const submissionData = await getUserSubmissions(userUuid, {
+                problem_id: questionPk,
+                page: 1,
+                size: 1,
+                operator_uuid: userUuid,
+                user_uuid: userUuid,
+              });
+
+              return {
+                questionPk,
+                attempted: Number(submissionData?.total ?? 0) > 0,
+              };
+            } catch {
+              return {
+                questionPk,
+                attempted: false,
+              };
+            }
+          })
+        );
+
+        for (const item of attemptedResults) {
+          if (item?.attempted) {
+            nextStatusMap[item.questionPk] = 'attempted';
+          }
+        }
+
+        setSolveStatusMap(nextStatusMap);
+      } catch {
+        setSolveStatusMap({});
       }
     };
 
-    const q = params.get('q') || '';
-    setSearchTerm(q);
-    // console.log(params.get('q'));
-    fetchQuestions(q);
-  }, [pageIdx, difficult, location.search]);
+    void fetchSolveStatuses();
+  }, [questions, userUuid]);
 
-  // useEffect(() => {
-  //   console.log('测试' + hasPermission('admin'));
-  // }, []);
-
-  // 解析标签字符串为数组
   const parseTags = (tagsString) => {
     if (!tagsString) return [];
-    return tagsString.split(',').map((tag) => tag.trim());
+    return String(tagsString)
+      .split(',')
+      .map((tag) => tag.trim())
+      .filter(Boolean);
   };
 
-  const searchProblem = async (q) => {
-    navigate(`/problem?q=${q}`);
+  const getDifficultyClass = (diff) => {
+    if (diff === '简单') return styles.easy;
+    if (diff === '中等') return styles.medium;
+    if (diff === '困难') return styles.hard;
+    return '';
   };
 
-  // 选择单个题目
-  const handelSelectProm = (value) => {
-    setSelctProm((prev) => {
-      let newSet = new Set(prev);
-      if (newSet.has(value)) {
-        newSet.delete(value);
-      } else {
-        newSet.add(value);
-      }
-      return newSet;
-    });
+  const getSolveStatusMeta = (questionPk) => {
+    if (!isLoggedIn()) {
+      return {
+        text: '登录后查看',
+        className: styles.statusLoginHint,
+      };
+    }
+
+    const state = solveStatusMap[Number(questionPk)] || 'unsolved';
+    if (state === 'solved') {
+      return {
+        text: '已通过',
+        className: styles.statusSolved,
+      };
+    }
+    if (state === 'attempted') {
+      return {
+        text: '未通过',
+        className: styles.statusAttempted,
+      };
+    }
+    return {
+      text: '未做',
+      className: styles.statusUnsolved,
+    };
   };
 
-  if (loading) {
-    return (
-      <div className={styles.container}>
-        <Container>
-          <div className={styles.loading}>加载中...</div>
-        </Container>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className={styles.container}>
-        <Container>
-          <div className={styles.error}>错误: {error}</div>
-        </Container>
-      </div>
-    );
-  }
+  const searchProblem = (raw) => {
+    const q = raw.trim();
+    setPageIdx(1);
+    const next = new URLSearchParams(location.search);
+    if (q) {
+      next.set('q', q);
+    } else {
+      next.delete('q');
+    }
+    navigate(`/problem${next.toString() ? `?${next.toString()}` : ''}`);
+  };
 
   return (
     <div className={styles.container}>
       <Container>
-        {/* <h1 className={styles.title}>题库列表</h1> */}
         <Row>
           <Col md={9}>
             <div className={styles.card}>
               <div className={styles.searchBar}>
                 <input
                   type="text"
-                  placeholder="搜索题目..."
+                  placeholder="搜索题目名称、题号、标签或内容关键词"
                   className={styles.searchInput}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -119,105 +212,125 @@ const QuestionBank = ({ setCurrentKey }) => {
                     e.key === 'Enter' && searchProblem(searchTerm)
                   }
                 />
-                <div
+                <button
+                  type="button"
                   onClick={() => searchProblem(searchTerm)}
                   className={styles.searchButton}
+                  aria-label="搜索题目"
                 >
                   <FaSearch />
-                </div>
+                </button>
               </div>
 
-              <div className={styles.tableContainer}>
-                <table className={styles.table}>
-                  <thead>
-                    <tr>
-                      {isEdit && (
-                        <th>
-                          <input
-                            className="form-check-input"
-                            type="checkbox"
-                            value=""
-                            id="checkDefault"
-                          ></input>
-                        </th>
-                      )}
-                      <th style={{ width: '80px' }}>ID</th>
-                      <th>题目名称</th>
-                      <th style={{ width: '100px' }}>难度</th>
-                      <th>标签</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {questions.map((question) => (
-                      <tr key={question.id} className={styles.row}>
-                        {isEdit && (
-                          <td>
-                            <input
-                              className="form-check-input"
-                              type="checkbox"
-                              value={question.id}
-                              id={question.id}
-                              onChange={(e) => {
-                                console.log(e.target.value);
-                              }}
-                            ></input>
-                          </td>
-                        )}
-                        <td>
-                          {question.question_id || question.question_number}
-                        </td>
-                        <td>
-                          <Link
-                            to={`/problem/${question.question_id}`}
-                            className={styles.link}
-                          >
-                            {question.title}
-                            {question.status != 'published' && (
-                              <span>(隐藏)</span>
-                            )}
-                          </Link>
-                        </td>
-                        <td>
-                          <span
-                            className={`${styles.difficulty} ${
-                              styles[question.difficulty]
-                            }`}
-                          >
-                            {question.difficulty}
-                          </span>
-                        </td>
-                        <td>
-                          {parseTags(question.tags).map((tag, index) => (
-                            <span key={index} className={styles.tag}>
-                              {tag}
-                            </span>
-                          ))}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className={styles.footNav}>
-                <FootNav
-                  pageIdx={pageIdx}
-                  setIdx={setPageIdx}
-                  pageCnt={Math.ceil(totalCnt / pageSize)}
+              {error ? (
+                <ErrorState
+                  title="题库加载失败"
+                  message={error}
+                  onRetry={() => void fetchQuestions()}
                 />
-              </div>
+              ) : loading ? (
+                <LoadingState text="正在加载题库..." />
+              ) : questions.length === 0 ? (
+                <EmptyState
+                  title="没有找到匹配题目"
+                  description="试试更换关键词，或调整难度筛选。"
+                />
+              ) : (
+                <>
+                  <div className={styles.tableContainer}>
+                    <table className={styles.table}>
+                      <thead>
+                        <tr>
+                          <th style={{ width: '80px' }}>题号</th>
+                          <th>题目名称</th>
+                          <th style={{ width: '110px' }}>状态</th>
+                          <th style={{ width: '100px' }}>难度</th>
+                          <th>标签</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {questions.map((question) => {
+                          const statusMeta = getSolveStatusMeta(question?.id);
+                          const tags = parseTags(question.tags);
 
-              {questions.length === 0 && !loading && (
-                <div className={styles.noData}>暂无题目数据</div>
+                          return (
+                            <tr key={question.id} className={styles.row}>
+                              <td>{question.question_id || question.question_number}</td>
+                              <td>
+                                <Link
+                                  to={`/problem/${question.id}`}
+                                  className={styles.link}
+                                >
+                                  {question.title}
+                                  {question.status !== 'published' ? (
+                                    <span>(隐藏)</span>
+                                  ) : null}
+                                </Link>
+                              </td>
+                              <td>
+                                <span
+                                  className={`${styles.solveStatus} ${statusMeta.className}`}
+                                >
+                                  {statusMeta.text}
+                                </span>
+                              </td>
+                              <td>
+                                <span
+                                  className={`${styles.difficulty} ${getDifficultyClass(
+                                    question.difficulty
+                                  )}`}
+                                >
+                                  {DIFFICULTY_TEXT[question.difficulty] ||
+                                    question.difficulty ||
+                                    '-'}
+                                </span>
+                              </td>
+                              <td>
+                                {tags.length > 0 ? (
+                                  tags.map((tag, index) => (
+                                    <span key={index} className={styles.tag}>
+                                      {tag}
+                                    </span>
+                                  ))
+                                ) : (
+                                  <span className="text-secondary small">暂无标签</span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className={styles.footNav}>
+                    <FootNav
+                      pageIdx={pageIdx}
+                      setIdx={setPageIdx}
+                      pageCnt={Math.max(1, Math.ceil(totalCnt / pageSize))}
+                    />
+                  </div>
+                </>
               )}
             </div>
           </Col>
+
           <Col md={3} className={styles.Left}>
             <div className={styles.card}>
+              <label
+                htmlFor="difficulty-filter"
+                className="d-block mb-2 text-secondary small"
+              >
+                难度筛选
+              </label>
               <select
+                id="difficulty-filter"
                 className={styles.filterSelect}
                 value={difficult}
-                onChange={(e) => setDifficult(e.target.value)}
+                onChange={(e) => {
+                  setPageIdx(1);
+                  setDifficult(e.target.value);
+                }}
               >
                 <option value="">全部难度</option>
                 <option value="简单">简单</option>
@@ -226,19 +339,17 @@ const QuestionBank = ({ setCurrentKey }) => {
               </select>
             </div>
 
-            {hasPermission('admin') && (
+            {hasPermission('admin') ? (
               <div
                 className={styles.actionButton}
                 onClick={() => navigate('/admin/addproblem')}
               >
                 <FaPlus style={{ marginRight: '8px' }} /> 添加题目
               </div>
-            )}
+            ) : null}
           </Col>
         </Row>
       </Container>
     </div>
   );
-};
-
-export default QuestionBank;
+}

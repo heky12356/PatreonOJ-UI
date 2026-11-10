@@ -1,0 +1,159 @@
+.page {
+  width: 88%;
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 24px 0 32px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+
+.title {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.subtitle {
+  color: #6b7280;
+  font-size: 0.92rem;
+}
+
+.headerActions {
+  display: flex;
+  gap: 8px;
+}
+
+.typeFilters {
+  padding-top: 6px;
+}
+
+.graphCard {
+  height: 100%;
+}
+
+.graphBody {
+  height: 680px;
+  position: relative;
+}
+
+.graphSvg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: radial-gradient(circle at 20% 20%, #f8fafc 0%, #f1f5f9 60%, #eef2f7 100%);
+  border-radius: 6px;
+}
+
+.emptyTip {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+}
+
+.detailTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 6px;
+  word-break: break-word;
+}
+
+.statGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.statItem {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 8px 10px;
+  background: #f9fafb;
+}
+
+.statLabel {
+  color: #6b7280;
+  font-size: 0.75rem;
+}
+
+.statValue {
+  color: #111827;
+  font-weight: 700;
+}
+
+.treeCardBody {
+  max-height: 500px;
+  overflow: auto;
+}
+
+.treePanel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.treeBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.treeNodeBtn {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  width: calc(100% - 4px);
+  text-align: left;
+  padding: 6px 8px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.treeNodeBtn:hover {
+  border-color: #0d6efd;
+}
+
+.treeNodeSelected {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.15);
+}
+
+.treeNodeTitle {
+  font-size: 0.82rem;
+  color: #1f2937;
+  word-break: break-word;
+}
+
+.treeNodeDiff {
+  font-size: 0.74rem;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+.treeEdgeHint {
+  font-size: 0.72rem;
+  color: #6b7280;
+}
+
+@media (max-width: 992px) {
+  .page {
+    width: 95%;
+    padding-top: 16px;
+  }
+
+  .graphBody {
+    height: 540px;
+  }
+}

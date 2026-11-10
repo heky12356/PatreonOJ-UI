@@ -1,135 +1,81 @@
-// src/api/user.js
 import axios from 'axios';
 
-// API基础URL，可以根据环境配置
 const API_BASE_URL = '/api';
+const USER_INFO_UPDATED_EVENT = 'user-info-updated';
 
-/**
- * 用户注册
- * @param {string} username - 用户名
- * @param {string} password - 密码
- * @returns {Promise} - 返回注册结果
- */
-export const register = async (username, password) => {
-  try {
-    const response = await axios.post(`${API_BASE_URL}/user/register`, {
-      username,
-      password,
-    });
-    return response.data;
-  } catch (error) {
-    // console.error('注册失败:', error);
-    throw error;
-  }
-};
-
-/**
- * 用户登录
- * @param {string} username - 用户名
- * @param {string} password - 密码
- * @returns {Promise} - 返回登录结果，包含用户信息和token
- */
-export const login = async (username, password) => {
-  try {
-    const response = await axios.post(`api/user/login`, {
-      username,
-      password,
-    });
-    return response.data;
-  } catch (error) {
-    // console.error('登录失败:', error);
-    throw error;
-  }
-};
-
-/**
- * 保存用户信息到本地存储
- * @param {Object} userInfo - 用户信息对象
- */
-export const saveUserInfo = (userInfo) => {
-  localStorage.setItem('userInfo', JSON.stringify(userInfo));
-};
-
-/**
- * 获取本地存储的用户信息
- * @returns {Object|null} - 返回用户信息对象，如果不存在则返回null
- */
-export const getUserInfo = () => {
-  const userInfo = localStorage.getItem('userInfo');
-  return userInfo ? JSON.parse(userInfo) : null;
-};
-
-/**
- * 清除本地存储的用户信息（登出）
- */
-export const clearUserInfo = () => {
-  localStorage.removeItem('userInfo');
-};
-
-/**
- * 检查用户是否已登录
- * @returns {boolean} - 返回是否已登录
- */
-export const isLoggedIn = () => {
-  return !!getUserInfo();
-};
-
-/**
- * 获取当前登录用户ID
- * @returns {number|null} - 返回用户ID，如果未登录则返回null
- */
-export const getUserId = () => {
-  const userInfo = getUserInfo();
-  return userInfo ? userInfo.uuid : null;
-};
-
-/**
- * 获取当前用户权限列表
- * @returns {string[]|null} - 返回权限数组，如果未登录则返回null
- */
-export const getUserPermissions = () => {
-  const userInfo = getUserInfo();
-  return userInfo ? userInfo.permissions || [] : null;
-};
-
-/**
- * 检查用户是否拥有指定权限
- * @param {string|string[]} permission - 权限名称或权限数组
- * @returns {boolean} - 返回是否拥有权限
- */
-export const hasPermission = (permission) => {
-  const userPermissions = getUserPermissions();
-  if (!userPermissions) return false;
-
-  if (Array.isArray(permission)) {
-    return permission.some((p) => userPermissions.includes(p));
-  }
-  return userPermissions.includes(permission);
-};
-
-// 辅助函数：清理参数中的undefined、null和空字符串
-const cleanParams = (params) => {
-  if (!params) return {};
-  return Object.fromEntries(
+const cleanParams = (params = {}) =>
+  Object.fromEntries(
     Object.entries(params).filter(
-      ([, v]) => v !== undefined && v !== null && v !== ''
+      ([, value]) => value !== undefined && value !== null && value !== ''
     )
   );
+
+const unwrapApiData = (payload) => {
+  if (!payload || typeof payload !== 'object') return payload;
+  if (payload.data !== undefined) return payload.data;
+  if (payload.result !== undefined) return payload.result;
+  return payload;
 };
 
-// 辅助函数：如果operator_uuid不存在，则使用当前登录用户ID
+const normalizePermissions = (permissions) => {
+  if (Array.isArray(permissions)) return permissions;
+  if (typeof permissions === 'string') {
+    return permissions
+      .split(',')
+      .map((x) => x.trim())
+      .filter(Boolean);
+  }
+  return [];
+};
+
+const normalizeRoles = (roles) => {
+  if (!Array.isArray(roles)) return [];
+  return roles
+    .filter((role) => role && typeof role === 'object')
+    .map((role) => ({
+      ...role,
+      permissions: normalizePermissions(
+        Array.isArray(role.permissions)
+          ? role.permissions
+              .map((permission) => permission?.code ?? permission)
+              .filter(Boolean)
+          : role.permissions
+      ),
+    }));
+};
+
+const normalizeUserInfo = (payload) => {
+  const raw = unwrapApiData(payload);
+  if (!raw || typeof raw !== 'object') return raw;
+  const roles = normalizeRoles(raw.roles);
+  return {
+    ...raw,
+    avatar_url: typeof raw.avatar_url === 'string' && raw.avatar_url.startsWith('oss/') ? `/${raw.avatar_url}` : raw.avatar_url,
+    permissions: [...new Set([...normalizePermissions(raw.permissions), ...roles.flatMap((role) => role.permissions)])],
+    roles,
+  };
+};
+
+const emitUserInfoUpdated = (detail) => {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(
+      new CustomEvent(USER_INFO_UPDATED_EVENT, {
+        detail,
+      })
+    );
+  }
+};
+
 const withOperatorUuid = (operator_uuid) => {
   const op = operator_uuid ?? getUserId();
   return op ? { operator_uuid: op } : {};
 };
 
-// 辅助函数：确保路径以斜杠结尾
 const ensureDirSuffix = (prefix) => {
   if (!prefix) return '';
   return prefix.endsWith('/') ? prefix : `${prefix}/`;
 };
 
-// 辅助函数：通过预签名URL上传文件到OSS
 const putToPresignedUrl = async (url, file) => {
   const contentType =
     file && file.type ? file.type : 'application/octet-stream';
@@ -141,7 +87,6 @@ const putToPresignedUrl = async (url, file) => {
   });
 };
 
-// 获取OSS预签名上传URL
 const getOssUploadUrl = async ({ filename, path }) => {
   const response = await axios.get(`${API_BASE_URL}/oss/upload-url`, {
     params: {
@@ -149,38 +94,161 @@ const getOssUploadUrl = async ({ filename, path }) => {
       path,
     },
   });
+  return unwrapApiData(response.data);
+};
+
+export const register = async (username, password) => {
+  const response = await axios.post(`${API_BASE_URL}/user/register`, {
+    username,
+    password,
+  });
   return response.data;
 };
 
-// 获取用户信息
-export const getUserByUuid = async (uuid, { operator_uuid } = {}) => {
+export const login = async (username, password) => {
+  const response = await axios.post(`${API_BASE_URL}/user/login`, {
+    username,
+    password,
+  });
+  return normalizeUserInfo(response.data);
+};
+
+export const logout = async () => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/user/${uuid}`, {
-      params: cleanParams(withOperatorUuid(operator_uuid)),
-    });
+    const response = await axios.post(`${API_BASE_URL}/user/logout`);
+    clearUserInfo();
     return response.data;
   } catch (error) {
+    if ([401, 403].includes(error?.response?.status)) {
+      clearUserInfo();
+      return null;
+    }
     throw error;
   }
 };
 
-// 更新用户信息
+export const saveUserInfo = (userInfo) => {
+  const normalized = normalizeUserInfo(userInfo);
+  localStorage.setItem('userInfo', JSON.stringify(normalized));
+  emitUserInfoUpdated(normalized);
+};
+
+export const getUserInfo = () => {
+  const userInfo = localStorage.getItem('userInfo');
+  if (!userInfo) return null;
+
+  try {
+    return normalizeUserInfo(JSON.parse(userInfo));
+  } catch {
+    return null;
+  }
+};
+
+export const clearUserInfo = () => {
+  localStorage.removeItem('userInfo');
+  emitUserInfoUpdated(null);
+};
+
+export const isLoggedIn = () => {
+  return !!getUserInfo();
+};
+
+export const getUserId = () => {
+  const userInfo = getUserInfo();
+  return userInfo ? userInfo.uuid : null;
+};
+
+export const getUserPermissions = () => {
+  const userInfo = getUserInfo();
+  return userInfo ? normalizePermissions(userInfo.permissions) : [];
+};
+
+export const hasPermission = (permission) => {
+  const userPermissions = getUserPermissions();
+  if (!userPermissions.length) return false;
+
+  if (Array.isArray(permission)) {
+    return permission.some((p) => userPermissions.includes(p));
+  }
+  return userPermissions.includes(permission);
+};
+
+export const getUserByUuid = async (uuid, { operator_uuid } = {}) => {
+  const response = await axios.get(`${API_BASE_URL}/user/${encodeURIComponent(uuid)}`, {
+    params: cleanParams(withOperatorUuid(operator_uuid)),
+  });
+
+  const raw = response.data;
+  const result = normalizeUserInfo(raw);
+
+  if (raw && typeof raw === 'object' && raw.result !== undefined) {
+    return { ...raw, result };
+  }
+  if (raw && typeof raw === 'object' && raw.data !== undefined) {
+    return { ...raw, result };
+  }
+  return { result };
+};
+
+export const getUserList = async (params = {}, { operator_uuid } = {}) => {
+  const response = await axios.get(`${API_BASE_URL}/user/`, {
+    params: cleanParams({
+      ...params,
+      ...withOperatorUuid(operator_uuid),
+    }),
+  });
+
+  const raw = response.data;
+  const result = Array.isArray(unwrapApiData(raw))
+    ? unwrapApiData(raw).map((item) => normalizeUserInfo(item))
+    : [];
+
+  if (raw && typeof raw === 'object' && raw.result !== undefined) {
+    return { ...raw, result };
+  }
+  if (raw && typeof raw === 'object' && raw.data !== undefined) {
+    return { ...raw, result };
+  }
+  return { result };
+};
+
 export const updateUserByUuid = async (
   uuid,
   payload,
   { operator_uuid } = {}
 ) => {
-  try {
-    const response = await axios.put(`${API_BASE_URL}/user/${uuid}`, payload, {
-      params: cleanParams(withOperatorUuid(operator_uuid)),
-    });
-    return response.data;
-  } catch (error) {
-    throw error;
+  const response = await axios.put(`${API_BASE_URL}/user/${encodeURIComponent(uuid)}`, payload, {
+    params: cleanParams(withOperatorUuid(operator_uuid)),
+  });
+
+  const raw = response.data;
+  const result = normalizeUserInfo(raw);
+
+  if (raw && typeof raw === 'object' && raw.result !== undefined) {
+    return { ...raw, result };
   }
+  if (raw && typeof raw === 'object' && raw.data !== undefined) {
+    return { ...raw, result };
+  }
+  return { result };
 };
 
-// 更新用户头像并同步更新用户信息
+export const syncCurrentUserInfo = (patch = {}) => {
+  const current = getUserInfo();
+  if (!current || !patch || typeof patch !== 'object') {
+    return current;
+  }
+
+  const next = normalizeUserInfo({
+    ...current,
+    ...patch,
+  });
+  saveUserInfo(next);
+  return next;
+};
+
+export const getUserInfoUpdatedEventName = () => USER_INFO_UPDATED_EVENT;
+
 export const uploadUserAvatarAndUpdateUserByUuid = async (
   uuid,
   avatarFile,
@@ -192,8 +260,8 @@ export const uploadUserAvatarAndUpdateUserByUuid = async (
     extraPayload,
   } = {}
 ) => {
-  if (!uuid) throw new Error('uuid 不能为空');
-  if (!avatarFile) throw new Error('avatarFile 不能为空');
+  if (!uuid) throw new Error('uuid is required');
+  if (!avatarFile) throw new Error('avatarFile is required');
 
   const trimmedFilename = typeof filename === 'string' ? filename.trim() : '';
 
@@ -223,7 +291,7 @@ export const uploadUserAvatarAndUpdateUserByUuid = async (
     uploaded?.url;
 
   if (bucket) {
-    avatarValue = `oss/${bucket}/${avatarValue}`;
+    avatarValue = `/oss/${bucket}/${avatarValue}`;
   }
 
   const mergedExtraPayload =
@@ -238,128 +306,17 @@ export const uploadUserAvatarAndUpdateUserByUuid = async (
     { operator_uuid }
   );
 
+  if (getUserId() === uuid) {
+    syncCurrentUserInfo({
+      ...(updateResp?.result ?? {}),
+      [avatarField]: avatarValue,
+    });
+  }
+
   return { upload: uploaded, avatar: avatarValue, update: updateResp };
 };
 
-// 获取用户掌握的题目列表
-export const getUserMasteryQuestions = async (
-  uuid,
-  { operator_uuid, pageIdx, pageSize, min_mastery, sort, order } = {}
-) => {
-  try {
-    const response = await axios.get(
-      `${API_BASE_URL}/user/${uuid}/mastery/questions`,
-      {
-        params: cleanParams({
-          ...withOperatorUuid(operator_uuid),
-          pageIdx,
-          pageSize,
-          min_mastery,
-          sort,
-          order,
-        }),
-      }
-    );
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
-// 获取用户掌握的标签列表
-export const getUserMasteryTags = async (
-  uuid,
-  { operator_uuid, pageIdx, pageSize, min_mastery, sort, order } = {}
-) => {
-  try {
-    const response = await axios.get(
-      `${API_BASE_URL}/user/${uuid}/mastery/tags`,
-      {
-        params: cleanParams({
-          ...withOperatorUuid(operator_uuid),
-          pageIdx,
-          pageSize,
-          min_mastery,
-          sort,
-          order,
-        }),
-      }
-    );
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
-// 提交用户掌握事件
-export const postUserMasteryEvent = async (
-  uuid,
-  payload,
-  { operator_uuid } = {}
-) => {
-  try {
-    const response = await axios.post(
-      `${API_BASE_URL}/user/${uuid}/mastery/events`,
-      payload,
-      {
-        params: cleanParams(withOperatorUuid(operator_uuid)),
-      }
-    );
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
-// 重置用户掌握的题目
-export const resetUserMasteryQuestion = async (
-  uuid,
-  questionNumber,
-  { operator_uuid } = {}
-) => {
-  try {
-    const response = await axios.delete(
-      `${API_BASE_URL}/user/${uuid}/mastery/questions/${questionNumber}`,
-      {
-        params: cleanParams(withOperatorUuid(operator_uuid)),
-      }
-    );
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
-// 重置用户掌握的标签
-export const resetUserMasteryTag = async (
-  uuid,
-  tag,
-  { operator_uuid } = {}
-) => {
-  try {
-    const response = await axios.delete(
-      `${API_BASE_URL}/user/${uuid}/mastery/tags`,
-      {
-        params: cleanParams({
-          ...withOperatorUuid(operator_uuid),
-          tag,
-        }),
-      }
-    );
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
-/**
- * 模拟登录（开发环境使用）
- * @param {string} username - 用户名
- * @param {string} role - 角色类型（admin, teacher, student, user）
- * @returns {Object} - 返回模拟的用户信息
- */
 export const mockLogin = (username, role = 'user') => {
-  // 根据角色设置权限
   let permissions = ['user'];
 
   switch (role) {
@@ -380,11 +337,11 @@ export const mockLogin = (username, role = 'user') => {
   }
 
   const mockUserInfo = {
-    message: '登录成功',
+    message: 'login success',
     user_id: 1,
-    username: username || '测试用户',
+    username: username || 'test-user',
     uuid: '2bfd19c5-abf9-40d0-903d-185c80e69fd4',
-    permissions: permissions,
+    permissions,
   };
 
   saveUserInfo(mockUserInfo);

@@ -1,127 +1,86 @@
-// pages/updateproblem/UpdateProblem.jsx
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import styles from './UpdateProblem.module.css';
 import { Row, Col, Modal, Button } from 'react-bootstrap';
 import { updateProblem } from '../../api/updateProblem';
-import { getProblemById, getProblemByNumber } from '../../api/getproblem';
-import { getCategories } from '../../api/getcategories';
+import { getProblemById } from '../../api/getproblem';
 import MDEditor from '@uiw/react-md-editor';
 
+const defaultForm = {
+  question_id: '',
+  title: '',
+  content: '',
+  difficulty: '简单',
+  time_limit: 1000,
+  memory_limit: 128,
+  tags: '',
+  status: 'published',
+};
+
 export default function UpdateProblem() {
-  const id = window.location.href.split('/').pop();
+  const { id } = useParams();
+  const navigate = useNavigate();
 
-  // 表单数据状态
-  const [formData, setFormData] = useState({
-    question_id: '',
-    question_number: '',
-    title: '',
-    content: '',
-    difficulty: '简单',
-    time_limit: 1000,
-    memory_limit: 128,
-    tags: '',
-    category_id: 0,
-    status: 'published',
-  });
-
-  // 提交状态
+  const [formData, setFormData] = useState(defaultForm);
   const [loading, setLoading] = useState(false);
+  const [initLoading, setInitLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-
-  // 分类
-  const [categories, setCategories] = useState([]);
-
-  // 弹窗状态
   const [show, setShow] = useState(false);
 
-  // 处理弹窗显示和隐藏
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
 
-  // 处理输入变化
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    // 清除错误和成功信息
-    // console.log(name, value);
     if (error) setError('');
-    if (success) setSuccess('');
   };
 
-  // 处理表单提交
+  const fetchProblemData = async () => {
+    if (!id) return;
+
+    setInitLoading(true);
+    setError('');
+    try {
+      const response = await getProblemById(id);
+      const data = response?.data || {};
+      setFormData({
+        ...defaultForm,
+        ...data,
+      });
+    } catch (err) {
+      console.error('fetch problem failed:', err);
+      setError(err?.message || '获取题目数据失败，请稍后再试');
+    } finally {
+      setInitLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProblemData();
+  }, [id]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // 验证必填字段
-    if (!formData.title || !formData.content || !formData.difficulty) {
-      setError('请填写必填字段：题目标题、题目描述和难度等级');
+    if (!formData.question_id || !formData.title || !formData.content) {
+      setError('请填写必填项：题目业务ID、标题和题目内容');
       return;
     }
 
     setLoading(true);
     setError('');
-    setSuccess('');
 
     try {
-      // 发送创建题目请求
-      const response = await updateProblem(formData, formData.question_number);
-
-      // 更新成功
-      setSuccess('题目更新成功！');
+      await updateProblem(formData, id);
       handleShow();
-      // console.log('题目更新成功:', response.data);
-
-      // 刷新题目数据
-      // fetchProblemData();
-      setSuccess('');
-      window.location.href = `/admin/updateproblem/${formData.question_id}`;
     } catch (err) {
-      console.error('题目更新失败:', err);
-      setError(err.response?.data?.message || '题目更新失败，请稍后再试');
+      console.error('update problem failed:', err);
+      setError(err?.message || '题目更新失败，请稍后再试');
     } finally {
       setLoading(false);
     }
   };
-
-  // 获取题目数据
-  const fetchProblemData = async () => {
-    try {
-      const response = await getProblemById(id);
-      //   console.log(response);
-      setFormData(response.data);
-    } catch (err) {
-      console.error('获取题目数据失败:', err);
-      setError(err.response?.data?.message || '获取题目数据失败，请稍后再试');
-    }
-  };
-
-  // 获取分类
-  const fetchCategories = async () => {
-    const result = await getCategories();
-    // console.log(result);
-    setCategories(result);
-  };
-
-  useEffect(() => {
-    fetchProblemData();
-    fetchCategories();
-  }, []);
-
-  // 成功弹窗
-  const successModal = (
-    <Modal show={show} onHide={handleClose}>
-      <Modal.Header closeButton>
-        <Modal.Title>提醒</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>题目更新成功！</Modal.Body>
-      <Modal.Footer>
-        <Button variant="primary" onClick={handleClose}>
-          确定
-        </Button>
-      </Modal.Footer>
-    </Modal>
-  );
 
   return (
     <div className={styles.container}>
@@ -129,17 +88,13 @@ export default function UpdateProblem() {
         <Col md={9}>
           <div className={styles.left}>
             {error && <div className={styles.errorMessage}>{error}</div>}
-            {success && <div className={styles.successMessage}>{success}</div>}
 
             <form onSubmit={handleSubmit}>
-              {/* 基本信息部分 */}
               <div className="row">
                 <div className="col-md-3">
                   <div className={styles.formGroup}>
-                    <label
-                      className={`${styles.formLabel} ${styles.requiredField}`}
-                    >
-                      题目ID
+                    <label className={`${styles.formLabel} ${styles.requiredField}`}>
+                      题目业务ID
                     </label>
                     <input
                       type="text"
@@ -148,14 +103,13 @@ export default function UpdateProblem() {
                       value={formData.question_id}
                       onChange={handleInputChange}
                       placeholder="例如：P1001"
+                      disabled={initLoading}
                     />
                   </div>
                 </div>
                 <div className="col-md-4">
                   <div className={styles.formGroup}>
-                    <label
-                      className={`${styles.formLabel} ${styles.requiredField}`}
-                    >
+                    <label className={`${styles.formLabel} ${styles.requiredField}`}>
                       题目标题
                     </label>
                     <input
@@ -165,21 +119,21 @@ export default function UpdateProblem() {
                       value={formData.title}
                       onChange={handleInputChange}
                       placeholder="例如：两数之和"
+                      disabled={initLoading}
                     />
                   </div>
                 </div>
                 <div className="col-md-2">
                   <div className={styles.formGroup}>
-                    <label
-                      className={`${styles.formLabel} ${styles.requiredField}`}
-                    >
-                      难度等级
+                    <label className={`${styles.formLabel} ${styles.requiredField}`}>
+                      难度
                     </label>
                     <select
                       className={styles.difficultySelect}
                       name="difficulty"
                       value={formData.difficulty}
                       onChange={handleInputChange}
+                      disabled={initLoading}
                     >
                       <option value="简单">简单</option>
                       <option value="中等">中等</option>
@@ -187,19 +141,17 @@ export default function UpdateProblem() {
                     </select>
                   </div>
                 </div>
-
                 <div className="col-md-3">
                   <div className={styles.formGroup}>
                     <div className="form-check">
                       <input
                         className="form-check-input"
                         type="checkbox"
-                        value={
-                          formData.status == 'hidden' ? 'published' : 'hidden'
-                        }
-                        checked={formData.status != 'published'}
+                        value={formData.status === 'hidden' ? 'published' : 'hidden'}
+                        checked={formData.status !== 'published'}
                         name="status"
                         onChange={handleInputChange}
+                        disabled={initLoading}
                       />
                       <label className="form-check-label">隐藏</label>
                     </div>
@@ -207,12 +159,9 @@ export default function UpdateProblem() {
                 </div>
               </div>
 
-              {/* 题目描述 */}
               <div className={styles.formGroup}>
-                <label
-                  className={`${styles.formLabel} ${styles.requiredField}`}
-                >
-                  题目描述
+                <label className={`${styles.formLabel} ${styles.requiredField}`}>
+                  题目内容
                 </label>
                 <MDEditor
                   className={`form-control ${styles.formControl} ${styles.textArea}`}
@@ -221,18 +170,16 @@ export default function UpdateProblem() {
                   onChange={(val) => {
                     setFormData((prev) => ({ ...prev, content: val || '' }));
                     if (error) setError('');
-                    if (success) setSuccess('');
                   }}
                   height={480}
                 />
               </div>
 
-              {/* 提交按钮 */}
               <div className="text-center">
                 <button
                   type="submit"
                   className={`btn ${styles.submitBtn}`}
-                  disabled={loading}
+                  disabled={loading || initLoading}
                 >
                   {loading ? '提交中...' : '更新题目'}
                 </button>
@@ -240,42 +187,28 @@ export default function UpdateProblem() {
             </form>
           </div>
         </Col>
+
         <Col md={3}>
           <div className={styles.rightContainer}>
             <div className={styles.right}>
-              <p>分类</p>
-              {categories.map((category) => (
-                <div key={category.id}>
-                  <label className={styles.formLabel}>
-                    <input
-                      type="radio"
-                      name="category_id"
-                      value={category.id}
-                      onChange={handleInputChange}
-                    />
-                    {category.name}
-                  </label>
-                </div>
-              ))}
-            </div>
-            <div className={styles.right}>
               <div>
                 <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>标签（用逗号分隔）</label>
+                  <label className={styles.formLabel}>标签（逗号分隔）</label>
                   <input
                     type="text"
                     className={`form-control ${styles.formControl} ${styles.tagsInput}`}
                     name="tags"
                     value={formData.tags}
                     onChange={handleInputChange}
-                    placeholder="例如：数组,哈希表"
+                    placeholder="例如：数组,哈希"
+                    disabled={initLoading}
                   />
                 </div>
               </div>
             </div>
+
             <div className={styles.right}>
               <div>其他</div>
-              {/* 时间和内存限制 */}
               <div className="row">
                 <div className="col-md-6">
                   <div className={styles.formGroup}>
@@ -288,6 +221,7 @@ export default function UpdateProblem() {
                       onChange={handleInputChange}
                       min="100"
                       step="100"
+                      disabled={initLoading}
                     />
                   </div>
                 </div>
@@ -303,6 +237,7 @@ export default function UpdateProblem() {
                       onChange={handleInputChange}
                       min="16"
                       step="16"
+                      disabled={initLoading}
                     />
                   </div>
                 </div>
@@ -311,7 +246,24 @@ export default function UpdateProblem() {
           </div>
         </Col>
       </Row>
-      {successModal}
+
+      <Modal show={show} onHide={handleClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>提示</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>题目更新成功</Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="primary"
+            onClick={() => {
+              handleClose();
+              navigate(`/admin/updateproblem/${id}`);
+            }}
+          >
+            确定
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }

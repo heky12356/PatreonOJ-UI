@@ -1,33 +1,43 @@
-import { useState, useEffect } from 'react';
-import { Navbar, Container, Nav, NavDropdown } from 'react-bootstrap';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { getUserInfo, clearUserInfo } from '../../api/user';
+import { useEffect, useState } from 'react';
+import { Container, Nav, Navbar, NavDropdown } from 'react-bootstrap';
+import { message } from 'antd';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import {
+  logout,
+  getUserInfo,
+  getUserInfoUpdatedEventName,
+} from '../../api/user';
 import logoUrl from '../../assets/tgu.jpg';
 import styles from './HeaderNav.module.css';
 
 const UserPanel = ({ userInfo, setIsLogin, setUserInfo }) => {
   const [isAdmin, setIsAdmin] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const navigate = useNavigate();
 
-  // 检查用户是否为管理员
   useEffect(() => {
-    if (userInfo?.permissions?.includes('admin')) {
-      setIsAdmin(true);
-    }
+    setIsAdmin(Boolean(userInfo?.permissions?.includes('admin')));
   }, [userInfo]);
 
-  // 退出登录
-  const handleLogout = (e) => {
+  const handleLogout = async (e) => {
     e.preventDefault();
-    clearUserInfo();
-    setUserInfo(null);
-    setIsLogin(false);
-    navigate('/');
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try {
+      await logout();
+      setUserInfo(null);
+      setIsLogin(false);
+      navigate('/');
+    } catch {
+      message.error('退出登录失败，请重试');
+    } finally {
+      setLoggingOut(false);
+    }
   };
 
   return (
     <NavDropdown
-      title={userInfo?.username}
+      title={userInfo?.nickname || userInfo?.username}
       id="basic-nav-dropdown"
       className={styles.userDropdown}
       align="end"
@@ -38,15 +48,14 @@ const UserPanel = ({ userInfo, setIsLogin, setUserInfo }) => {
       <NavDropdown.Item as={Link} to="/settings">
         设置
       </NavDropdown.Item>
-      {/* <NavDropdown.Item as={Link} to="/rank">Rank</NavDropdown.Item> */}
-      {isAdmin && (
+      {isAdmin ? (
         <NavDropdown.Item as={Link} to="/admin">
           管理员面板
         </NavDropdown.Item>
-      )}
+      ) : null}
       <NavDropdown.Divider />
-      <NavDropdown.Item href="#" onClick={handleLogout}>
-        退出登录
+      <NavDropdown.Item href="#" onClick={handleLogout} disabled={loggingOut}>
+        {loggingOut ? '正在退出…' : '退出登录'}
       </NavDropdown.Item>
     </NavDropdown>
   );
@@ -57,13 +66,31 @@ export default function HeaderNav() {
   const [isLogin, setIsLogin] = useState(false);
   const location = useLocation();
 
-  // 获取用户信息
   useEffect(() => {
-    const info = getUserInfo();
-    setUserInfo(info);
-    if (info) {
-      setIsLogin(true);
-    }
+    const syncUserInfo = () => {
+      const info = getUserInfo();
+      setUserInfo(info);
+      setIsLogin(Boolean(info));
+    };
+
+    const handleUserInfoUpdated = () => {
+      syncUserInfo();
+    };
+
+    syncUserInfo();
+    window.addEventListener('storage', handleUserInfoUpdated);
+    window.addEventListener(
+      getUserInfoUpdatedEventName(),
+      handleUserInfoUpdated
+    );
+
+    return () => {
+      window.removeEventListener('storage', handleUserInfoUpdated);
+      window.removeEventListener(
+        getUserInfoUpdatedEventName(),
+        handleUserInfoUpdated
+      );
+    };
   }, []);
 
   return (
@@ -95,13 +122,6 @@ export default function HeaderNav() {
               className={`${styles.navLink} ${location.pathname.startsWith('/problem') ? styles.navLinkActive : ''}`}
             >
               题库
-            </Nav.Link>
-            <Nav.Link
-              as={Link}
-              to="/graph"
-              className={`${styles.navLink} ${location.pathname.startsWith('/graph') ? styles.navLinkActive : ''}`}
-            >
-              知识图谱
             </Nav.Link>
           </Nav>
           {isLogin ? (
