@@ -38,8 +38,8 @@ PatreonOJ-UI 是一个基于 React 19.1.0 构建的前端项目，用于 Patreon
 ### 安装依赖
 ```bash
 # 克隆项目
-git clone https://gitee.com/tju2025-grand-innovation/patreon-oj-ui.git
-cd patreon-oj-ui
+git clone --branch labVersion https://github.com/heky12356/PatreonOJ-UI.git
+cd PatreonOJ-UI
 
 # 安装依赖
 npm ci
@@ -55,7 +55,9 @@ npm run dev
 
 ### 生产环境构建
 
-部署说明与 Caddy/systemd 模板见后端仓库的 [部署指南](../PatreonOJ/部署指南.md)。默认开发代理为后端 `127.0.0.1:8080`、对象存储 `127.0.0.1:9000`；沿用其他端口时，在 `.env.local` 中设置 `VITE_API_PROXY_TARGET`、`VITE_OSS_PROXY_TARGET`。生产使用同源 `/api`、`/oss` 代理，不运行 Vite 开发服务器。
+从 GitHub 拉取前后端、配置 MySQL、构建镜像和部署的完整步骤见后端仓库的 [部署指南](https://github.com/heky12356/PatreonOJ/blob/master/%E9%83%A8%E7%BD%B2%E6%8C%87%E5%8D%97.md)。两个仓库使用默认目录名 `PatreonOJ`、`PatreonOJ-UI`，放在同一级；通过后端 `deploy/compose.sh` 构建和启动全部服务。
+
+默认开发代理为后端 `127.0.0.1:8080`、对象存储 `127.0.0.1:9000`；沿用其他端口时，在 `.env.local` 中设置 `VITE_API_PROXY_TARGET`、`VITE_OSS_PROXY_TARGET`。生产使用同源 `/api`、`/oss` 代理，由 Caddy 提供静态资源。
 
 ```bash
 npm test
