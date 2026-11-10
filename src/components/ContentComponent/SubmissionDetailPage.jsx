@@ -28,8 +28,9 @@ export default function SubmissionDetailPage() {
     load();
     return () => { disposed = true; clearTimeout(timer); };
   }, [submissionId, revision]);
+  const sourceCode = typeof record?.source_code === 'string' ? record.source_code : typeof record?.code === 'string' ? record.code : null;
   const copyCode = async () => {
-    try { await navigator.clipboard.writeText(record.code); message.success('代码已复制'); }
+    try { await navigator.clipboard.writeText(sourceCode); message.success('代码已复制'); }
     catch { message.error('复制失败，请手动选择代码'); }
   };
   if (error) return <div className={styles.page}><Alert type="error" showIcon message="无法查看这条提交" description={error} action={<Button onClick={() => setRevision((value) => value + 1)}>重试</Button>} /></div>;
@@ -44,10 +45,10 @@ export default function SubmissionDetailPage() {
     <small>{test.runtime ?? 0} ms · {test.memory_usage ?? 0} KB</small>
     {test.is_hidden ? <small>隐藏测试</small> : <details><summary>输入与输出</summary>{[['输入', test.input], ['期望输出', test.expected_output], ['实际输出', test.actual_output]].map(([label, content]) => <div key={label}><small>{label}</small><pre className={styles.io}>{content || '（空）'}</pre></div>)}</details>}
   </section>)}</div> : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={waiting ? '评测完成后显示测试点结果' : '暂无测试点结果'} />;
-  const codeContent = typeof record.code === 'string' ? <>
-    <div className={styles.heading}><Typography.Text type="secondary">{languageName(record.language)} · {record.code_length ?? new TextEncoder().encode(record.code).length} B</Typography.Text><Button size="small" icon={<CopyOutlined />} onClick={copyCode}>复制代码</Button></div>
-    <pre className={styles.code} aria-label="提交的源代码"><code>{record.code.split('\n').map((line, index) => <span className={styles.codeLine} key={index}><span className={styles.lineNumber} aria-hidden="true">{index + 1}</span>{line || '\u200b'}{'\n'}</span>)}</code></pre>
-  </> : <Empty description="代码不可见" />;
+  const codeContent = sourceCode !== null ? <>
+    <div className={styles.heading}><Typography.Text type="secondary">{languageName(record.language)} · {record.code_length ?? new TextEncoder().encode(sourceCode).length} B</Typography.Text><Button size="small" icon={<CopyOutlined />} onClick={copyCode}>复制代码</Button></div>
+    <pre className={styles.code} aria-label="提交的源代码"><code>{sourceCode.split('\n').map((line, index) => <span className={styles.codeLine} key={index}><span className={styles.lineNumber} aria-hidden="true">{index + 1}</span>{line || '\u200b'}{'\n'}</span>)}</code></pre>
+  </> : <Empty description="此提交没有可用的源代码" />;
   return <main className={styles.page}>
     <div className={styles.heading}><div><Space><Link to={'/problem/' + record.question_pk + '/submissions'}>提交记录</Link><span>/ #{shortSubmissionId(record.submission_id)}</span></Space><Typography.Title level={2} style={{ marginTop: 12 }}><Link to={'/problem/' + record.question_pk}>{record.question_id || ''} {record.question_title || '评测详情'}</Link></Typography.Title></div><Button icon={<ReloadOutlined />} onClick={() => setRevision((value) => value + 1)}>刷新</Button></div>
     <div className={styles.detailGrid}><div>

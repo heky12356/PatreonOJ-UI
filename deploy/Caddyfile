@@ -27,6 +27,8 @@
     reverse_proxy oss:9000
   }
   handle {
+    @document not path /assets/*
+    header @document Cache-Control "no-store"
     root * /srv
     try_files {path} /index.html
     file_server

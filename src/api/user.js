@@ -48,10 +48,12 @@ const normalizeUserInfo = (payload) => {
   const raw = unwrapApiData(payload);
   if (!raw || typeof raw !== 'object') return raw;
   const roles = normalizeRoles(raw.roles);
+  const directPermissions = normalizePermissions(raw.direct_permissions ?? raw.permissions);
   return {
     ...raw,
+    direct_permissions: directPermissions,
     avatar_url: typeof raw.avatar_url === 'string' && raw.avatar_url.startsWith('oss/') ? `/${raw.avatar_url}` : raw.avatar_url,
-    permissions: [...new Set([...normalizePermissions(raw.permissions), ...roles.flatMap((role) => role.permissions)])],
+    permissions: [...new Set([...directPermissions, ...roles.flatMap((role) => role.permissions)])],
     roles,
   };
 };
@@ -195,6 +197,12 @@ export const getUserByUuid = async (uuid, { operator_uuid } = {}) => {
   return { result };
 };
 
+export const getRoleCatalog = async () => {
+  const response = await axios.get('/api/user/roles');
+  const roles = unwrapApiData(response.data);
+  return Array.isArray(roles) ? roles : [];
+};
+
 export const getUserList = async (params = {}, { operator_uuid } = {}) => {
   const response = await axios.get(`${API_BASE_URL}/user/`, {
     params: cleanParams({
@@ -247,6 +255,7 @@ export const syncCurrentUserInfo = (patch = {}) => {
   const next = normalizeUserInfo({
     ...current,
     ...patch,
+    ...(Object.hasOwn(patch, 'permissions') && !Object.hasOwn(patch, 'direct_permissions') ? { direct_permissions: normalizePermissions(patch.permissions) } : {}),
   });
   saveUserInfo(next);
   return next;

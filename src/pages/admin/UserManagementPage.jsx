@@ -5,11 +5,12 @@ import {
   getUserByUuid,
   getUserId,
   getUserList,
+  getRoleCatalog,
   syncCurrentUserInfo,
   updateUserByUuid,
 } from '../../api/user.js';
 
-const DEFAULT_ROLE_OPTIONS = ['admin', 'moderator', 'teacher', 'student', 'user'];
+
 
 const parseRequestError = (error, fallback = '请求失败') => {
   const msg =
@@ -76,15 +77,28 @@ export default function UserManagementPage() {
   const [selectedRoleCodes, setSelectedRoleCodes] = useState([]);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState(null);
+  const [roleCatalog, setRoleCatalog] = useState([]);
+  const [roleCatalogError, setRoleCatalogError] = useState('');
+  const [roleCatalogLoading, setRoleCatalogLoading] = useState(true);
+  const [roleCatalogRevision, setRoleCatalogRevision] = useState(0);
+
+  useEffect(() => {
+    let disposed = false;
+    setRoleCatalogLoading(true);
+    getRoleCatalog().then((roles) => { if (!disposed) { setRoleCatalog(roles); setRoleCatalogError(''); } })
+      .catch((error) => { if (!disposed) { setRoleCatalog([]); setRoleCatalogError(parseRequestError(error, '角色列表加载失败')); } })
+      .finally(() => { if (!disposed) setRoleCatalogLoading(false); });
+    return () => { disposed = true; };
+  }, [operatorUuid, roleCatalogRevision]);
 
   const availableRoleOptions = useMemo(() => {
-    const codes = new Set(DEFAULT_ROLE_OPTIONS);
+    const codes = new Set(roleCatalog.map((role) => role.name));
     users.forEach((user) => {
       normalizeRoleCodes(user?.roles).forEach((code) => codes.add(code));
     });
     normalizeRoleCodes(userDetail?.roles).forEach((code) => codes.add(code));
     return Array.from(codes);
-  }, [userDetail, users]);
+  }, [userDetail, users, roleCatalog]);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -108,33 +122,24 @@ export default function UserManagementPage() {
   }, [filters, operatorUuid]);
 
   useEffect(() => {
+    let disposed = false;
     const fetchDetail = async () => {
-      if (!selectedUuid) {
-        setUserDetail(null);
-        setDetailError('');
-        return;
-      }
-
-      setDetailLoading(true);
-      setDetailError('');
+      if (!selectedUuid) { setUserDetail(null); setDetailError(''); return; }
+      setDetailLoading(true); setDetailError(''); setUserDetail(null);
       try {
-        const response = await getUserByUuid(selectedUuid, {
-          operator_uuid: operatorUuid,
-        });
+        const response = await getUserByUuid(selectedUuid, { operator_uuid: operatorUuid });
+        if (disposed) return;
         const detail = response?.result ?? null;
         setUserDetail(detail);
         setStatusValue(detail?.status || 'active');
-        setPermissionsValue(normalizePermissionTokens(detail?.permissions).join(', '));
+        setPermissionsValue(normalizePermissionTokens(detail?.direct_permissions ?? detail?.permissions).join(', '));
         setSelectedRoleCodes(normalizeRoleCodes(detail?.roles));
       } catch (error) {
-        setDetailError(parseRequestError(error, '获取用户详情失败'));
-        setUserDetail(null);
-      } finally {
-        setDetailLoading(false);
-      }
+        if (!disposed) { setDetailError(parseRequestError(error, '获取用户详情失败')); setUserDetail(null); }
+      } finally { if (!disposed) setDetailLoading(false); }
     };
-
     void fetchDetail();
+    return () => { disposed = true; };
   }, [operatorUuid, selectedUuid]);
 
   const handleSearchSubmit = (event) => {
@@ -172,7 +177,7 @@ export default function UserManagementPage() {
 
   const handleDetailReset = () => {
     setStatusValue(userDetail?.status || 'active');
-    setPermissionsValue(normalizePermissionTokens(userDetail?.permissions).join(', '));
+    setPermissionsValue(normalizePermissionTokens(userDetail?.direct_permissions ?? userDetail?.permissions).join(', '));
     setSelectedRoleCodes(normalizeRoleCodes(userDetail?.roles));
     setFeedback(null);
   };
@@ -213,7 +218,7 @@ export default function UserManagementPage() {
 
   const handleSave = async (event) => {
     event.preventDefault();
-    if (!selectedUuid) return;
+    if (!selectedUuid || userDetail?.uuid !== selectedUuid) return;
 
     setSaving(true);
     setFeedback(null);
@@ -223,7 +228,7 @@ export default function UserManagementPage() {
         {
           status: statusValue,
           permissions: normalizePermissionTokens(permissionsValue).join(','),
-          role_codes: selectedRoleCodes,
+          ...(JSON.stringify([...selectedRoleCodes].sort()) !== JSON.stringify(normalizeRoleCodes(userDetail?.roles).sort()) ? { role_codes: selectedRoleCodes } : {}),
         },
         {
           operator_uuid: operatorUuid,
@@ -234,7 +239,7 @@ export default function UserManagementPage() {
       if (updated) {
         setUserDetail(updated);
         setStatusValue(updated?.status || 'active');
-        setPermissionsValue(normalizePermissionTokens(updated?.permissions).join(', '));
+        setPermissionsValue(normalizePermissionTokens(updated?.direct_permissions ?? updated?.permissions).join(', '));
         setSelectedRoleCodes(normalizeRoleCodes(updated?.roles));
         if (selectedUuid === operatorUuid) {
           syncCurrentUserInfo(updated);
@@ -267,6 +272,7 @@ export default function UserManagementPage() {
         </Col>
       </Row>
 
+      {roleCatalogError && <Alert variant="danger">{roleCatalogError} <Button size="sm" variant="outline-danger" onClick={() => setRoleCatalogRevision((value) => value + 1)}>重新加载角色</Button></Alert>}
       {feedback ? (
         <Alert variant={feedback.type} dismissible onClose={() => setFeedback(null)}>
           {feedback.text}
@@ -490,6 +496,7 @@ export default function UserManagementPage() {
                     <Form.Label>角色</Form.Label>
                     <div className="border rounded p-3">
                       <Row className="g-2">
+                        {!availableRoleOptions.length && <Col className="text-secondary small">{roleCatalogLoading ? '正在加载角色…' : '暂无可用角色'}</Col>}
                         {availableRoleOptions.map((roleCode) => (
                           <Col xs={12} sm={6} key={roleCode}>
                             <Form.Check
@@ -498,7 +505,7 @@ export default function UserManagementPage() {
                               label={roleCode}
                               checked={selectedRoleCodes.includes(roleCode)}
                               onChange={() => handleRoleToggle(roleCode)}
-                              disabled={saving}
+                              disabled={saving || roleCatalogLoading}
                             />
                           </Col>
                         ))}
@@ -507,7 +514,7 @@ export default function UserManagementPage() {
                   </Form.Group>
 
                   <div className="d-flex gap-2">
-                    <Button type="submit" disabled={saving}>
+                    <Button type="submit" disabled={saving || detailLoading || userDetail?.uuid !== selectedUuid}>
                       {saving ? '保存中...' : '保存修改'}
                     </Button>
                     <Button
