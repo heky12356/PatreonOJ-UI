@@ -42,6 +42,7 @@ const normalizeSubmission = (payload) => {
 
   return {
     ...raw,
+    code: raw.source_code ?? (typeof raw.code === 'string' ? raw.code : undefined),
     submission_id: raw.submission_id ?? raw.id,
     question_pk: raw.question_pk ?? raw.question_number ?? raw.problem_id,
     question_number: raw.question_number ?? raw.question_pk ?? raw.problem_id,
