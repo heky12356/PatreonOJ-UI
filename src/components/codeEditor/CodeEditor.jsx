@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { Card, Select, Button, message, Spin, Tag } from 'antd';
+import { Card, Select, Button, message, Spin } from 'antd';
 import {
   CloudUploadOutlined,
   LoadingOutlined,
@@ -10,6 +10,8 @@ import { submitCode, getSubmissionResult } from '../../api/judge.js';
 import { getUserId, isLoggedIn } from '../../api/user.js';
 import { useNavigate } from 'react-router-dom';
 import styles from './CodeEditor.module.css';
+import VerdictTag from '../submissions/VerdictTag.jsx';
+import { getVerdict, VERDICTS, shortSubmissionId } from '../../utils/submission.js';
 
 const { Option } = Select;
 
@@ -84,6 +86,7 @@ function CodeEditor({ problem, onSubmit }) {
         }
 
         setSubmissionResult(result);
+        window.dispatchEvent(new CustomEvent('submission-evaluated'));
         setIsEvaluating(false);
         setOutput(formatSubmissionResult(result));
       } catch {
@@ -162,37 +165,10 @@ function CodeEditor({ problem, onSubmit }) {
     }
   };
 
-  const getStatusMessage = (status) => {
-    const map = {
-      pending: '等待评测',
-      judging: '评测中',
-      processing: '处理中',
-      accepted: '通过',
-      wrong_answer: '答案错误',
-      time_limit_exceeded: '超时',
-      memory_limit_exceeded: '内存超限',
-      runtime_error: '运行时错误',
-      compile_error: '编译错误',
-      system_error: '系统错误',
-      completed: '评测完成',
-      error: '评测失败',
-    };
-
-    return map[String(status || '').toLowerCase()] || String(status || '未知状态');
-  };
-
-  const getStatusColor = (status) => {
-    const s = String(status || '').toLowerCase();
-    if (s === 'accepted' || s === 'completed') return 'success';
-    if (s === 'pending' || s === 'judging' || s === 'processing') return 'processing';
-    if (s.includes('error') || s.includes('wrong')) return 'error';
-    return 'default';
-  };
-
   const formatSubmissionResult = (result) => {
     if (!result) return '';
 
-    let text = `评测结果: ${getStatusMessage(result.status)}\n`;
+    let text = `评测结果: ${getVerdict(result)} · ${VERDICTS[getVerdict(result)].text}\n`;
 
     if (result.pass_rate !== undefined) {
       text += `通过率: ${Math.round(Number(result.pass_rate) * 100)}%\n`;
@@ -300,9 +276,7 @@ function CodeEditor({ problem, onSubmit }) {
                 {submissionResult ? '评测结果' : isEvaluating ? '评测状态' : '运行结果'}
               </span>
               {submissionResult && (
-                <Tag color={getStatusColor(submissionResult.status)}>
-                  {getStatusMessage(submissionResult.status)}
-                </Tag>
+                <VerdictTag record={submissionResult} />
               )}
               {isEvaluating && (
                 <Spin indicator={<LoadingOutlined style={{ fontSize: 16 }} spin />} />
@@ -323,7 +297,7 @@ function CodeEditor({ problem, onSubmit }) {
               }}
             >
               <div style={{ fontSize: '0.9em', color: '#888' }}>
-                提交ID: {submissionId}
+                提交 ID: {shortSubmissionId(submissionId)}
               </div>
               {submissionResult && (
                 <Button

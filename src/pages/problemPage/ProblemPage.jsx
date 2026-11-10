@@ -16,9 +16,10 @@ import CodeEditor from '../../components/codeEditor/CodeEditor';
 import { EmptyState, ErrorState, LoadingState } from '../../components/feedback/AsyncState.jsx';
 import { getProblemById } from '../../api/getproblem';
 import { getProblemRecommendations } from '../../api/learning.js';
-import { getUserSubmissions } from '../../api/judge.js';
+import useCurrentUserUuid from '../../hooks/useCurrentUserUuid.js';
+import useMyProblemStatuses from '../../hooks/useMyProblemStatuses.js';
 import { getUserId, isLoggedIn } from '../../api/user';
-import { getUserQuestionSolved } from '../../api/userSolve.js';
+
 import { getRequestErrorMessage } from '../../utils/request.js';
 import styles from './ProblemPage.module.css';
 
@@ -30,7 +31,9 @@ function ProblemPage() {
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('description');
   const [recommendations, setRecommendations] = useState([]);
-  const [solveStatus, setSolveStatus] = useState('unknown');
+  const userUuid = useCurrentUserUuid();
+  const statuses = useMyProblemStatuses([question?.id]);
+  const solveStatus = statuses[question?.id] || 'unknown';
 
   const fetchQuestion = async () => {
     try {
@@ -73,50 +76,7 @@ function ProblemPage() {
     };
 
     void fetchRecommendations();
-  }, [question]);
-
-  useEffect(() => {
-    const fetchSolveStatus = async () => {
-      if (!question?.id || !isLoggedIn()) {
-        setSolveStatus('unknown');
-        return;
-      }
-
-      const uuid = getUserId();
-      if (!uuid) {
-        setSolveStatus('unknown');
-        return;
-      }
-
-      try {
-        const solvedResp = await getUserQuestionSolved({
-          uuid,
-          id: question.id,
-        });
-
-        if (solvedResp?.solved) {
-          setSolveStatus('solved');
-          return;
-        }
-
-        const submissionResp = await getUserSubmissions(uuid, {
-          problem_id: question.id,
-          page: 1,
-          size: 1,
-          operator_uuid: uuid,
-          user_uuid: uuid,
-        });
-
-        setSolveStatus(
-          Number(submissionResp?.total ?? 0) > 0 ? 'attempted' : 'unsolved'
-        );
-      } catch {
-        setSolveStatus('unknown');
-      }
-    };
-
-    void fetchSolveStatus();
-  }, [question]);
+  }, [question, userUuid]);
 
   const handleCopyProblem = async () => {
     if (!question) return;
@@ -241,16 +201,11 @@ function ProblemPage() {
 
   return (
     <div className={styles.content}>
-      <div
-        className={`${styles.problemStatusBanner} ${solveStatusMeta.className}`}
-      >
-        {solveStatusMeta.text}
-      </div>
-
       <div className={styles['problem-header']}>
-        <h1>
-          {question.question_id || question.id}. {question.title}
-        </h1>
+        <div className={styles.titleRow}>
+          <h1>{question.question_id || question.id}. {question.title}</h1>
+          <span role="status" className={`${styles.problemStatusBadge} ${solveStatusMeta.className}`}>{solveStatusMeta.text.replace('当前状态：', '')}</span>
+        </div>
         <div className={styles['problem-meta']}>
           <div className={styles['problem-info']}>
             <div className={styles['info-item']}>

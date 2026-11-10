@@ -1,5 +1,6 @@
 ﻿import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ConfigProvider } from 'antd';
+import zhCN from 'antd/locale/zh_CN';
 import MainLayout from './MainLayout.jsx';
 import Login from './pages/login/Login.jsx';
 import Register from './pages/register/Register.jsx';
@@ -8,6 +9,7 @@ import QuestionBank from './pages/questionBank/QuestionBank.jsx';
 import ProblemPage from './pages/problemPage/ProblemPage.jsx';
 import SubmissionDetailPage from './components/ContentComponent/SubmissionDetailPage.jsx';
 import Profile from './pages/profile/profile.jsx';
+import UserHomePage from './pages/profile/UserHomePage.jsx';
 import AddProblem from './pages/addproblem';
 import UpdateProblem from './pages/updateproblem';
 import Updatebase from './pages/updatebase/update.jsx';
@@ -33,7 +35,7 @@ const whiteTheme = {
 
 function App() {
   return (
-    <ConfigProvider theme={whiteTheme}>
+    <ConfigProvider theme={whiteTheme} locale={zhCN}>
       <Router>
         <Routes>
           <Route path="/" element={<MainLayout />}>
@@ -43,6 +45,7 @@ function App() {
             <Route path="study" element={<StudyComponent />} />
             <Route path="problem" element={<QuestionBank />} />
             <Route path="profile" element={<Profile />} />
+            <Route path="users/:id" element={<UserHomePage />} />
             <Route path="settings" element={<UserSettingPage />} />
             <Route path="problem/:id" element={<ProblemPage />} />
             <Route path="problem/:id/graph" element={<QuestionGraphPage />} />

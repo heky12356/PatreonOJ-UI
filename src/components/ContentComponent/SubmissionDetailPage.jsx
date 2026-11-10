@@ -1,275 +1,68 @@
-﻿import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import {
-  Card,
-  Tag,
-  Button,
-  Spin,
-  Alert,
-  Progress,
-  Descriptions,
-  Table,
-  Space,
-  Statistic,
-  Row,
-  Col,
-} from 'antd';
-import {
-  ArrowLeftOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ClockCircleOutlined,
-  DatabaseOutlined,
-  CodeOutlined,
-} from '@ant-design/icons';
+import { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { Alert, Button, Card, Empty, Space, Spin, Tabs, Typography, message } from 'antd';
+import { CopyOutlined, ReloadOutlined } from '@ant-design/icons';
 import { getSubmissionResult } from '../../api/judge.js';
-import styles from './SubmissionDetailPage.module.css';
+import { getVerdict, VERDICTS, formatDate, languageName, shortSubmissionId } from '../../utils/submission.js';
+import VerdictTag from '../submissions/VerdictTag.jsx';
+import styles from '../submissions/Record.module.css';
 
-function SubmissionDetailPage() {
+export default function SubmissionDetailPage() {
   const { submissionId } = useParams();
-  const navigate = useNavigate();
-  const [submissionData, setSubmissionData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
+  const [record, setRecord] = useState(null);
+  const [error, setError] = useState('');
+  const [revision, setRevision] = useState(0);
   useEffect(() => {
-    const fetchSubmissionDetail = async () => {
-      if (!submissionId) {
-        setError('提交ID不存在');
-        setLoading(false);
-        return;
-      }
-
+    let disposed = false;
+    let timer;
+    setRecord(null); setError('');
+    const load = async () => {
       try {
-        setLoading(true);
         const result = await getSubmissionResult(submissionId);
-        setSubmissionData(result);
-      } catch (err) {
-        console.error('fetch submission detail failed:', err);
-        setError(err?.message || '获取评测结果失败');
-      } finally {
-        setLoading(false);
-      }
+        if (disposed) return;
+        setRecord(result); setError('');
+        if (['PENDING', 'JUDGING'].includes(getVerdict(result))) timer = setTimeout(load, 1500);
+        else window.dispatchEvent(new CustomEvent('submission-evaluated'));
+      } catch (err) { if (!disposed) setError(err.message || '读取提交失败'); }
     };
-
-    fetchSubmissionDetail();
-  }, [submissionId]);
-
-  const handleGoBack = () => {
-    navigate(-1);
+    load();
+    return () => { disposed = true; clearTimeout(timer); };
+  }, [submissionId, revision]);
+  const copyCode = async () => {
+    try { await navigator.clipboard.writeText(record.code); message.success('代码已复制'); }
+    catch { message.error('复制失败，请手动选择代码'); }
   };
-
-  const getStatusInfo = (status) => {
-    const statusMap = {
-      completed: { color: 'success', icon: <CheckCircleOutlined />, text: '评测完成' },
-      accepted: { color: 'success', icon: <CheckCircleOutlined />, text: '通过' },
-      processing: { color: 'processing', icon: <ClockCircleOutlined />, text: '评测中' },
-      pending: { color: 'default', icon: <ClockCircleOutlined />, text: '等待评测' },
-      error: { color: 'error', icon: <CloseCircleOutlined />, text: '评测失败' },
-      wrong_answer: { color: 'error', icon: <CloseCircleOutlined />, text: '答案错误' },
-    };
-    return statusMap[String(status || '').toLowerCase()] || {
-      color: 'default',
-      icon: null,
-      text: String(status || '-'),
-    };
-  };
-
-  const formatTime = (timeString) => {
-    if (!timeString) return '-';
-    return new Date(timeString).toLocaleString('zh-CN');
-  };
-
-  const testCaseColumns = [
-    {
-      title: '用例编号',
-      dataIndex: 'index',
-      key: 'index',
-      width: 100,
-      render: (_, __, index) => `#${index + 1}`,
-    },
-    {
-      title: '状态',
-      dataIndex: 'is_correct',
-      key: 'is_correct',
-      width: 100,
-      render: (isCorrect) => (
-        <Tag color={isCorrect ? 'success' : 'error'} icon={isCorrect ? <CheckCircleOutlined /> : <CloseCircleOutlined />}>
-          {isCorrect ? '通过' : '失败'}
-        </Tag>
-      ),
-    },
-    {
-      title: '运行时间',
-      dataIndex: 'runtime',
-      key: 'runtime',
-      width: 120,
-      render: (runtime) => (
-        <span>
-          <ClockCircleOutlined style={{ marginRight: 4 }} />
-          {runtime ?? 0}ms
-        </span>
-      ),
-    },
-    {
-      title: '内存使用',
-      dataIndex: 'memory_usage',
-      key: 'memory_usage',
-      width: 120,
-      render: (memory) => (
-        <span>
-          <DatabaseOutlined style={{ marginRight: 4 }} />
-          {memory || 0}KB
-        </span>
-      ),
-    },
-  ];
-
-  if (loading) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.loading}>
-          <Spin size="large" />
-          <p>正在加载评测结果...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className={styles.container}>
-        <Alert
-          message="加载失败"
-          description={error}
-          type="error"
-          showIcon
-          action={
-            <Button size="small" onClick={handleGoBack}>
-              返回
-            </Button>
-          }
-        />
-      </div>
-    );
-  }
-
-  if (!submissionData) {
-    return (
-      <div className={styles.container}>
-        <Alert
-          message="未找到评测结果"
-          description="该提交记录不存在或已被删除"
-          type="warning"
-          showIcon
-          action={
-            <Button size="small" onClick={handleGoBack}>
-              返回
-            </Button>
-          }
-        />
-      </div>
-    );
-  }
-
-  const statusInfo = getStatusInfo(submissionData.status);
-  const passRate = Number(submissionData.pass_rate || 0);
-  const questionPk =
-    submissionData.question_pk ?? submissionData.problem_id ?? submissionData.question_number;
-
-  return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <Button icon={<ArrowLeftOutlined />} onClick={handleGoBack} className={styles.backButton}>
-          返回
-        </Button>
-        <h1 className={styles.title}>评测结果详情</h1>
-      </div>
-
-      <Card className={styles.infoCard} title="提交信息">
-        <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} md={6}>
-            <Statistic
-              title="评测状态"
-              value={statusInfo.text}
-              prefix={statusInfo.icon}
-              valueStyle={{ color: statusInfo.color === 'success' ? '#52c41a' : statusInfo.color === 'error' ? '#ff4d4f' : '#1890ff' }}
-            />
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Statistic
-              title="通过率"
-              value={Math.round(passRate * 100)}
-              suffix="%"
-              valueStyle={{ color: passRate === 1 ? '#52c41a' : passRate > 0.5 ? '#faad14' : '#ff4d4f' }}
-            />
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Statistic
-              title="通过用例"
-              value={`${submissionData.passed_cases || 0}/${submissionData.total_cases || 0}`}
-            />
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Statistic title="题目主键" value={questionPk || '-'} prefix={<CodeOutlined />} />
-          </Col>
-        </Row>
-
-        <div className={styles.progressSection}>
-          <h4>测试用例通过情况</h4>
-          <Progress
-            percent={Math.round(passRate * 100)}
-            status={passRate === 1 ? 'success' : 'active'}
-            strokeColor={passRate === 1 ? '#52c41a' : passRate > 0.5 ? '#faad14' : '#ff4d4f'}
-          />
-        </div>
-
-        <Descriptions column={2} className={styles.descriptions}>
-          <Descriptions.Item label="提交ID">{submissionData.submission_id}</Descriptions.Item>
-          <Descriptions.Item label="用户ID">{submissionData.user_id}</Descriptions.Item>
-          <Descriptions.Item label="提交时间">{formatTime(submissionData.created_at)}</Descriptions.Item>
-          <Descriptions.Item label="更新时间">{formatTime(submissionData.updated_at)}</Descriptions.Item>
-        </Descriptions>
+  if (error) return <div className={styles.page}><Alert type="error" showIcon message="无法查看这条提交" description={error} action={<Button onClick={() => setRevision((value) => value + 1)}>重试</Button>} /></div>;
+  if (!record) return <div className={styles.page}><Spin /> 正在读取提交…</div>;
+  const verdict = getVerdict(record);
+  const waiting = ['PENDING', 'JUDGING'].includes(verdict);
+  const cases = record.results || [];
+  const passed = record.passed_cases ?? cases.filter((test) => test.is_correct).length;
+  const total = record.total_cases ?? cases.length;
+  const caseContent = cases.length ? <div className={styles.caseGrid}>{cases.map((test, index) => <section className={styles.testCase} key={test.test_case_id || index}>
+    <header><strong>#{index + 1}</strong><VerdictTag record={{ status: 'completed', verdict: test.verdict || (test.is_correct ? 'AC' : 'WA') }} /></header>
+    <small>{test.runtime ?? 0} ms · {test.memory_usage ?? 0} KB</small>
+    {test.is_hidden ? <small>隐藏测试</small> : <details><summary>输入与输出</summary>{[['输入', test.input], ['期望输出', test.expected_output], ['实际输出', test.actual_output]].map(([label, content]) => <div key={label}><small>{label}</small><pre className={styles.io}>{content || '（空）'}</pre></div>)}</details>}
+  </section>)}</div> : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={waiting ? '评测完成后显示测试点结果' : '暂无测试点结果'} />;
+  const codeContent = typeof record.code === 'string' ? <>
+    <div className={styles.heading}><Typography.Text type="secondary">{languageName(record.language)} · {record.code_length ?? new TextEncoder().encode(record.code).length} B</Typography.Text><Button size="small" icon={<CopyOutlined />} onClick={copyCode}>复制代码</Button></div>
+    <pre className={styles.code} aria-label="提交的源代码"><code>{record.code.split('\n').map((line, index) => <span className={styles.codeLine} key={index}><span className={styles.lineNumber} aria-hidden="true">{index + 1}</span>{line || '\u200b'}{'\n'}</span>)}</code></pre>
+  </> : <Empty description="代码不可见" />;
+  return <main className={styles.page}>
+    <div className={styles.heading}><div><Space><Link to={'/problem/' + record.question_pk + '/submissions'}>提交记录</Link><span>/ #{shortSubmissionId(record.submission_id)}</span></Space><Typography.Title level={2} style={{ marginTop: 12 }}><Link to={'/problem/' + record.question_pk}>{record.question_id || ''} {record.question_title || '评测详情'}</Link></Typography.Title></div><Button icon={<ReloadOutlined />} onClick={() => setRevision((value) => value + 1)}>刷新</Button></div>
+    <div className={styles.detailGrid}><div>
+      <Card className={styles.card}>
+        <div className={styles.heading}><div><VerdictTag record={record} /><Typography.Title level={3} style={{ marginTop: 12, marginBottom: 0 }}>{VERDICTS[verdict].text}</Typography.Title></div><Typography.Text type="secondary">{waiting ? <Spin size="small" /> : total ? passed + ' / ' + total + ' 个测试点通过' : '—'}</Typography.Text></div>
+        {record.error_message && <Alert type={verdict === 'SE' ? 'warning' : 'error'} showIcon message={record.message || VERDICTS[verdict].text} description={<pre className={styles.io}>{record.error_message}</pre>} />}
+        <Tabs defaultActiveKey="code" items={[{ key: 'code', label: '源代码', children: codeContent }, { key: 'cases', label: '测试点 (' + total + ')', children: caseContent }]} />
       </Card>
-
-      <Card className={styles.testCasesCard} title={`测试用例详情 (${submissionData.results?.length || 0} 个用例)`}>
-        {submissionData.results && submissionData.results.length > 0 ? (
-          <Table
-            columns={testCaseColumns}
-            dataSource={submissionData.results}
-            rowKey={(_, index) => index}
-            pagination={false}
-            scroll={{ x: 1200 }}
-            className={styles.testCaseTable}
-            rowClassName={(record) => (record.is_correct ? styles.passedRow : styles.failedRow)}
-          />
-        ) : (
-          <Alert
-            message="暂无测试用例数据"
-            description="该提交可能还在评测中，或评测过程出现了问题"
-            type="info"
-            showIcon
-          />
-        )}
-      </Card>
-
-      <div className={styles.actions}>
-        <Space>
-          <Button onClick={handleGoBack}>返回上一页</Button>
-          <Button
-            type="primary"
-            onClick={() => {
-              if (!questionPk) return;
-              navigate(`/problem/${questionPk}`);
-            }}
-            disabled={!questionPk}
-          >
-            重新提交
-          </Button>
-        </Space>
-      </div>
-    </div>
-  );
+    </div><aside><Card title="提交信息" className={styles.card}><dl className={styles.meta}>
+      <div><dt>用户</dt><dd>{record.username ? <Link to={'/users/' + record.user_id}>{record.username}</Link> : '已注销用户'}</dd></div>
+      <div><dt>提交编号</dt><dd title={record.submission_id} className="font-monospace">#{shortSubmissionId(record.submission_id)}</dd></div>
+      <div><dt>提交日期</dt><dd>{formatDate(record.created_at)}</dd></div>
+      <div><dt>语言</dt><dd>{languageName(record.language)}</dd></div>
+      <div><dt>运行用时</dt><dd>{waiting ? '—' : (record.runtime_ms ?? 0) + ' ms'}</dd></div>
+      <div><dt>内存使用</dt><dd>{waiting ? '—' : (record.memory_kb ?? 0) + ' KB'}</dd></div>
+    </dl></Card><Link to={'/problem/' + record.question_pk}>返回题目并再次提交 →</Link></aside></div>
+  </main>;
 }
-
-export default SubmissionDetailPage;

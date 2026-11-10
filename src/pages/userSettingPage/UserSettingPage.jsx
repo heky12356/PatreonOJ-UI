@@ -30,6 +30,7 @@ export default function UserSettingPage() {
 
   const [nickname, setNickname] = useState('');
   const [email, setEmail] = useState('');
+  const [showActivity, setShowActivity] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
 
   const [selectedFile, setSelectedFile] = useState(null);
@@ -51,6 +52,7 @@ export default function UserSettingPage() {
   const hydrateProfileForm = (profile) => {
     setNickname(profile?.nickname ?? '');
     setEmail(profile?.email ?? '');
+    setShowActivity(profile?.show_activity ?? true);
   };
 
   const fetchUser = async () => {
@@ -102,6 +104,7 @@ export default function UserSettingPage() {
         {
           nickname: nickname.trim(),
           email: email.trim(),
+          show_activity: showActivity,
         },
         {
           operator_uuid: operatorUuid,
@@ -235,7 +238,7 @@ export default function UserSettingPage() {
                     {userProfile?.email || '未设置邮箱'}
                   </div>
                   <div className="text-secondary small font-monospace mt-1">
-                    {userProfile?.uuid || targetUuid}
+                    {userProfile?.username || '—'}
                   </div>
                 </div>
               </div>
@@ -248,6 +251,8 @@ export default function UserSettingPage() {
             <Card.Header>编辑基础资料</Card.Header>
             <Card.Body>
               <Form onSubmit={handleProfileSave}>
+                <Form.Check id="show-activity" type="switch" label="公开做题详情" checked={showActivity} disabled={savingProfile || userLoading} onChange={(event) => setShowActivity(event.target.checked)} />
+                <p className="text-secondary small mt-2 mb-4">默认公开。关闭后，其他用户只能查看基础资料，无法查看你的做题统计、题目记录和提交详情。保存资料后生效。</p>
                 <Row className="g-3">
                   <Col xs={12} md={6}>
                     <Form.Group>

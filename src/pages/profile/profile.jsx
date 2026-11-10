@@ -238,7 +238,7 @@ export default function Profile({ uuid } = {}) {
                         <div
                           className={`${styles.userInfoValue} ${styles.monospaceText}`}
                         >
-                          {userProfile.uuid || targetUuid}
+                          {userProfile.username || '—'}
                         </div>
                       </div>
 

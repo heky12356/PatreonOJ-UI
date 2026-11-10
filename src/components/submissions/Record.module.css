@@ -1,0 +1,29 @@
+.page { max-width: 1320px; margin: 0 auto; padding: 36px 24px 56px; color: #26362b; }
+.heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+.heading h2 { margin: 0 0 6px; font-size: 26px; }
+.card { margin-bottom: 22px; border-color: #e9eee9; border-radius: 14px; }
+.filters { margin-bottom: 24px; }
+.notice { margin-bottom: 18px; }
+.detailGrid { display: grid; grid-template-columns: minmax(0,1fr) 300px; gap: 24px; align-items: start; }
+.stats { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 18px; margin-bottom: 24px; }
+.stat { padding: 22px; background: #f6f8f5; border: 1px solid #e8ede7; border-radius: 12px; }
+.stat span { display: block; color: #748071; font-size: 13px; margin-bottom: 9px; }
+.stat strong { font-size: 28px; color: #405c44; }
+.meta { display: grid; gap: 18px; margin: 0; }
+.meta dt { color: #788277; font-size: 12px; font-weight: 400; margin-bottom: 4px; }
+.meta dd { margin: 0; overflow-wrap: anywhere; }
+.code { margin: 0; padding: 12px 0; max-height: 660px; overflow: auto; font: 13px/1.9 Consolas, 'SFMono-Regular', monospace; background: #fbfcfa; color: #253b2a; tab-size: 4; border: 1px solid #eef1eb; border-radius: 8px; }
+.codeLine { display: inline; white-space: pre; }
+.lineNumber { display: inline-block; min-width: 48px; padding-right: 16px; margin-right: 16px; text-align: right; color: #a2aa9e; border-right: 1px solid #e4e9df; user-select: none; }
+.caseGrid { display: grid; grid-template-columns: repeat(auto-fill,minmax(185px,1fr)); gap: 12px; }
+.testCase { border: 1px solid #e7ece4; border-radius: 9px; padding: 15px; }
+.testCase header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.testCase small { display: block; color: #7d8579; margin-top: 9px; }
+.testCase details { margin-top: 10px; font-size: 12px; }
+.io { max-height: 160px; overflow: auto; padding: 8px; background: #f4f6f2; white-space: pre; }
+.profileHero { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+.profileHero h1 { margin: 0 0 4px; font-size: 30px; }
+.profileHero p { margin: 5px 0 0; color: #7d877b; }
+:global(.oj-submission-table th), :global(.oj-submission-table td) { white-space: nowrap; }
+:global(.oj-submission-table a) { color: #49664b; }
+@media(max-width:800px) { .page { padding: 24px 12px 40px; } .detailGrid { grid-template-columns: minmax(0,1fr); } .stats { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; } .stat { padding: 16px; } .heading h2 { font-size: 22px; } }

@@ -31,6 +31,13 @@ const normalizeSolvedIds = (payload) => {
   return [];
 };
 
+export async function getMyProblemStatuses(ids, { signal, expectedUuid } = {}) {
+  const { data } = await axios.get('/api/user/me/problem-status', { params: { ids: ids.join(',') }, signal });
+  const body = data?.data ?? data?.result ?? data;
+  if (expectedUuid && body.user_uuid !== expectedUuid) throw new Error('登录状态已变化，请重新登录');
+  return body.statuses || {};
+}
+
 export async function getUserSolvedQuestionIds(uuid) {
   if (!uuid) {
     return [];

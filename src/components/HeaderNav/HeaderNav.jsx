@@ -42,6 +42,7 @@ const UserPanel = ({ userInfo, setIsLogin, setUserInfo }) => {
       className={styles.userDropdown}
       align="end"
     >
+      <NavDropdown.Item as={Link} to={'/users/' + userInfo?.uuid}>我的主页</NavDropdown.Item>
       <NavDropdown.Item as={Link} to="/profile">
         个人信息
       </NavDropdown.Item>

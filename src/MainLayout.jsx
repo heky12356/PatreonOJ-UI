@@ -1,10 +1,12 @@
 import { Outlet } from 'react-router-dom';
+import useCurrentUserUuid from './hooks/useCurrentUserUuid.js';
 import HeaderNav from './components/HeaderNav/HeaderNav';
 import { Container } from 'react-bootstrap';
 import './main.css' 
 
 
 const MainLayout = () => {
+  const uuid = useCurrentUserUuid();
   return (
     <div style={{ 
       backgroundColor: 'white', 
@@ -13,7 +15,7 @@ const MainLayout = () => {
     }}>
       <HeaderNav />
       <Container fluid style={{ backgroundColor: 'white', width: '100%' }}>
-        <Outlet />
+        <Outlet key={uuid || 'anonymous'} />
       </Container>   
     </div>
   );

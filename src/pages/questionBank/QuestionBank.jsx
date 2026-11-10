@@ -3,9 +3,9 @@ import { Col, Container, Row } from 'react-bootstrap';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FaPlus, FaSearch } from 'react-icons/fa';
 import { getProblem } from '../../api/getproblem';
-import { getUserSubmissions } from '../../api/judge.js';
-import { getUserId, hasPermission, isLoggedIn } from '../../api/user.js';
-import { getUserSolvedQuestionIds } from '../../api/userSolve.js';
+import useMyProblemStatuses from '../../hooks/useMyProblemStatuses.js';
+import { hasPermission, isLoggedIn } from '../../api/user.js';
+
 import {
   EmptyState,
   ErrorState,
@@ -22,7 +22,6 @@ const DIFFICULTY_TEXT = {
 };
 
 export default function QuestionBank() {
-  const userUuid = getUserId();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -40,7 +39,7 @@ export default function QuestionBank() {
   const [pageSize, setPageSize] = useState(10);
   const [totalCnt, setTotalCnt] = useState(0);
   const [difficult, setDifficult] = useState('');
-  const [solveStatusMap, setSolveStatusMap] = useState({});
+  const solveStatusMap = useMyProblemStatuses(questions.map((question) => question.id));
 
   const fetchQuestions = async ({ q = currentQuery, page = pageIdx } = {}) => {
     try {
@@ -72,75 +71,6 @@ export default function QuestionBank() {
     void fetchQuestions();
   }, [currentQuery, pageIdx, difficult]);
 
-  useEffect(() => {
-    const fetchSolveStatuses = async () => {
-      if (!isLoggedIn() || !userUuid || questions.length === 0) {
-        setSolveStatusMap({});
-        return;
-      }
-
-      try {
-        const solvedIds = await getUserSolvedQuestionIds(userUuid);
-        const solvedSet = new Set(
-          solvedIds
-            .map((item) => Number(item))
-            .filter((item) => Number.isFinite(item) && item > 0)
-        );
-
-        const nextStatusMap = Object.fromEntries(
-          questions.map((question) => {
-            const questionPk = Number(question?.id);
-            const solved =
-              Number.isFinite(questionPk) && solvedSet.has(questionPk);
-            return [questionPk, solved ? 'solved' : 'unsolved'];
-          })
-        );
-
-        const unresolvedQuestions = questions.filter((question) => {
-          const questionPk = Number(question?.id);
-          return Number.isFinite(questionPk) && !solvedSet.has(questionPk);
-        });
-
-        const attemptedResults = await Promise.all(
-          unresolvedQuestions.map(async (question) => {
-            const questionPk = Number(question?.id);
-            try {
-              const submissionData = await getUserSubmissions(userUuid, {
-                problem_id: questionPk,
-                page: 1,
-                size: 1,
-                operator_uuid: userUuid,
-                user_uuid: userUuid,
-              });
-
-              return {
-                questionPk,
-                attempted: Number(submissionData?.total ?? 0) > 0,
-              };
-            } catch {
-              return {
-                questionPk,
-                attempted: false,
-              };
-            }
-          })
-        );
-
-        for (const item of attemptedResults) {
-          if (item?.attempted) {
-            nextStatusMap[item.questionPk] = 'attempted';
-          }
-        }
-
-        setSolveStatusMap(nextStatusMap);
-      } catch {
-        setSolveStatusMap({});
-      }
-    };
-
-    void fetchSolveStatuses();
-  }, [questions, userUuid]);
-
   const parseTags = (tagsString) => {
     if (!tagsString) return [];
     return String(tagsString)
@@ -164,7 +94,9 @@ export default function QuestionBank() {
       };
     }
 
-    const state = solveStatusMap[Number(questionPk)] || 'unsolved';
+    const state = solveStatusMap[Number(questionPk)];
+    if (!state) return { text: '加载中', className: styles.statusLoginHint };
+    if (state === 'unknown') return { text: '暂不可用', className: styles.statusLoginHint };
     if (state === 'solved') {
       return {
         text: '已通过',

@@ -97,6 +97,11 @@ const getOssUploadUrl = async ({ filename, path }) => {
   return unwrapApiData(response.data);
 };
 
+export const getUserHome = async (identifier, params = {}) => {
+  const response = await axios.get('/api/user/' + encodeURIComponent(identifier) + '/home', { params });
+  return unwrapApiData(response.data);
+};
+
 export const register = async (username, password) => {
   const response = await axios.post(`${API_BASE_URL}/user/register`, {
     username,
