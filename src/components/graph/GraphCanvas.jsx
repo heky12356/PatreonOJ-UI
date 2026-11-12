@@ -36,7 +36,7 @@ export default function GraphCanvas({ nodes, edges, rootId = '', selectedId, onS
       svg.call(zoom.transform, d3.zoomIdentity.translate(width / 2 - scale * (xs[0] + xs[1]) / 2, height / 2 - scale * (ys[0] + ys[1]) / 2).scale(scale));
     };
     fit();
-    group.call(d3.drag().on('start', (event, d) => { if (!event.active) simulation.alphaTarget(0.2).restart(); d.fx = d.x; d.fy = d.y; }).on('drag', (event, d) => { d.fx = event.x; d.fy = event.y; }).on('end', (event, d) => { if (!event.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; }));
+    group.call(d3.drag().clickDistance(4).on('start', (_event, d) => { d.fx = d.x; d.fy = d.y; }).on('drag', (event, d) => { simulation.alphaTarget(0.2).restart(); d.fx = event.x; d.fy = event.y; }).on('end', (event, d) => { if (!event.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; }));
     actions.current = { fit, zoom: factor => svg.call(zoom.scaleBy, factor) };
     return () => { simulation.stop(); actions.current = {}; svg.on('.zoom', null); };
   }, [nodes, edges, rootId, onSelect, markerPrefix]);
