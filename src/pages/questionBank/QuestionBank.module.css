@@ -267,3 +267,19 @@
   display: flex;
   justify-content: center;
 }
+
+/* Keep long imported identifiers and titles inside their own columns. */
+.table { table-layout: fixed; min-width: 740px; }
+.table th:nth-child(1) { width: 145px !important; }
+.table th:nth-child(2) { width: 31%; }
+.table th:nth-child(3) { width: 108px !important; }
+.table th:nth-child(4) { width: 85px !important; }
+.table th, .table td { padding: 12px; }
+.questionNumber { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 12px/1.7 Consolas,monospace; }
+.link { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; line-height: 1.6; }
+.tag { max-width: 100%; overflow-wrap: anywhere; }
+.searchInput { min-width: 0; }
+.card, .tableContainer { min-width: 0; max-width: 100%; }
+
+.tableHint { display: none; }
+@media(max-width: 767px) { .tableHint { display: block; font-size: 11px; color: #7c8795; margin: 12px 0 0; } }

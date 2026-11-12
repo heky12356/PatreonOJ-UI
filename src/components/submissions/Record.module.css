@@ -27,3 +27,8 @@
 :global(.oj-submission-table th), :global(.oj-submission-table td) { white-space: nowrap; }
 :global(.oj-submission-table a) { color: #49664b; }
 @media(max-width:800px) { .page { padding: 24px 12px 40px; } .detailGrid { grid-template-columns: minmax(0,1fr); } .stats { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; } .stat { padding: 16px; } .heading h2 { font-size: 22px; } }
+
+.heading > div, .detailGrid > *, .profileHero > div { min-width: 0; max-width: 100%; }
+.heading h2, .heading h1, .profileHero h1 { overflow-wrap: anywhere; }
+:global(.oj-submission-table) { max-width: 100%; min-width: 0; }
+:global(.oj-submission-table .ant-table) { table-layout: fixed; }

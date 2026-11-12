@@ -122,10 +122,11 @@ export default function HeaderNav() {
             <Nav.Link
               as={Link}
               to="/problem"
-              className={`${styles.navLink} ${location.pathname.startsWith('/problem') ? styles.navLinkActive : ''}`}
+              className={`${styles.navLink} ${location.pathname.startsWith('/problem') && !location.pathname.endsWith('/graph') ? styles.navLinkActive : ''}`}
             >
               题库
             </Nav.Link>
+            <Nav.Link as={Link} to="/graph" className={`${styles.navLink} ${location.pathname === '/graph' || location.pathname.endsWith('/graph') ? styles.navLinkActive : ''}`}>知识图谱</Nav.Link>
           </Nav>
           {isLogin ? (
             <UserPanel

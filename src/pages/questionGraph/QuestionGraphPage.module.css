@@ -157,3 +157,12 @@
     height: 540px;
   }
 }
+
+.header { flex-wrap: wrap; }
+.header > div:first-child { min-width: 0; flex: 1; }
+.subtitle, .detailTitle { overflow-wrap: anywhere; }
+.treeNodeBtn { width: auto; min-width: 0; }
+.treeNodeTitle { min-width: 0; flex: 1; overflow-wrap: anywhere; }
+.treeNodeDiff { flex-shrink: 0; }
+.statGrid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+.graphBody { min-width: 0; }

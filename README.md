@@ -4,6 +4,8 @@
 
 站点主题切换、首页幻灯片配置及私有主题部署，见 [主题与幻灯片说明](THEMES.md)。
 
+题目编辑器已支持公开样例、自定义输入、输出对照和停止自测；自测不会改变正式提交和通过状态。Header 的知识图谱入口按标签浏览题目关系，再进入单题图谱。接口和限制见后端的 [在线自测说明](https://github.com/heky12356/PatreonOJ/blob/master/docs/self-test.md)，性能设计见 [图谱扩容说明](https://github.com/heky12356/PatreonOJ/blob/master/docs/graph-performance.md)。
+
 ## 项目介绍
 
 PatreonOJ-UI 是一个基于 React 19.1.0 构建的前端项目，用于 PatreonOJ 平台的用户界面。该项目采用 Vite 7.0.0 作为构建工具，使用 Ant Design 5.26.2 和 Bootstrap 5.3.7 作为 UI 组件库。

@@ -187,11 +187,12 @@ export default function QuestionBank() {
 
                           return (
                             <tr key={question.id} className={styles.row}>
-                              <td>{question.question_id || question.question_number}</td>
+                              <td><span className={styles.questionNumber} title={question.question_id || question.question_number}>{question.question_id || question.question_number}</span></td>
                               <td>
                                 <Link
                                   to={`/problem/${question.id}`}
                                   className={styles.link}
+                                  title={question.title}
                                 >
                                   {question.title}
                                   {question.status !== 'published' ? (
@@ -234,6 +235,7 @@ export default function QuestionBank() {
                       </tbody>
                     </table>
                   </div>
+                  <p className={styles.tableHint}>左右滑动查看状态、难度和标签</p>
 
                   <div className={styles.footNav}>
                     <FootNav

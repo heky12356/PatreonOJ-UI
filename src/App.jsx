@@ -1,6 +1,7 @@
 ﻿import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ConfigProvider } from 'antd';
 import SiteProvider from './site/SiteProvider.jsx';
+import KnowledgeGraphPage from './pages/knowledgeGraph/KnowledgeGraphPage.jsx';
 import useSiteSettings from './site/useSiteSettings.js';
 import zhCN from 'antd/locale/zh_CN';
 import MainLayout from './MainLayout.jsx';
@@ -47,6 +48,7 @@ function AppRoutes() {
             <Route index element={<Home />} />
             <Route path="study" element={<StudyComponent />} />
             <Route path="problem" element={<QuestionBank />} />
+            <Route path="graph" element={<KnowledgeGraphPage />} />
             <Route path="profile" element={<Profile />} />
             <Route path="users/:id" element={<UserHomePage />} />
             <Route path="settings" element={<UserSettingPage />} />

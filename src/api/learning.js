@@ -1,5 +1,14 @@
 const API_BASE_URL = '/api';
 
+async function graphRequest(path, signal) {
+  const response = await fetch(`${API_BASE_URL}/learning/${path}`, { signal, cache: 'no-store' });
+  const body = await response.json();
+  if (!response.ok) throw new Error(body.msg || body.error || '获取知识图谱失败');
+  return body.data;
+}
+export const getGraphTags = signal => graphRequest('tags', signal);
+export const getTagGraph = ({ tag, q, page = 1, signal }) => graphRequest(`graph?${new URLSearchParams({ tag, q: q || '', page, page_size: 60 })}`, signal);
+
 const cleanParams = (params = {}) =>
   Object.fromEntries(
     Object.entries(params).filter(

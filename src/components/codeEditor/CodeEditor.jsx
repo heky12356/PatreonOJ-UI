@@ -1,9 +1,10 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, Select, Button, message, Spin } from 'antd';
 import {
   CloudUploadOutlined,
   LoadingOutlined,
   FileSearchOutlined,
+  PlayCircleOutlined,
 } from '@ant-design/icons';
 import Editor from '@monaco-editor/react';
 import { submitCode, getSubmissionResult } from '../../api/judge.js';
@@ -12,8 +13,33 @@ import { useNavigate } from 'react-router-dom';
 import styles from './CodeEditor.module.css';
 import VerdictTag from '../submissions/VerdictTag.jsx';
 import { getVerdict, VERDICTS, shortSubmissionId } from '../../utils/submission.js';
+import SelfTestPanel from './SelfTestPanel.jsx';
+import './monaco.js';
 
 const { Option } = Select;
+
+const LANGUAGE_CONFIG = {
+  python: {
+    name: 'Python',
+    template: `# 在这里编写你的解题代码\ndef solution():\n    pass\n`,
+    monacoLanguage: 'python',
+  },
+  cpp: {
+    name: 'C++',
+    template: `#include <iostream>\nusing namespace std;\n\nint main() {\n    return 0;\n}\n`,
+    monacoLanguage: 'cpp',
+  },
+  java: {
+    name: 'Java',
+    template: `public class Main {\n    public static void main(String[] args) {\n    }\n}\n`,
+    monacoLanguage: 'java',
+  },
+  go: {
+    name: 'Go',
+    template: `package main\n\nimport "fmt"\n\nfunc main() {\n    fmt.Println("hello")\n}\n`,
+    monacoLanguage: 'go',
+  },
+};
 
 function CodeEditor({ problem, onSubmit }) {
   const navigate = useNavigate();
@@ -25,33 +51,15 @@ function CodeEditor({ problem, onSubmit }) {
   const [submissionId, setSubmissionId] = useState(null);
   const [submissionResult, setSubmissionResult] = useState(null);
   const [isEvaluating, setIsEvaluating] = useState(false);
+  const selfTestRef = useRef(null);
+  const [selfTesting, setSelfTesting] = useState(false);
+  const languageDrafts = useRef({});
 
-  const languageConfig = {
-    python: {
-      name: 'Python',
-      template: `# 在这里编写你的解题代码\ndef solution():\n    pass\n`,
-      monacoLanguage: 'python',
-    },
-    cpp: {
-      name: 'C++',
-      template: `#include <iostream>\nusing namespace std;\n\nint main() {\n    return 0;\n}\n`,
-      monacoLanguage: 'cpp',
-    },
-    java: {
-      name: 'Java',
-      template: `public class Main {\n    public static void main(String[] args) {\n    }\n}\n`,
-      monacoLanguage: 'java',
-    },
-    go: {
-      name: 'Go',
-      template: `package main\n\nimport "fmt"\n\nfunc main() {\n    fmt.Println("hello")\n}\n`,
-      monacoLanguage: 'go',
-    },
-  };
+
 
   useEffect(() => {
-    if (languageConfig[language]) {
-      setCode(languageConfig[language].template);
+    if (LANGUAGE_CONFIG[language]) {
+      setCode(languageDrafts.current[language] ?? LANGUAGE_CONFIG[language].template);
     }
   }, [language]);
 
@@ -196,7 +204,8 @@ function CodeEditor({ problem, onSubmit }) {
   };
 
   const handleReset = () => {
-    setCode(languageConfig[language]?.template || '');
+    languageDrafts.current[language] = LANGUAGE_CONFIG[language]?.template || '';
+    setCode(languageDrafts.current[language]);
     setOutput('');
     message.info('代码已重置');
   };
@@ -209,25 +218,29 @@ function CodeEditor({ problem, onSubmit }) {
         extra={
           <div className={styles.editorControls}>
             <Select
+              aria-label="编程语言"
               value={language}
               onChange={handleLanguageChange}
               style={{ width: 120, marginRight: 12 }}
             >
-              {Object.entries(languageConfig).map(([key, config]) => (
+              {Object.entries(LANGUAGE_CONFIG).map(([key, config]) => (
                 <Option key={key} value={key}>
                   {config.name}
                 </Option>
               ))}
             </Select>
 
+            <Button aria-label="运行自测" icon={<PlayCircleOutlined />} disabled={selfTesting} onClick={() => selfTestRef.current?.run()}>运行自测</Button>
+
             <Button
               type="primary"
               icon={<CloudUploadOutlined />}
               onClick={handleSubmit}
               loading={submitting}
+              disabled={isEvaluating}
               style={{ marginRight: 8 }}
             >
-              提交
+              正式提交
             </Button>
           </div>
         }
@@ -235,10 +248,11 @@ function CodeEditor({ problem, onSubmit }) {
         <div className={styles.editorContainer}>
           <Editor
             height="400px"
-            language={languageConfig[language]?.monacoLanguage || 'python'}
+            language={LANGUAGE_CONFIG[language]?.monacoLanguage || 'python'}
             theme="vs-light"
             value={code}
-            onChange={(value) => setCode(value || '')}
+            onChange={(value) => { languageDrafts.current[language] = value || ''; setCode(value || ''); }}
+            onMount={(editor, monaco) => { editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => selfTestRef.current?.run()); }}
             options={{
               automaticLayout: true,
               fontFamily: 'Consolas, "Courier New", monospace',
@@ -258,9 +272,11 @@ function CodeEditor({ problem, onSubmit }) {
           <Button onClick={handleReset} style={{ marginRight: 8 }}>
             重置代码
           </Button>
-          <span className={styles.tips}>提示: 使用 Ctrl+S 保存，Ctrl+Z 撤销</span>
+          <span className={styles.tips}>Ctrl / Cmd + Enter 运行自测，Ctrl / Cmd + Z 撤销</span>
         </div>
       </Card>
+
+      <SelfTestPanel ref={selfTestRef} problem={problem} code={code} language={language} onBusyChange={setSelfTesting} />
 
       {(isEvaluating || output) && (
         <Card

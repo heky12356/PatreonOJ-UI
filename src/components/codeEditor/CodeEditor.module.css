@@ -200,3 +200,9 @@
 .editorControls .ant-btn-primary:hover {
     background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
 }
+.codeEditor, .editorCard, .outputCard { min-width: 0; max-width: 100%; }
+.editorCard :global(.ant-card-head-wrapper) { flex-wrap: wrap; gap: 12px; }
+.editorCard :global(.ant-card-head-title) { min-width: 0; }
+.editorCard :global(.ant-card-extra) { margin-inline-start: 0; }
+.editorControls, .editorActions { flex-wrap: wrap; gap: 10px; }
+@media(max-width: 575px) { .editorCard :global(.ant-card-head) { padding: 16px 12px; } .editorCard :global(.ant-card-body) { padding: 12px; } .editorControls { justify-content: flex-start; } .editorControls :global(.ant-select) { margin-right: 0 !important; width: 105px !important; } .editorActions { justify-content: flex-start; } }

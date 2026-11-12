@@ -377,3 +377,24 @@
     max-width: none;
   }
 }
+
+/* Text can shrink inside flex layouts; the full title remains visible. */
+.content { width: calc(100% - 32px); min-width: 0; }
+.titleRow { align-items: flex-start; }
+.problem-header .titleRow h1 { flex: 1 1 260px; min-width: 0; overflow-wrap: anywhere; line-height: 1.5; }
+.problemStatusBadge { flex-shrink: 0; margin-top: 6px; }
+.problem-header, .problem-tabs, .tab-content, .problem-content { min-width: 0; max-width: 100%; }
+.problem-description { overflow-wrap: anywhere; min-width: 0; }
+.problem-description :global(.wmde-markdown) { min-width: 0; overflow-wrap: anywhere; }
+.problem-description :global(pre) { max-width: 100%; overflow: auto; }
+.problem-description :global(table) { display: block; max-width: 100%; overflow-x: auto; }
+.problem-description :global(img) { max-width: 100%; height: auto; }
+.rec-link { min-width: 0; align-items: flex-start; }
+.rec-link > span:first-child { min-width: 0; flex: 1; overflow-wrap: anywhere; }
+.rec-link > span:last-child { flex-shrink: 0; }
+.tag { max-width: 100%; overflow-wrap: anywhere; text-decoration: none; }
+@media(max-width: 991px) { .tab-content { flex-direction: column; padding: 20px; } .problem-sidebar { width: 100%; max-width: none; min-width: 0; } }
+@media(max-width: 575px) { .content { width: calc(100% - 20px); padding-top: 16px; } .problem-header { padding: 20px 14px; } .problem-header h1 { font-size: 23px; } .tab-content { padding: 16px 12px; } .problem-actions { gap: 8px; } .problem-info { gap: 12px; } }
+
+.questionNumber { font: 12px/1.8 Consolas,monospace; color: #7c8795; overflow-wrap: anywhere; margin-bottom: 10px; }
+.problem-header .titleRow h1 { flex-basis: 180px; }

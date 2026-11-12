@@ -153,3 +153,6 @@
     padding-bottom: 0.5rem;
     display: block;
 }
+
+.problemLink { min-width: 0; overflow-wrap: anywhere; }
+.searchInput { min-width: 0; }

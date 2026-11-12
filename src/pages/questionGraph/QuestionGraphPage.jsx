@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import * as d3 from 'd3';
+import GraphCanvas from '../../components/graph/GraphCanvas.jsx';
 import { Alert, Badge, Button, Card, Col, Form, Row, Spinner } from 'react-bootstrap';
 import { getQuestionGraph } from '../../api/learning.js';
 import styles from './QuestionGraphPage.module.css';
@@ -12,20 +12,6 @@ const EDGE_TEXT = {
   NEXT_LEVEL: '进阶路径',
   SIMILAR: '同类扩展',
 };
-
-const EDGE_COLORS = {
-  PREREQUISITE: '#0d6efd',
-  NEXT_LEVEL: '#198754',
-  SIMILAR: '#fd7e14',
-};
-
-const DIFFICULTY_COLORS = {
-  简单: '#d1e7dd',
-  中等: '#fff3cd',
-  困难: '#f8d7da',
-};
-
-const fallbackDiffColor = '#e9ecef';
 
 const toNodeLabel = (node) =>
   `${node?.question_id || node?.question_pk || '-'} ${node?.title || ''}`.trim();
@@ -72,7 +58,6 @@ function TreePanel({ tree, enabledTypes, onSelectNode, selectedId }) {
 export default function QuestionGraphPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const svgRef = useRef(null);
 
   const [depth, setDepth] = useState(3);
   const [loading, setLoading] = useState(false);
@@ -197,150 +182,13 @@ export default function QuestionGraphPage() {
     return stats;
   }, [graph.edges, selectedNodeId]);
 
-  useEffect(() => {
-    const svgEl = svgRef.current;
-    if (!svgEl) return undefined;
-
-    const width = 980;
-    const height = 620;
-    const rootId = String(graph.root_question_id || '');
-    const currentSelected = String(selectedNodeId || '');
-
-    const svg = d3.select(svgEl);
-    svg.selectAll('*').remove();
-    svg.attr('viewBox', `0 0 ${width} ${height}`).attr('preserveAspectRatio', 'xMidYMid meet');
-
-    if (visibleNodes.length === 0) {
-      return undefined;
-    }
-
-    const defs = svg.append('defs');
-    EDGE_TYPES.forEach((type) => {
-      defs
-        .append('marker')
-        .attr('id', `arrow-${type}`)
-        .attr('viewBox', '0 -5 10 10')
-        .attr('refX', 16)
-        .attr('refY', 0)
-        .attr('markerWidth', 6)
-        .attr('markerHeight', 6)
-        .attr('orient', 'auto')
-        .append('path')
-        .attr('d', 'M0,-5L10,0L0,5')
-        .attr('fill', EDGE_COLORS[type]);
-    });
-
-    const canvas = svg.append('g');
-    svg.call(
-      d3
-        .zoom()
-        .scaleExtent([0.3, 2.8])
-        .on('zoom', (event) => {
-          canvas.attr('transform', event.transform);
-        })
-    );
-
-    const nodes = visibleNodes.map((node) => ({ ...node }));
-    const links = visibleEdges.map((edge) => ({
-      source: String(edge.from_question_id),
-      target: String(edge.to_question_id),
-      edge_type: edge.edge_type,
-    }));
-
-    const link = canvas
-      .append('g')
-      .attr('stroke-opacity', 0.85)
-      .selectAll('line')
-      .data(links)
-      .enter()
-      .append('line')
-      .attr('stroke', (d) => EDGE_COLORS[d.edge_type] || '#adb5bd')
-      .attr('stroke-width', 2)
-      .attr('stroke-dasharray', (d) => (d.edge_type === 'SIMILAR' ? '5,5' : null))
-      .attr('marker-end', (d) => `url(#arrow-${d.edge_type})`);
-
-    const node = canvas
-      .append('g')
-      .selectAll('g')
-      .data(nodes)
-      .enter()
-      .append('g')
-      .style('cursor', 'pointer')
-      .on('click', (_, d) => {
-        setSelectedNodeId(String(d.question_id));
-      });
-
-    node
-      .append('circle')
-      .attr('r', (d) => (String(d.question_id) === rootId ? 18 : 13))
-      .attr('fill', (d) => DIFFICULTY_COLORS[d.difficulty] || fallbackDiffColor)
-      .attr('stroke', (d) =>
-        String(d.question_id) === currentSelected ? '#212529' : '#6c757d'
-      )
-      .attr('stroke-width', (d) => (String(d.question_id) === currentSelected ? 3 : 1.2));
-
-    node
-      .append('text')
-      .attr('x', 0)
-      .attr('y', 28)
-      .attr('text-anchor', 'middle')
-      .attr('font-size', 11)
-      .attr('fill', '#343a40')
-      .text((d) => `${d.question_id}`);
-
-    const simulation = d3
-      .forceSimulation(nodes)
-      .force(
-        'link',
-        d3
-          .forceLink(links)
-          .id((d) => d.question_id)
-          .distance(120)
-          .strength(0.5)
-      )
-      .force('charge', d3.forceManyBody().strength(-360))
-      .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('collision', d3.forceCollide(26))
-      .on('tick', () => {
-        link
-          .attr('x1', (d) => d.source.x)
-          .attr('y1', (d) => d.source.y)
-          .attr('x2', (d) => d.target.x)
-          .attr('y2', (d) => d.target.y);
-
-        node.attr('transform', (d) => `translate(${d.x},${d.y})`);
-      });
-
-    const drag = d3
-      .drag()
-      .on('start', (event, d) => {
-        if (!event.active) simulation.alphaTarget(0.3).restart();
-        d.fx = d.x;
-        d.fy = d.y;
-      })
-      .on('drag', (event, d) => {
-        d.fx = event.x;
-        d.fy = event.y;
-      })
-      .on('end', (event, d) => {
-        if (!event.active) simulation.alphaTarget(0);
-        d.fx = null;
-        d.fy = null;
-      });
-
-    node.call(drag);
-
-    return () => {
-      simulation.stop();
-    };
-  }, [visibleNodes, visibleEdges, graph.root_question_id, selectedNodeId]);
 
   return (
     <div className={styles.page}>
       <div className={styles.header}>
         <div>
           <h2 className={styles.title}>学习图谱</h2>
-          <div className={styles.subtitle}>题目主键: {id}</div>
+          <div className={styles.subtitle}>{graph.nodes.find(node => String(node.question_pk) === String(id))?.title || '查看当前题目的关联学习路径'}</div>
         </div>
         <div className={styles.headerActions}>
           <Button variant="outline-secondary" onClick={() => navigate(-1)}>
@@ -422,7 +270,7 @@ export default function QuestionGraphPage() {
               {visibleNodes.length === 0 && !loading ? (
                 <div className={styles.emptyTip}>暂无图谱数据</div>
               ) : (
-                <svg ref={svgRef} className={styles.graphSvg} />
+                <GraphCanvas nodes={visibleNodes} edges={visibleEdges} rootId={graph.root_question_id} selectedId={selectedNodeId} onSelect={setSelectedNodeId} />
               )}
             </Card.Body>
           </Card>

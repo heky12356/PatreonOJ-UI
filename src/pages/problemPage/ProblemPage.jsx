@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Tabs, message } from 'antd';
 import {
@@ -12,7 +12,6 @@ import {
 import remarkGfm from 'remark-gfm';
 import MDEditor from '@uiw/react-md-editor';
 import { FaLightbulb, FaTags } from 'react-icons/fa';
-import CodeEditor from '../../components/codeEditor/CodeEditor';
 import { EmptyState, ErrorState, LoadingState } from '../../components/feedback/AsyncState.jsx';
 import { getProblemById } from '../../api/getproblem';
 import { getProblemRecommendations } from '../../api/learning.js';
@@ -22,6 +21,8 @@ import { getUserId, isLoggedIn } from '../../api/user';
 
 import { getRequestErrorMessage } from '../../utils/request.js';
 import styles from './ProblemPage.module.css';
+
+const CodeEditor = lazy(() => import('../../components/codeEditor/CodeEditor.jsx'));
 
 function ProblemPage() {
   const { id } = useParams();
@@ -202,8 +203,9 @@ function ProblemPage() {
   return (
     <div className={styles.content}>
       <div className={styles['problem-header']}>
+        <div className={styles.questionNumber}>{question.question_id || question.id}</div>
         <div className={styles.titleRow}>
-          <h1>{question.question_id || question.id}. {question.title}</h1>
+          <h1>{question.title}</h1>
           <span role="status" className={`${styles.problemStatusBadge} ${solveStatusMeta.className}`}>{solveStatusMeta.text.replace('当前状态：', '')}</span>
         </div>
         <div className={styles['problem-meta']}>
@@ -302,9 +304,9 @@ function ProblemPage() {
                     <div className={styles['tag-list']}>
                       {parseTags(question.tags).length > 0 ? (
                         parseTags(question.tags).map((tag, index) => (
-                          <span key={index} className={styles.tag}>
+                          <a href={`/graph?tag=${encodeURIComponent(tag)}`} key={index} className={styles.tag}>
                             {tag}
-                          </span>
+                          </a>
                         ))
                       ) : (
                         <span className="text-secondary small">暂无标签</span>
@@ -380,7 +382,7 @@ function ProblemPage() {
               <div
                 className={`${styles['tab-content']} ${styles.codeEditor}`}
               >
-                <CodeEditor problem={question} onSubmit={handleCodeSubmit} />
+                <Suspense fallback={<LoadingState text="正在加载编辑器…" />}><CodeEditor key={question.id} problem={question} onSubmit={handleCodeSubmit} /></Suspense>
               </div>
             ),
           },
