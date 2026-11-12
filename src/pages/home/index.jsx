@@ -24,11 +24,11 @@ export default function Home() {
 
   // 获取总题目数和最新题目
   const fetchProblemsNum = async () => {
-    let res = await getProblem();
+    let res = await getProblem({ pageIdx: 1, pageSize: 100 });
     setTotalProblemsNum(res?.totalCnt || 0);
     setProblems(Array.isArray(res?.result) ? res.result : []);
 
-    res = await getNewProblems();
+    res = await getNewProblems({ pageIdx: 1, pageSize: 5 });
     setNewProblems(Array.isArray(res?.result) ? res.result : []);
   };
 
