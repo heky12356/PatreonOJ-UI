@@ -70,17 +70,17 @@
 }
 
 .btnPrimary {
-  background-color: #51624f;
+  background-color: var(--site-primary, #51624f);
   color: white;
-  border-color: #51624f;
+  border-color: var(--site-primary, #51624f);
 }
 
 .btnPrimary:hover {
-  background-color: #3e4b3c;
-  border-color: #3e4b3c;
+  background-color: var(--site-primary-dark, #3e4b3c);
+  border-color: var(--site-primary-dark, #3e4b3c);
   color: white;
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(81, 98, 79, 0.2);
+  box-shadow: 0 4px 10px var(--site-primary-glow, rgba(81, 98, 79, 0.2));
 }
 
 .btnOutline {
@@ -98,12 +98,12 @@
 
 .btnOutlinePrimary {
   background-color: white;
-  color: #51624f;
-  border-color: #51624f;
+  color: var(--site-primary, #51624f);
+  border-color: var(--site-primary, #51624f);
 }
 
 .btnOutlinePrimary:hover {
-  background-color: #51624f;
+  background-color: var(--site-primary, #51624f);
   color: white;
 }
 
@@ -166,8 +166,8 @@
 }
 
 .filterSelect:focus {
-  border-color: #51624f;
-  box-shadow: 0 0 0 2px rgba(81, 98, 79, 0.1);
+  border-color: var(--site-primary, #51624f);
+  box-shadow: 0 0 0 2px var(--site-primary-subtle, rgba(81, 98, 79, 0.1));
 }
 
 .filterLabel {
@@ -264,9 +264,9 @@
 }
 
 .pageItem.active .pageLink {
-  background-color: #51624f;
+  background-color: var(--site-primary, #51624f);
   color: white;
-  border-color: #51624f;
+  border-color: var(--site-primary, #51624f);
 }
 
 .pageItem.disabled .pageLink {
@@ -277,8 +277,8 @@
 
 .pageLink:hover:not(.disabled) {
   background-color: #f8fdf9;
-  border-color: #51624f;
-  color: #51624f;
+  border-color: var(--site-primary, #51624f);
+  color: var(--site-primary, #51624f);
 }
 
 .sectionTitle {

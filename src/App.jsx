@@ -1,5 +1,7 @@
 ﻿import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ConfigProvider } from 'antd';
+import SiteProvider from './site/SiteProvider.jsx';
+import useSiteSettings from './site/useSiteSettings.js';
 import zhCN from 'antd/locale/zh_CN';
 import MainLayout from './MainLayout.jsx';
 import Login from './pages/login/Login.jsx';
@@ -33,9 +35,10 @@ const whiteTheme = {
   },
 };
 
-function App() {
+function AppRoutes() {
+  const { theme } = useSiteSettings();
   return (
-    <ConfigProvider theme={whiteTheme} locale={zhCN}>
+    <ConfigProvider theme={{ token: { ...whiteTheme.token, ...theme.antdToken } }} locale={zhCN}>
       <Router>
         <Routes>
           <Route path="/" element={<MainLayout />}>
@@ -128,4 +131,6 @@ function App() {
   );
 }
 
-export default App;
+export default function App() {
+  return <SiteProvider><AppRoutes /></SiteProvider>;
+}

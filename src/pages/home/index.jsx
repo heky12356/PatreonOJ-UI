@@ -8,8 +8,12 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { getAnnouncement, getHomeShowText } from '../../api/homeShowText';
 import { Link, useNavigate } from 'react-router-dom';
+import useSiteSettings from '../../site/useSiteSettings.js';
+import HomeSlideshow from '../../components/HomeSlideshow/HomeSlideshow.jsx';
 
 export default function Home() {
+  const { theme } = useSiteSettings();
+  const [problems, setProblems] = useState([]);
   const [totalProblemsNum, setTotalProblemsNum] = useState(0); // 总题目数
   const [motto, setMotto] = useState({}); // 一言
   const [newProblems, setNewProblems] = useState([]); // 最新题目
@@ -22,6 +26,7 @@ export default function Home() {
   const fetchProblemsNum = async () => {
     let res = await getProblem();
     setTotalProblemsNum(res?.totalCnt || 0);
+    setProblems(Array.isArray(res?.result) ? res.result : []);
 
     res = await getNewProblems();
     setNewProblems(Array.isArray(res?.result) ? res.result : []);
@@ -44,17 +49,21 @@ export default function Home() {
   };
 
   useEffect(() => {
-    fetchProblemsNum();
-    fetchMotto();
-    fetchHomeShowText();
-    fetchAnnouncement();
+    Promise.allSettled([fetchProblemsNum(), fetchMotto(), fetchHomeShowText(), fetchAnnouncement()]);
   }, []);
 
   const searchProblem = () => {
-    navigate(`/problem?q=${searchTerm}`);
+    navigate(`/problem?q=${encodeURIComponent(searchTerm)}`);
   };
 
+  if (theme.Home) {
+    const ThemeHome = theme.Home;
+    return <><HomeSlideshow /><ThemeHome totalProblems={totalProblemsNum} problems={problems} latestProblems={newProblems} homeText={homeShowText} announcement={announcement} /></>;
+  }
+
   return (
+    <>
+    <HomeSlideshow />
     <div className={styles.homeContainer}>
       <Container>
         <Row>
@@ -123,5 +132,6 @@ export default function Home() {
         </Row>
       </Container>
     </div>
+    </>
   );
 }

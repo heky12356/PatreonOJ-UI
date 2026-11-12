@@ -8,13 +8,9 @@ import './main.css'
 const MainLayout = () => {
   const uuid = useCurrentUserUuid();
   return (
-    <div style={{ 
-      backgroundColor: 'white', 
-      minHeight: '100vh',
-      width: '100%'
-    }}>
+    <div className="site-shell" style={{ minHeight: '100vh', width: '100%' }}>
       <HeaderNav />
-      <Container fluid style={{ backgroundColor: 'white', width: '100%' }}>
+      <Container fluid className="site-main" style={{ width: '100%' }}>
         <Outlet key={uuid || 'anonymous'} />
       </Container>   
     </div>

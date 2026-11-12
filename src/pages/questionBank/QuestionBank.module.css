@@ -30,8 +30,8 @@
 
 .searchBar:focus-within {
   background: #fff;
-  border-color: #51624f;
-  box-shadow: 0 0 0 3px rgba(81, 98, 79, 0.1);
+  border-color: var(--site-primary, #51624f);
+  box-shadow: 0 0 0 3px var(--site-primary-subtle, rgba(81, 98, 79, 0.1));
 }
 
 .searchInput {
@@ -47,7 +47,7 @@
 .searchButton {
   background: none;
   border: none;
-  color: #51624f;
+  color: var(--site-primary, #51624f);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -58,7 +58,7 @@
 }
 
 .searchButton:hover {
-  background: rgba(81, 98, 79, 0.1);
+  background: var(--site-primary-subtle, rgba(81, 98, 79, 0.1));
 }
 
 /* Table Styling */
@@ -107,7 +107,7 @@
 }
 
 .link:hover {
-  color: #51624f;
+  color: var(--site-primary, #51624f);
 }
 
 .link span {
@@ -220,8 +220,8 @@
 }
 
 .filterSelect:focus {
-  border-color: #51624f;
-  box-shadow: 0 0 0 3px rgba(81, 98, 79, 0.1);
+  border-color: var(--site-primary, #51624f);
+  box-shadow: 0 0 0 3px var(--site-primary-subtle, rgba(81, 98, 79, 0.1));
 }
 
 .actionButton {
@@ -231,7 +231,7 @@
   width: 100%;
   padding: 0.8rem;
   border-radius: 8px;
-  background-color: #51624f;
+  background-color: var(--site-primary, #51624f);
   color: white;
   font-weight: 500;
   cursor: pointer;
@@ -241,9 +241,9 @@
 }
 
 .actionButton:hover {
-  background-color: #3e4b3c;
+  background-color: var(--site-primary-dark, #3e4b3c);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(81, 98, 79, 0.2);
+  box-shadow: 0 4px 12px var(--site-primary-glow, rgba(81, 98, 79, 0.2));
   color: white;
 }
 

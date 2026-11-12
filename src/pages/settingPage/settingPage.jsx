@@ -9,6 +9,7 @@ import {
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import AppearanceSettings from './AppearanceSettings.jsx';
 
 export default function SettingPage() {
   const [homeShowText, setHomeShowText] = useState('');
@@ -59,9 +60,10 @@ export default function SettingPage() {
   return (
     <Container>
       <Row>
-        <Col md={10}>
+        <Col xs={12}>
           <div className={styles.settingPage}>
-            <h1>设置</h1>
+            <h1>站点设置</h1>
+            <AppearanceSettings />
 
             <h2>首页内容</h2>
             <h3>显示效果</h3>

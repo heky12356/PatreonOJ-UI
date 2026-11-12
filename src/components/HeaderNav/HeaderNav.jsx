@@ -9,6 +9,7 @@ import {
 } from '../../api/user';
 import logoUrl from '../../assets/tgu.jpg';
 import styles from './HeaderNav.module.css';
+import useSiteSettings from '../../site/useSiteSettings.js';
 
 const UserPanel = ({ userInfo, setIsLogin, setUserInfo }) => {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -63,6 +64,7 @@ const UserPanel = ({ userInfo, setIsLogin, setUserInfo }) => {
 };
 
 export default function HeaderNav() {
+  const { theme } = useSiteSettings();
   const [userInfo, setUserInfo] = useState(null);
   const [isLogin, setIsLogin] = useState(false);
   const location = useLocation();
@@ -95,7 +97,7 @@ export default function HeaderNav() {
   }, []);
 
   return (
-    <Navbar expand="lg" className={`${styles.headerNavbar} mb-4`}>
+    <Navbar expand="lg" className={`${styles.headerNavbar} site-navbar mb-4`}>
       <Container>
         <Navbar.Brand as={Link} to="/" className={styles.brand}>
           <img
@@ -105,7 +107,7 @@ export default function HeaderNav() {
             height="35"
             className={`d-inline-block align-top ${styles.brandLogo}`}
           />
-          Tgu-OJ
+          <span className="site-brand-copy"><span className="site-brand-name">{theme.brand?.name || 'Tgu-OJ'}</span>{theme.brand?.subtitle && <small className="site-brand-subtitle">{theme.brand.subtitle}</small>}</span>
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">

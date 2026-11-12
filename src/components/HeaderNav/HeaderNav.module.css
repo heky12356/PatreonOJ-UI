@@ -17,7 +17,7 @@
 
 .brand:hover {
   opacity: 0.8;
-  color: #51624f !important;
+  color: var(--site-primary, #51624f) !important;
 }
 
 .brandLogo {
@@ -37,8 +37,8 @@
 
 .navLink:hover,
 .navLinkActive {
-  color: #51624f !important;
-  background-color: rgba(81, 98, 79, 0.08);
+  color: var(--site-primary, #51624f) !important;
+  background-color: var(--site-primary-soft, rgba(81, 98, 79, 0.08));
 }
 
 .userDropdown :global(.dropdown-toggle) {
@@ -69,40 +69,40 @@
 }
 
 .userDropdown :global(.dropdown-item):hover {
-  background-color: rgba(81, 98, 79, 0.08);
-  color: #51624f;
+  background-color: var(--site-primary-soft, rgba(81, 98, 79, 0.08));
+  color: var(--site-primary, #51624f);
 }
 
 .userDropdown :global(.dropdown-item):active {
-  background-color: #51624f;
+  background-color: var(--site-primary, #51624f);
   color: #fff;
 }
 
 /* Auth buttons */
 .authLink {
-  color: #51624f !important;
+  color: var(--site-primary, #51624f) !important;
   font-weight: 600;
   margin-left: 1rem;
   padding: 0.4rem 1.2rem !important;
-  border: 1px solid #51624f;
+  border: 1px solid var(--site-primary, #51624f);
   border-radius: 20px;
   transition: all 0.2s;
 }
 
 .authLink:hover {
-  background-color: #51624f;
+  background-color: var(--site-primary, #51624f);
   color: #fff !important;
   text-decoration: none;
 }
 
 .authLinkPrimary {
-  background-color: #51624f;
+  background-color: var(--site-primary, #51624f);
   /* color: #fff !important; */
   margin-left: 0.5rem;
 }
 
 .authLinkPrimary:hover {
-  background-color: #3e4b3c;
-  border-color: #3e4b3c;
-  box-shadow: 0 4px 10px rgba(81, 98, 79, 0.2);
+  background-color: var(--site-primary-dark, #3e4b3c);
+  border-color: var(--site-primary-dark, #3e4b3c);
+  box-shadow: 0 4px 10px var(--site-primary-glow, rgba(81, 98, 79, 0.2));
 }

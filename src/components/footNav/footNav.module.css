@@ -26,22 +26,22 @@
 }
 
 .paginationButton:hover {
-    border-color: #51624f;
-    color: #51624f;
+    border-color: var(--site-primary, #51624f);
+    color: var(--site-primary, #51624f);
     background-color: #f8fdf9;
     transform: translateY(-1px);
 }
 
 .paginationButtonActive {
-    background-color: #51624f;
+    background-color: var(--site-primary, #51624f);
     color: white;
-    border-color: #51624f;
+    border-color: var(--site-primary, #51624f);
 }
 
 .paginationButtonActive:hover {
-    background-color: #3e4b3c;
+    background-color: var(--site-primary-dark, #3e4b3c);
     color: white;
-    border-color: #3e4b3c;
+    border-color: var(--site-primary-dark, #3e4b3c);
     transform: translateY(-1px);
 }
 

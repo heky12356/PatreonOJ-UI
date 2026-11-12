@@ -28,3 +28,6 @@ ide-part
 
 docs
 
+# Deployment-specific themes and their university/organization assets.
+/src/themes/private/
+

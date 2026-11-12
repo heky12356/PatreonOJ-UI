@@ -50,8 +50,8 @@
 
 .searchBar:focus-within {
   background: #fff;
-  border-color: #51624f; /* Primary brand color */
-  box-shadow: 0 0 0 3px rgba(81, 98, 79, 0.1);
+  border-color: var(--site-primary, #51624f); /* Primary brand color */
+  box-shadow: 0 0 0 3px var(--site-primary-subtle, rgba(81, 98, 79, 0.1));
 }
 
 .searchInput {
@@ -67,7 +67,7 @@
 .searchButton {
   background: none;
   border: none;
-  color: #51624f;
+  color: var(--site-primary, #51624f);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -78,7 +78,7 @@
 }
 
 .searchButton:hover {
-  background: rgba(81, 98, 79, 0.1);
+  background: var(--site-primary-subtle, rgba(81, 98, 79, 0.1));
 }
 
 /* New Problems List */
@@ -103,8 +103,8 @@
 
 .problemLink:hover {
   background: #fff;
-  border-color: #51624f;
-  color: #51624f;
+  border-color: var(--site-primary, #51624f);
+  color: var(--site-primary, #51624f);
   transform: translateX(4px);
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
@@ -140,7 +140,7 @@
 .statNumber {
   font-size: 1.5rem;
   font-weight: bold;
-  color: #51624f;
+  color: var(--site-primary, #51624f);
   margin-left: 0.5rem;
 }
 
