@@ -307,3 +307,6 @@
 .filterHint { color:#9299a3; font-size:12px; line-height:1.6; margin:10px 0 0; }
 .filterGraphLink { display:inline-block; margin-top:12px; color:var(--site-primary,#51624f); font-size:12px; text-decoration:none; }
 .filterGraphLink:hover { text-decoration:underline; }
+
+.container { margin-inline:auto; }
+.container > :global(.container) { max-width:none; padding-inline:0; }
