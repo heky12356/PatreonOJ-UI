@@ -247,7 +247,7 @@ function CodeEditor({ problem, onSubmit }) {
       >
         <div className={styles.editorContainer}>
           <Editor
-            height="400px"
+            height="360px"
             language={LANGUAGE_CONFIG[language]?.monacoLanguage || 'python'}
             theme="vs-light"
             value={code}

@@ -1,19 +1,10 @@
-/* 全局白色背景设置 */
-body, html, #root {
-  background-color: var(--site-page-bg, white) !important;
-  margin: 0;
-  padding: 0;
-}
-
-/* 确保所有布局容器也是白色背景 */
-.ant-layout,
-.ant-layout-content,
-/* .container, */
-.container-fluid {
-  background-color: var(--site-page-bg, white) !important;
-}
-
-.body {
-  background-color: white !important;
-}
-
+html,body,#root { margin:0; padding:0; background:var(--site-page-bg,#f5f6f7)!important; }
+body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",Arial,sans-serif; color:#30343b; }
+.site-shell .site-main { padding:0; }
+.site-shell .btn { font-size:13px; border-radius:3px; }
+.site-shell .card { border:1px solid #dfe2e6; border-radius:4px; box-shadow:none; }
+.site-shell .card-header { background:#fafbfc; border-bottom-color:#e8eaed; font-size:14px; }
+.site-shell .form-control,.site-shell .form-select { font-size:13px; border-radius:3px; }
+.site-shell .badge { border-radius:3px; font-weight:500; }
+.site-shell .ant-card { box-shadow:none; }
+@media(prefers-reduced-motion:reduce) { .site-shell * { scroll-behavior:auto!important; } }

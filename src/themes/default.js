@@ -4,5 +4,6 @@ export default {
   description: '保留当前页面的简洁布局与配色。',
   swatch: '#51624f',
   brand: { name: 'Tgu-OJ' },
-  variables: { primary: '#51624f', 'page-bg': '#ffffff' },
+  antdToken: { colorPrimary: '#51624f', borderRadius: 4, fontSize: 14 },
+  variables: { primary: '#51624f', 'page-bg': '#f5f6f7' },
 };

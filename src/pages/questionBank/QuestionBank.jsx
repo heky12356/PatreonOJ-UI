@@ -189,6 +189,7 @@ export default function QuestionBank() {
                             <tr key={question.id} className={styles.row}>
                               <td><span className={styles.questionNumber} title={question.question_id || question.question_number}>{question.question_id || question.question_number}</span></td>
                               <td>
+                                <small className={styles.mobileQuestionNumber} title={question.question_id || question.question_number}>{question.question_id || question.question_number}</small>
                                 <Link
                                   to={`/problem/${question.id}`}
                                   className={styles.link}

@@ -24,7 +24,9 @@ export default {
 };
 ```
 
-`Home` 可省略；提供时接收 `totalProblems`、`problems`、`latestProblems`、`homeText`、`announcement`。幻灯片由公共页面层渲染，不放在主题组件内。
+`Home` 可省略；提供时接收 `totalProblems`、`latestProblems`、`topics`、`homeText`、`announcement`、`loading`、`unavailable`。`topics` 是实际知识点与题目数量，首页不再为了统计而读取前 100 道题的全文。幻灯片由公共页面层渲染，不放在主题组件内。
+
+公共首页为 `src/pages/home/PracticeHome.jsx`，包含公告、最新题目、知识点入口和题目搜索。私有主题可以直接复用它，只补充品牌标识或侧栏内容。页面以题目列表和分类导航为主，使用细边框、小圆角和中性底色；品牌色主要用于链接、选中项和关键操作。参考 [洛谷首页](https://www.luogu.com.cn/)、[力扣题库](https://leetcode.cn/problemset/) 和 [杭电 OJ](https://acm.hdu.edu.cn/) 的功能组织，不添加缺少实际数据的比赛、排行或宣传式占位模块。
 
 CSS 必须限制在 `html[data-site-theme="local-lab"]` 下，避免影响其他主题。公共组件支持 `--site-primary`、`--site-primary-dark`、`--site-primary-soft`、`--site-primary-subtle`、`--site-primary-glow`、`--site-page-bg` 等 CSS 变量；没有定义的变量沿用原来的默认值。
 

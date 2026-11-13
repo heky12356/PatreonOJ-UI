@@ -63,20 +63,20 @@ export default forwardRef(function SelfTestPanel({ problem, code, language, onBu
   const meta = verdicts[job?.verdict] || ['等待结果', 'default'];
   const finished = ['completed', 'cancelled'].includes(job?.status);
   return <section ref={panelRef} className={styles.panel} aria-labelledby="self-test-heading">
-    <header className={styles.header}><div><h3 id="self-test-heading">在线自测</h3><p>使用样例或自定义输入调试代码；自测单独运行，正式提交用于完整评测。</p></div><Space wrap><Button aria-label="运行自测" icon={<PlayCircleOutlined />} loading={starting} disabled={busy} onClick={run}>运行自测</Button>{busy && <Button aria-label="停止" danger icon={<StopOutlined />} disabled={!job?.id} onClick={stop}>停止</Button>}</Space></header>
+    <header className={styles.header}><div><h3 id="self-test-heading">在线自测</h3><p>公开样例 / 自定义输入</p></div><Space wrap><Button aria-label="运行自测" icon={<PlayCircleOutlined />} loading={starting} disabled={busy} onClick={run}>运行自测</Button>{busy && <Button aria-label="停止" danger icon={<StopOutlined />} disabled={!job?.id} onClick={stop}>停止</Button>}</Space></header>
     {error && <Alert type="error" showIcon message={error} closable onClose={() => setError('')} />}
     <div className={styles.workspace}><div className={styles.inputs}>
       <div className={styles.samples}><strong>测试输入</strong><Space wrap>{samples.map((sample, index) => <Button size="small" key={sample.id} disabled={busy} onClick={() => { setInput(sample.input); setExpected(sample.output); setCompare(true); }}>载入样例 {index + 1}</Button>)}</Space></div>
       {sampleError && <p className={styles.hint}>{sampleError}</p>}
       {!sampleError && samples.length === 0 && <p className={styles.hint}>可以从题面复制样例，或输入自己的测试数据。</p>}
-      <Input.TextArea aria-label="自测输入" spellCheck={false} value={input} onChange={(e) => setInput(e.target.value)} disabled={busy} rows={8} placeholder="输入程序从标准输入读取的数据；也可以留空" className={styles.textarea} />
+      <Input.TextArea aria-label="自测输入" spellCheck={false} value={input} onChange={(e) => setInput(e.target.value)} disabled={busy} rows={6} placeholder="输入程序从标准输入读取的数据；也可以留空" className={styles.textarea} />
       <Checkbox checked={compare} disabled={busy} onChange={(e) => setCompare(e.target.checked)}>对照预期输出</Checkbox>
-      {compare && <Input.TextArea aria-label="预期输出" spellCheck={false} value={expected} onChange={(e) => setExpected(e.target.value)} disabled={busy} rows={4} placeholder="预期输出，可以为空" className={styles.textarea} />}
+      {compare && <Input.TextArea aria-label="预期输出" spellCheck={false} value={expected} onChange={(e) => setExpected(e.target.value)} disabled={busy} rows={3} placeholder="预期输出，可以为空" className={styles.textarea} />}
     </div><div className={styles.results} aria-live="polite">
       <div className={styles.resultHeading}><strong>运行结果</strong>{busy ? <span><Spin size="small" /> {job?.status === 'running' ? '运行中…' : '等待运行…'}</span> : finished && <Tag color={meta[1]}>{meta[0]}</Tag>}</div>
       {finished && <div className={styles.metrics}><span>用时 {job.runtime_ms ?? 0} ms</span><span>内存 {job.memory_kb ?? 0} KB</span><span>退出码 {job.exit_code ?? '—'}</span>{job.comparison && <Tag color={job.comparison === 'match' ? 'success' : 'warning'}>{job.comparison === 'match' ? '输出一致' : '输出不一致'}</Tag>}</div>}
       <Tabs activeKey={resultTab} onChange={setResultTab} items={[{ key: 'stdout', label: '程序输出', children: <pre className={styles.output}>{job?.stdout || (finished ? '（无输出）' : '运行后将在这里显示标准输出。')}</pre> }, { key: 'stderr', label: '错误信息', children: <pre className={styles.output}>{job?.stderr || (finished ? '（无错误信息）' : '编译或运行错误将在这里显示。')}</pre> }]} />
-      <p className={styles.hint}>仅使用当前输入，不读取隐藏测试数据，也不改变题目完成状态。</p>
+      <p className={styles.hint}>自测不计入提交记录，以正式评测结果为准。</p>
     </div></div>
   </section>;
 });

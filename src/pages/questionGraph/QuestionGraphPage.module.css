@@ -166,3 +166,14 @@
 .treeNodeDiff { flex-shrink: 0; }
 .statGrid { grid-template-columns: repeat(2,minmax(0,1fr)); }
 .graphBody { min-width: 0; }
+
+.page { width:100%; max-width:1200px; padding:22px 16px 32px; font-size:13px; }
+.title { font-size:22px; font-weight:600; }
+.subtitle { font-size:12px; color:#868d97; }
+.graphBody { height:560px; }
+.graphSvg { background:#fafbfc; border-radius:3px; }
+.statItem { border:0; border-radius:0; background:transparent; padding:3px 0; }
+.statValue { font-size:17px; font-weight:600; }
+.treeNodeBtn { border-radius:3px; }
+.treeNodeSelected { border-color:var(--site-primary,#51624f); box-shadow:none; background:var(--site-primary-soft,#f0f3ef); }
+@media(max-width:575px) { .page { width:100%; padding:16px 12px 24px; } .graphBody { height:460px; } .title { font-size:20px; } }

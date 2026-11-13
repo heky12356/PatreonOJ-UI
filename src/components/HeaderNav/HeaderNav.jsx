@@ -97,7 +97,7 @@ export default function HeaderNav() {
   }, []);
 
   return (
-    <Navbar expand="lg" className={`${styles.headerNavbar} site-navbar mb-4`}>
+    <Navbar expand="lg" className={`${styles.headerNavbar} site-navbar`}>
       <Container>
         <Navbar.Brand as={Link} to="/" className={styles.brand}>
           <img
@@ -109,12 +109,13 @@ export default function HeaderNav() {
           />
           <span className="site-brand-copy"><span className="site-brand-name">{theme.brand?.name || 'Tgu-OJ'}</span>{theme.brand?.subtitle && <small className="site-brand-subtitle">{theme.brand.subtitle}</small>}</span>
         </Navbar.Brand>
-        <Navbar.Toggle aria-controls="basic-navbar-nav" />
+        <Navbar.Toggle aria-controls="basic-navbar-nav" label="切换导航" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
             <Nav.Link
               as={Link}
               to="/"
+              aria-current={location.pathname === '/' ? 'page' : undefined}
               className={`${styles.navLink} ${location.pathname === '/' ? styles.navLinkActive : ''}`}
             >
               首页
@@ -122,11 +123,12 @@ export default function HeaderNav() {
             <Nav.Link
               as={Link}
               to="/problem"
+              aria-current={location.pathname.startsWith('/problem') && !location.pathname.endsWith('/graph') ? 'page' : undefined}
               className={`${styles.navLink} ${location.pathname.startsWith('/problem') && !location.pathname.endsWith('/graph') ? styles.navLinkActive : ''}`}
             >
               题库
             </Nav.Link>
-            <Nav.Link as={Link} to="/graph" className={`${styles.navLink} ${location.pathname === '/graph' || location.pathname.endsWith('/graph') ? styles.navLinkActive : ''}`}>知识图谱</Nav.Link>
+            <Nav.Link as={Link} to="/graph" aria-current={location.pathname === '/graph' || location.pathname.endsWith('/graph') ? 'page' : undefined} className={`${styles.navLink} ${location.pathname === '/graph' || location.pathname.endsWith('/graph') ? styles.navLinkActive : ''}`}>知识图谱</Nav.Link>
           </Nav>
           {isLogin ? (
             <UserPanel

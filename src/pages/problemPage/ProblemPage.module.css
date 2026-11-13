@@ -398,3 +398,23 @@
 
 .questionNumber { font: 12px/1.8 Consolas,monospace; color: #7c8795; overflow-wrap: anywhere; margin-bottom: 10px; }
 .problem-header .titleRow h1 { flex-basis: 180px; }
+
+/* Match the archive and editor to a practical judge workspace. */
+.content { width:100%; max-width:1200px; min-height:0; padding:22px 16px 32px; font-size:14px; }
+.problem-header { border:1px solid #dfe2e6; border-radius:4px; box-shadow:none; padding:16px 20px; margin-bottom:16px; }
+.titleRow { gap:12px; margin-bottom:12px; }
+.problem-header h1 { font-size:23px; font-weight:600; }
+.problemStatusBadge { border-radius:3px; padding:3px 8px; font-size:12px; font-weight:400; }
+.problem-meta { gap:14px; }
+.problem-info { gap:16px; }
+.info-item { font-size:12px; }
+.btn { padding:6px 10px; font-size:13px; border-radius:3px; }
+.btn-primary:hover,.btn-outline:hover { transform:none; box-shadow:none; }
+.problem-tabs { border:1px solid #dfe2e6; border-radius:4px; box-shadow:none; }
+.problem-tabs :global(.ant-tabs-nav) { padding:0 16px; background:#fff; }
+.problem-tabs :global(.ant-tabs-tab) { padding:12px 0; font-size:13px; margin-right:24px; }
+.tab-content { padding:18px; gap:24px; min-height:460px; }
+.sidebar-card { padding:14px; border:1px solid #e4e7eb; border-radius:3px; background:#fff; }
+.sidebar-title { font-size:14px; margin-bottom:12px; }
+.problem-description :global(pre) { border-radius:3px; }
+@media(max-width:575px) { .content { width:100%; padding:16px 12px 24px; } .problem-header { padding:14px; } .problem-header h1 { font-size:21px; } .tab-content { padding:12px; } .problem-actions { gap:6px; } }

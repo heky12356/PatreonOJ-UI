@@ -1,11 +1,11 @@
-.home-slideshow { position: relative; max-width: 1320px; margin: 24px auto 0; padding: 0 12px; }
-.home-slideshow .carousel { border-radius: 12px; overflow: hidden; background: #eff0f3; }
-.home-slideshow .carousel-item img { width: 100%; height: clamp(180px, 25vw, 360px); object-fit: cover; display: block; }
+.home-slideshow { position: relative; max-width: 1200px; margin: 18px auto 0; padding: 0 16px; }
+.home-slideshow .carousel { border-radius: 4px; overflow: hidden; background: #eff0f3; }
+.home-slideshow .carousel-item img { width: 100%; height: clamp(160px, 21vw, 280px); object-fit: cover; display: block; }
 .home-slide-link { display: block; }
 .home-slide-link:focus-visible { outline: 4px solid #fff; outline-offset: -6px; }
 .home-slideshow .carousel-caption { pointer-events: none; bottom: 24px; }
-.home-slideshow .carousel-caption span { display: inline-block; background: rgb(0 0 0 / 60%); border-radius: 6px; padding: 8px 16px; font-size: 16px; }
-.home-slide-pause { position: absolute; right: 28px; bottom: 14px; border: 1px solid #fff9; border-radius: 6px; background: #18212bd9; color: #fff; padding: 5px 10px; font-size: 12px; z-index: 2; }
+.home-slideshow .carousel-caption span { display: inline-block; background: rgb(0 0 0 / 60%); border-radius: 3px; padding: 6px 12px; font-size: 14px; }
+.home-slide-pause { position: absolute; right: 28px; bottom: 14px; border: 1px solid #fff9; border-radius: 3px; background: #18212bd9; color: #fff; padding: 5px 10px; font-size: 12px; z-index: 2; }
 .home-slide-pause:focus-visible { outline: 3px solid var(--site-primary, #51624f); outline-offset: 3px; }
 @media (max-width: 575px) { .home-slideshow { margin-top: 12px; } .home-slideshow .carousel-caption { bottom: 35px; } }
 @media (prefers-reduced-motion: reduce) { .home-slideshow * { transition: none !important; } }

@@ -32,3 +32,24 @@
 .heading h2, .heading h1, .profileHero h1 { overflow-wrap: anywhere; }
 :global(.oj-submission-table) { max-width: 100%; min-width: 0; }
 :global(.oj-submission-table .ant-table) { table-layout: fixed; }
+
+.page { max-width:1200px; padding:22px 16px 32px; color:#353c47; font-size:13px; }
+.heading { margin-bottom:16px; }
+.heading h2 { font-size:22px; font-weight:600; }
+.card { border:1px solid #dfe2e6; border-radius:4px; margin-bottom:16px; }
+.card :global(.ant-card-body) { padding:16px; }
+.card :global(.ant-card-head) { min-height:44px; padding:0 16px; border-bottom-color:#e8eaed; }
+.card :global(.ant-card-head-title) { font-size:14px; font-weight:600; }
+.stats { gap:0; margin-bottom:16px; border:1px solid #dfe2e6; background:#fff; border-radius:4px; }
+.stat { padding:12px 18px; border:0; border-right:1px solid #e8eaed; border-radius:0; background:transparent; }
+.stat:last-child { border-right:0; }
+.stat span { color:#858d98; font-size:12px; margin-bottom:4px; }
+.stat strong { font-size:22px; color:#3b4350; font-weight:500; }
+.meta { gap:12px; }
+.code { background:#fafbfc; color:#394452; border-color:#e5e8ec; border-radius:3px; }
+.profileHero { gap:16px; }
+.profileHero h1 { font-size:23px; font-weight:600; }
+.profileHero p { font-size:12px; color:#858d98; }
+.testCase { border-radius:3px; padding:12px; }
+:global(.oj-submission-table a) { color:var(--site-primary,#51624f); }
+@media(max-width:800px) { .page { padding:16px 12px 24px; } .stat:nth-child(2) { border-right:0; } .stat:nth-child(-n+2) { border-bottom:1px solid #e8eaed; } }
