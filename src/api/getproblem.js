@@ -84,12 +84,13 @@ const normalizeDetailResp = (payload) => {
   return { ...body, data: body };
 };
 
-export async function getProblem({ q, pageIdx, pageSize, difficult } = {}) {
+export async function getProblem({ q, pageIdx, pageSize, difficult, tag, signal } = {}) {
   const params = {
     q,
     pageIdx,
     pageSize,
     difficult,
+    tag,
   };
 
   if (isLoggedIn()) {
@@ -97,7 +98,7 @@ export async function getProblem({ q, pageIdx, pageSize, difficult } = {}) {
   }
 
   const response = await fetch(
-    `${API_BASE_URL}/question/${toQueryString(params)}`
+    `${API_BASE_URL}/question/${toQueryString(params)}`, { signal }
   );
   const data = await parseJson(response);
   return normalizeListResp(data, Number(pageIdx) || 1, Number(pageSize) || 20);

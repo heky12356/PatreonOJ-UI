@@ -302,3 +302,8 @@
 
 .mobileQuestionNumber { display:none; }
 @media(max-width:575px) { .table th:nth-child(1),.table td:nth-child(1) { display:none; } .mobileQuestionNumber { display:block; max-width:100%; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font:10px/1.5 Consolas,monospace; color:#8d95a0; margin-bottom:3px; } }
+
+.filterSelect { font-size:13px; border-radius:3px; padding:8px 10px; }
+.filterHint { color:#9299a3; font-size:12px; line-height:1.6; margin:10px 0 0; }
+.filterGraphLink { display:inline-block; margin-top:12px; color:var(--site-primary,#51624f); font-size:12px; text-decoration:none; }
+.filterGraphLink:hover { text-decoration:underline; }

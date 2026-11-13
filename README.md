@@ -4,6 +4,8 @@
 
 站点主题切换、首页幻灯片配置及私有主题部署，见 [主题与幻灯片说明](THEMES.md)。
 
+题库侧栏支持标签与难度筛选，可和关键词搜索组合使用；筛选条件保存在地址中，切换筛选时从第一页开始。选中标签后也可直接进入对应知识图谱。
+
 题目编辑器已支持公开样例、自定义输入、输出对照和停止自测；自测不会改变正式提交和通过状态。Header 的知识图谱入口按标签浏览题目关系，再进入单题图谱。接口和限制见后端的 [在线自测说明](https://github.com/heky12356/PatreonOJ/blob/master/docs/self-test.md)，性能设计见 [图谱扩容说明](https://github.com/heky12356/PatreonOJ/blob/master/docs/graph-performance.md)。
 
 ## 项目介绍

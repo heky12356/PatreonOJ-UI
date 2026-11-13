@@ -3,6 +3,7 @@ import { Col, Container, Row } from 'react-bootstrap';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FaPlus, FaSearch } from 'react-icons/fa';
 import { getProblem } from '../../api/getproblem';
+import { getGraphTags } from '../../api/learning.js';
 import useMyProblemStatuses from '../../hooks/useMyProblemStatuses.js';
 import { hasPermission, isLoggedIn } from '../../api/user.js';
 
@@ -30,46 +31,49 @@ export default function QuestionBank() {
     [location.search]
   );
   const currentQuery = params.get('q') || '';
-
+  const tag = params.get('tag') || '';
+  const difficult = params.get('difficult') || '';
+  const pageIdx = Math.min(100000, Math.max(1, parseInt(params.get('page'), 10) || 1));
+  const pageSize = 10;
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState(currentQuery);
-  const [pageIdx, setPageIdx] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
   const [totalCnt, setTotalCnt] = useState(0);
-  const [difficult, setDifficult] = useState('');
-  const solveStatusMap = useMyProblemStatuses(questions.map((question) => question.id));
+  const [tags, setTags] = useState([]);
+  const [tagsLoading, setTagsLoading] = useState(true);
+  const [tagsError, setTagsError] = useState(false);
+  const [revision, setRevision] = useState(0);
+  const solveStatusMap = useMyProblemStatuses(questions.map(question => question.id));
 
-  const fetchQuestions = async ({ q = currentQuery, page = pageIdx } = {}) => {
-    try {
-      setLoading(true);
-      setError('');
-      const data = await getProblem({
-        q,
-        pageSize,
-        pageIdx: page,
-        difficult,
-      });
-      setQuestions(Array.isArray(data?.result) ? data.result : []);
-      setPageIdx(data?.pageIdx || 1);
-      setPageSize(data?.pageSize || 10);
-      setTotalCnt(data?.totalCnt || 0);
-    } catch (err) {
-      setError(getRequestErrorMessage(err, '获取题库列表失败'));
-      setQuestions([]);
-    } finally {
-      setLoading(false);
-    }
+  const navigateQuery = next => navigate(`/problem${next.toString() ? `?${next}` : ''}`);
+  const updateFilter = (name, value) => {
+    const next = new URLSearchParams(location.search);
+    if (value) next.set(name, value); else next.delete(name);
+    next.delete('page');
+    navigateQuery(next);
+  };
+  const setPageIdx = page => {
+    const next = new URLSearchParams(location.search);
+    if (page > 1) next.set('page', String(page)); else next.delete('page');
+    navigateQuery(next);
   };
 
+  useEffect(() => { setSearchTerm(currentQuery); }, [currentQuery]);
   useEffect(() => {
-    setSearchTerm(currentQuery);
-  }, [currentQuery]);
-
+    const abort = new AbortController();
+    getGraphTags(abort.signal).then(setTags).catch(error => { if (error.name !== 'AbortError') setTagsError(true); }).finally(() => { if (!abort.signal.aborted) setTagsLoading(false); });
+    return () => abort.abort();
+  }, []);
   useEffect(() => {
-    void fetchQuestions();
-  }, [currentQuery, pageIdx, difficult]);
+    const abort = new AbortController();
+    setLoading(true); setError('');
+    getProblem({ q: currentQuery, tag, difficult, pageIdx, pageSize, signal: abort.signal })
+      .then(data => { if (!abort.signal.aborted) { setQuestions(data.result || []); setTotalCnt(data.totalCnt || 0); } })
+      .catch(error => { if (!abort.signal.aborted) { setError(getRequestErrorMessage(error, '获取题库列表失败')); setQuestions([]); } })
+      .finally(() => { if (!abort.signal.aborted) setLoading(false); });
+    return () => abort.abort();
+  }, [currentQuery, tag, difficult, pageIdx, revision]);
 
   const parseTags = (tagsString) => {
     if (!tagsString) return [];
@@ -115,17 +119,7 @@ export default function QuestionBank() {
     };
   };
 
-  const searchProblem = (raw) => {
-    const q = raw.trim();
-    setPageIdx(1);
-    const next = new URLSearchParams(location.search);
-    if (q) {
-      next.set('q', q);
-    } else {
-      next.delete('q');
-    }
-    navigate(`/problem${next.toString() ? `?${next.toString()}` : ''}`);
-  };
+  const searchProblem = raw => updateFilter('q', raw.trim());
 
   return (
     <div className={styles.container}>
@@ -158,7 +152,7 @@ export default function QuestionBank() {
                 <ErrorState
                   title="题库加载失败"
                   message={error}
-                  onRetry={() => void fetchQuestions()}
+                  onRetry={() => setRevision(value => value + 1)}
                 />
               ) : loading ? (
                 <LoadingState text="正在加载题库..." />
@@ -262,16 +256,24 @@ export default function QuestionBank() {
                 id="difficulty-filter"
                 className={styles.filterSelect}
                 value={difficult}
-                onChange={(e) => {
-                  setPageIdx(1);
-                  setDifficult(e.target.value);
-                }}
+                onChange={event => updateFilter('difficult', event.target.value)}
               >
                 <option value="">全部难度</option>
                 <option value="简单">简单</option>
                 <option value="中等">中等</option>
                 <option value="困难">困难</option>
               </select>
+            </div>
+
+            <div className={styles.card}>
+              <label htmlFor="tag-filter" className="d-block mb-2 text-secondary small">标签筛选</label>
+              <select id="tag-filter" className={styles.filterSelect} value={tag} disabled={tagsLoading} onChange={event => updateFilter('tag', event.target.value)}>
+                <option value="">{tagsLoading ? '正在读取标签…' : '全部标签'}</option>
+                {tag && !tags.some(item => item.name === tag) && <option value={tag}>{tag}</option>}
+                {tags.map(item => <option key={item.name} value={item.name}>{item.name}</option>)}
+              </select>
+              {tagsError && <p className={styles.filterHint}>标签列表暂不可用，请刷新重试。</p>}
+              {tag && <Link className={styles.filterGraphLink} to={`/graph?tag=${encodeURIComponent(tag)}`}>查看该标签图谱</Link>}
             </div>
 
             {hasPermission('admin') ? (
